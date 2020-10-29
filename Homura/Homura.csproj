@@ -1,0 +1,314 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{61479EA0-7CC7-46C8-A54C-30325AD08BDF}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Homura</RootNamespace>
+    <AssemblyName>Homura</AssemblyName>
+    <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <Deterministic>true</Deterministic>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Dapper, Version=2.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Dapper.2.0.35\lib\net461\Dapper.dll</HintPath>
+    </Reference>
+    <Reference Include="NLog, Version=4.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
+      <HintPath>..\packages\NLog.4.7.5\lib\net45\NLog.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Configuration" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.IO.Compression" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.ServiceModel" />
+    <Reference Include="System.Transactions" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Core\BaseObject.cs" />
+    <Compile Include="Core\Delegate.cs" />
+    <Compile Include="Core\IModifiedCounter.cs" />
+    <Compile Include="Core\ISqlize.cs" />
+    <Compile Include="Core\ModifiedEventArgs.cs" />
+    <Compile Include="Core\MustInitialize.cs" />
+    <Compile Include="Core\NotifyPropertyChangedImpl.cs" />
+    <Compile Include="Core\PropertyNameUtility.cs" />
+    <Compile Include="ORM\BaseColumn.cs" />
+    <Compile Include="ORM\Column.cs" />
+    <Compile Include="ORM\Connection.cs" />
+    <Compile Include="ORM\ConnectionManager.cs" />
+    <Compile Include="ORM\Dao.cs" />
+    <Compile Include="ORM\DaoConst.cs" />
+    <Compile Include="ORM\DatabaseSchemaException.cs" />
+    <Compile Include="ORM\DataOperationUnit.cs" />
+    <Compile Include="ORM\DbSelector.cs" />
+    <Compile Include="ORM\EntityBaseObject.cs" />
+    <Compile Include="ORM\Extensions.cs" />
+    <Compile Include="ORM\FailedOpeningDatabaseException.cs" />
+    <Compile Include="ORM\IColumn.cs" />
+    <Compile Include="ORM\IConnection.cs" />
+    <Compile Include="ORM\IDao.cs" />
+    <Compile Include="ORM\IDDLConstraint.cs" />
+    <Compile Include="ORM\IId.cs" />
+    <Compile Include="ORM\IRightValue.cs" />
+    <Compile Include="ORM\ITable.cs" />
+    <Compile Include="ORM\Mapping\ColumnAttribute.cs" />
+    <Compile Include="ORM\Mapping\ConvertAttribute.cs" />
+    <Compile Include="ORM\Mapping\DefaultVersionAttribute.cs" />
+    <Compile Include="ORM\Mapping\DiscontinuousVersionClassException.cs" />
+    <Compile Include="ORM\Mapping\IDDLConstraintAttribute.cs" />
+    <Compile Include="ORM\Mapping\IndexAttribute.cs" />
+    <Compile Include="ORM\Mapping\ISchemaVersion.cs" />
+    <Compile Include="ORM\Mapping\NotNullAttribute.cs" />
+    <Compile Include="ORM\Mapping\PrimaryKeyAttribute.cs" />
+    <Compile Include="ORM\Mapping\SinceAttribute.cs" />
+    <Compile Include="ORM\Mapping\UntilAttribute.cs" />
+    <Compile Include="ORM\Mapping\VersionOrigin.cs" />
+    <Compile Include="ORM\Migration\ChangePlanByTable.cs" />
+    <Compile Include="ORM\Migration\ChangePlanByVersion.cs" />
+    <Compile Include="ORM\Migration\IEntityVersionChangePlan.cs" />
+    <Compile Include="ORM\Migration\IVersionChangePlan.cs" />
+    <Compile Include="ORM\Migration\VersionChangeEventArgs.cs" />
+    <Compile Include="ORM\Migration\VersionChangeUnit.cs" />
+    <Compile Include="ORM\Migration\VersionHelper.cs" />
+    <Compile Include="ORM\MultiplePlaceholderRightValue.cs" />
+    <Compile Include="ORM\NoEntityInsertedException.cs" />
+    <Compile Include="ORM\NotExistColumnException.cs" />
+    <Compile Include="ORM\NotMatchColumnException.cs" />
+    <Compile Include="ORM\NotNull.cs" />
+    <Compile Include="ORM\OverridedColumn.cs" />
+    <Compile Include="ORM\PlaceholderRightValue.cs" />
+    <Compile Include="ORM\PrimaryKey.cs" />
+    <Compile Include="ORM\RightValueImpl.cs" />
+    <Compile Include="ORM\Setup\DataVersionManager.cs" />
+    <Compile Include="ORM\Setup\DbInfoRetriever.cs" />
+    <Compile Include="ORM\Setup\EntityVersionKey.cs" />
+    <Compile Include="ORM\Setup\UpgradeHelper.cs" />
+    <Compile Include="ORM\Setup\VersioningStrategy.cs" />
+    <Compile Include="ORM\Setup\VersioningStrategyByTable.cs" />
+    <Compile Include="ORM\Setup\VersioningStrategyByTick.cs" />
+    <Compile Include="ORM\Setup\VersioningStrategyNotSupported.cs" />
+    <Compile Include="ORM\Setup\VersionKey.cs" />
+    <Compile Include="ORM\SubqueryRightValue.cs" />
+    <Compile Include="ORM\Table.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="QueryBuilder\Core\Delimiter.cs" />
+    <Compile Include="QueryBuilder\Core\Extensions.cs" />
+    <Compile Include="QueryBuilder\Core\INoMarginLeftSyntax.cs" />
+    <Compile Include="QueryBuilder\Core\INoMarginRightSyntax.cs" />
+    <Compile Include="QueryBuilder\Core\IRepeatable.cs" />
+    <Compile Include="QueryBuilder\Core\ISql.cs" />
+    <Compile Include="QueryBuilder\Core\ISyntaxBase.cs" />
+    <Compile Include="QueryBuilder\Core\RepeatableSyntax.cs" />
+    <Compile Include="QueryBuilder\Core\SyntaxBase.cs" />
+    <Compile Include="QueryBuilder\Core\Table.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\All.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Delete.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Distinct.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Extensions.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Insert.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Select.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\AllColumnSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\AllSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\AndSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\AscSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\AsSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\AsteriskSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\BeginSubquerySyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\BySyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\CloseFunctionSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\CloseParenthesisSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\ColumnSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\ConditionColumnSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\CorrespondingSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\CountSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\CrossSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\DefaultSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\DeleteSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\DescSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\DistinctColumnSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\DistinctSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\EndSubquerySyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\EqualToSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\ExceptSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\ExistsSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\FromSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\FullSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\FunctionColumnSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\FunctionWildcardSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\GreaterThanOrEqualToSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\GreaterThanSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\GroupByColumnSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\GroupBySyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\IAsSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\IBySyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\ICloseSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\IColumnSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\IConditionValueSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\ICorrespondingColumnSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\ICorrespondingSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\ICountParameterSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\ICountSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\ICrossSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\IDeleteSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\IDeleteTableSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\IExceptSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\IExistsSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\IFromSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\IGroupByColumnSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\IGroupBySyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\IInsertColumnsSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\IInsertColumnSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\IInsertSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\IInSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\IIntersectSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\IIntoSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\IInValueSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\IIsSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\IJoinConditionSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\IJoinTableSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\IJoinTypeSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\INaturalSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\InnerSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\INotSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\InsertColumnSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\InsertSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\InSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\IntersectSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\IntoSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\InValueSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\IOnSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\IOperatorColumnSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\IOperatorSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\IOrderByColumnSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\IOrderBySyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\IOrderTypeSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\IOuterJoinTypeSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\IRowSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\ISearchCondition.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\ISelectSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\ISetClauseSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\ISetClauseValueSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\ISetOperatorSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\ISetQuantifierSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\ISetSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\ISinkStateSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\IsNotNullSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\IsNullSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\IsSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\IUnionSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\IUpdateSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\IUpdateTableSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\IValueExpressionSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\IValuesSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\IWhereNotSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\IWhereSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\JoinTableSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\LeftSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\LessThanOrEqualToSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\LessThanSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\LikeSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\NaturalSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\NotEqualToSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\NotNullSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\NotSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\NullSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\OnSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\OpenFunctionSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\OpenParenthesisSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\OrderByColumnSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\OrderBySyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\OrSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\OuterSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\ParameterizedValueExpressionSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\RepeatRowSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\RightSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\RowSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\SearchCondition.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\SelectSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\SetClauseValueSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\SetSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\SubstituteSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\TableSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\UnionSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\UpdateColumnSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\UpdateSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\UsingSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\ValueExpressionSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\ValuesSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\WhereNotSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\WhereSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Transitions\IAsTransition.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Transitions\IColumnTransition.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Transitions\IComparisonPredicateTransition.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Transitions\ICorrespondingByTransition.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Transitions\ICorrespondingTransition.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Transitions\ICrossJoinTransition.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Transitions\IEqualToTransition.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Transitions\IFromTransition.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Transitions\IFunctionTransition.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Transitions\IGroupByTransition.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Transitions\IJoinTableTransition.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Transitions\IJoinTypeTransition.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Transitions\INaturalTransition.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Transitions\INextRowTransition.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Transitions\IOrderByTransition.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Transitions\IOuterJoinTypeTransition.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Transitions\IQuantityTransition.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Transitions\IQueryTermTransition.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Transitions\IRowTransition.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Transitions\ISetAllTransition.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Transitions\ISetOperatorTransition.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Transitions\ISubQueryTransition.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Transitions\ITableTransition.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Transitions\IUpdateColumnTransition.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Transitions\IUpdateSourceTransition.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Transitions\IValuesTransition.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Transitions\IValueTransition.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Transitions\IWhereColumnTransition.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Transitions\IWhereTransition.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Transitions\IWildcardTransition.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Update.cs" />
+    <Compile Include="QueryBuilder\Vendor\SQLite\Dcl\Syntaxes\IVacuumSyntax.cs" />
+    <Compile Include="QueryBuilder\Vendor\SQLite\Dcl\Syntaxes\VacuumSyntax.cs" />
+    <Compile Include="QueryBuilder\Vendor\SQLite\Dcl\Vacuum.cs" />
+    <Compile Include="QueryBuilder\Vendor\SQLite\Dml\Extensions.cs" />
+    <Compile Include="QueryBuilder\Vendor\SQLite\Dml\InsertOrReplace.cs" />
+    <Compile Include="QueryBuilder\Vendor\SQLite\Dml\Syntaxes\IInsertOrReplaceSyntax.cs" />
+    <Compile Include="QueryBuilder\Vendor\SQLite\Dml\Syntaxes\ILimitSyntax.cs" />
+    <Compile Include="QueryBuilder\Vendor\SQLite\Dml\Syntaxes\InsertOrReplaceSyntax.cs" />
+    <Compile Include="QueryBuilder\Vendor\SQLite\Dml\Syntaxes\LimitSyntax.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>

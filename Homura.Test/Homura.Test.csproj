@@ -1,0 +1,136 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="16.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\packages\NUnit3TestAdapter.3.13.0\build\net35\NUnit3TestAdapter.props" Condition="Exists('..\packages\NUnit3TestAdapter.3.13.0\build\net35\NUnit3TestAdapter.props')" />
+  <Import Project="..\packages\NUnit.3.11.0\build\NUnit.props" Condition="Exists('..\packages\NUnit.3.11.0\build\NUnit.props')" />
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{82098222-623A-4B30-B980-8DDC8553E174}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Homura.Test</RootNamespace>
+    <AssemblyName>Homura.Test</AssemblyName>
+    <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="nunit.framework, Version=3.11.0.0, Culture=neutral, PublicKeyToken=2638cd05610744eb, processorArchitecture=MSIL">
+      <HintPath>..\packages\NUnit.3.11.0\lib\net45\nunit.framework.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Data.SQLite, Version=1.0.113.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Data.SQLite.Core.1.0.113.1\lib\net46\System.Data.SQLite.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Iso\Dml\DeleteTest.cs" />
+    <Compile Include="Iso\Dml\InsertTest.cs" />
+    <Compile Include="Iso\Dml\SelectTest.cs" />
+    <Compile Include="Iso\Dml\UpdateTest.cs" />
+    <Compile Include="TestFixture\Dao\AlphaDao.cs" />
+    <Compile Include="TestFixture\Dao\BetaDao.cs" />
+    <Compile Include="TestFixture\Dao\DetailDao.cs" />
+    <Compile Include="TestFixture\Dao\GammaDao.cs" />
+    <Compile Include="TestFixture\Dao\HeaderDao.cs" />
+    <Compile Include="TestFixture\Dao\OriginDao.cs" />
+    <Compile Include="TestFixture\DummyAbstractTable.cs" />
+    <Compile Include="TestFixture\DummyAuthorTable.cs" />
+    <Compile Include="TestFixture\DummyBookTable.cs" />
+    <Compile Include="TestFixture\DummyImageTable.cs" />
+    <Compile Include="TestFixture\DummyImageTagTable.cs" />
+    <Compile Include="TestFixture\DummyPageTable.cs" />
+    <Compile Include="TestFixture\DummyTagTable.cs" />
+    <Compile Include="TestFixture\DummyThumbnailTable.cs" />
+    <Compile Include="TestFixture\Entity\Alpha.cs" />
+    <Compile Include="TestFixture\Entity\AnotherEntity.cs" />
+    <Compile Include="TestFixture\Entity\Beta.cs" />
+    <Compile Include="TestFixture\Entity\Detail.cs" />
+    <Compile Include="TestFixture\Entity\Gamma.cs" />
+    <Compile Include="TestFixture\Entity\Header.cs" />
+    <Compile Include="TestFixture\Entity\Origin.cs" />
+    <Compile Include="TestFixture\Entity\SomeEntity.cs" />
+    <Compile Include="TestFixture\Migration\Plan\AlphaChangePlan_Abstract.cs" />
+    <Compile Include="TestFixture\Migration\Plan\AlphaChangePlan_VersionOrigin.cs" />
+    <Compile Include="TestFixture\Migration\Plan\AlphaChangePlan_Version_1.cs" />
+    <Compile Include="TestFixture\Migration\Plan\AlphaChangePlan_Version_2.cs" />
+    <Compile Include="TestFixture\Migration\Plan\BetaChangePlan_Abstract.cs" />
+    <Compile Include="TestFixture\Migration\Plan\BetaChangePlan_VersionOrigin.cs" />
+    <Compile Include="TestFixture\Migration\Plan\BetaChangePlan_Version_1.cs" />
+    <Compile Include="TestFixture\Migration\Plan\BetaChangePlan_Version_2.cs" />
+    <Compile Include="TestFixture\Migration\Plan\DetailChangePlan_Abstract.cs" />
+    <Compile Include="TestFixture\Migration\Plan\DetailChangePlan_VersionOrigin.cs" />
+    <Compile Include="TestFixture\Migration\Plan\DetailChangePlan_Version_1.cs" />
+    <Compile Include="TestFixture\Migration\Plan\DetailChangePlan_Version_2.cs" />
+    <Compile Include="TestFixture\Migration\Plan\DetailChangePlan_Version_3.cs" />
+    <Compile Include="TestFixture\Migration\Plan\GammaChangePlan_Abstract.cs" />
+    <Compile Include="TestFixture\Migration\Plan\GammaChangePlan_VersionOrigin.cs" />
+    <Compile Include="TestFixture\Migration\Plan\GammaChangePlan_Version_1.cs" />
+    <Compile Include="TestFixture\Migration\Plan\HeaderChangePlan_Abstract.cs" />
+    <Compile Include="TestFixture\Migration\Plan\HeaderChangePlan_VersionOrigin.cs" />
+    <Compile Include="TestFixture\Migration\Plan\HeaderChangePlan_Version_1.cs" />
+    <Compile Include="TestFixture\Migration\Plan\HeaderChangePlan_Version_2.cs" />
+    <Compile Include="TestFixture\Migration\Plan\HeaderChangePlan_Version_3.cs" />
+    <Compile Include="TestFixture\Migration\Plan\OriginChangePlan_Abstract.cs" />
+    <Compile Include="TestFixture\Migration\Plan\OriginChangePlan_VersionOrigin.cs" />
+    <Compile Include="TestFixture\Migration\Plan\OriginChangePlan_Version_1.cs" />
+    <Compile Include="TestFixture\Migration\Plan\VersionChangePlan_VersionOrigin.cs" />
+    <Compile Include="TestFixture\Migration\Plan\VersionChangePlan_Version_1.cs" />
+    <Compile Include="TestFixture\Migration\Version_1.cs" />
+    <Compile Include="TestFixture\Migration\Version_2.cs" />
+    <Compile Include="TestFixture\Migration\Version_3.cs" />
+    <Compile Include="UnitTest\Setup\DataVersionManagerTest.cs" />
+    <Compile Include="UnitTest\TableTest.cs" />
+    <Compile Include="Vendor\SQLite\Dcl\VacuumTest.cs" />
+    <Compile Include="Vendor\SQLite\Dml\InsertOrReplaceTest.cs" />
+    <Compile Include="VersionControl\SchemaTest.cs" />
+    <Compile Include="VersionControl\TableMigrationTest.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Homura\Homura.csproj">
+      <Project>{61479ea0-7cc7-46c8-a54c-30325ad08bdf}</Project>
+      <Name>Homura</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>このプロジェクトは、このコンピューター上にない NuGet パッケージを参照しています。それらのパッケージをダウンロードするには、[NuGet パッケージの復元] を使用します。詳細については、http://go.microsoft.com/fwlink/?LinkID=322105 を参照してください。見つからないファイルは {0} です。</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\NUnit.3.11.0\build\NUnit.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\NUnit.3.11.0\build\NUnit.props'))" />
+    <Error Condition="!Exists('..\packages\NUnit3TestAdapter.3.13.0\build\net35\NUnit3TestAdapter.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\NUnit3TestAdapter.3.13.0\build\net35\NUnit3TestAdapter.props'))" />
+    <Error Condition="!Exists('..\packages\System.Data.SQLite.Core.1.0.113.1\build\net46\System.Data.SQLite.Core.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\System.Data.SQLite.Core.1.0.113.1\build\net46\System.Data.SQLite.Core.targets'))" />
+  </Target>
+  <Import Project="..\packages\System.Data.SQLite.Core.1.0.113.1\build\net46\System.Data.SQLite.Core.targets" Condition="Exists('..\packages\System.Data.SQLite.Core.1.0.113.1\build\net46\System.Data.SQLite.Core.targets')" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
