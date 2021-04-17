@@ -366,12 +366,42 @@ namespace Homura.QueryBuilder.Test.Iso.Dml
             }
 
             [Test]
+            public void Select_Column1_From_Table_Where_KeyEqualValue_NULL()
+            {
+                var dictionary = new Dictionary<string, object>() { { "Column1", null } };
+                using (var query = new Select().Column("Column1").From.Table("Table").Where.KeyEqualToValue(dictionary))
+                {
+                    Assert.That(query.ToSql(), Is.EqualTo("SELECT Column1 FROM Table WHERE Column1 IS NULL"));
+                }
+            }
+
+            [Test]
             public void Select_Column1_From_Table_Where_KeyEqualValue_And_KeyEqualValue()
             {
                 var dictionary = new Dictionary<string, object>() { { "Column1", "Value1" }, { "Column2", "Value1" } };
                 using (var query = new Select().Column("Column1").Column("Column2").From.Table("Table").Where.KeyEqualToValue(dictionary))
                 {
                     Assert.That(query.ToSql(), Is.EqualTo("SELECT Column1, Column2 FROM Table WHERE Column1 = @val_0 AND Column2 = @val_1"));
+                }
+            }
+
+            [Test]
+            public void Select_Column1_From_Table_Where_KeyEqualValue_NULL_And_KeyEqualValue()
+            {
+                var dictionary = new Dictionary<string, object>() { { "Column1", null }, { "Column2", "Value1" } };
+                using (var query = new Select().Column("Column1").Column("Column2").From.Table("Table").Where.KeyEqualToValue(dictionary))
+                {
+                    Assert.That(query.ToSql(), Is.EqualTo("SELECT Column1, Column2 FROM Table WHERE Column1 IS NULL AND Column2 = @val_0"));
+                }
+            }
+
+            [Test]
+            public void Select_Column1_From_Table_Where_KeyEqualValue_NULL_And_KeyEqualValue_NULL()
+            {
+                var dictionary = new Dictionary<string, object>() { { "Column1", null }, { "Column2", null } };
+                using (var query = new Select().Column("Column1").Column("Column2").From.Table("Table").Where.KeyEqualToValue(dictionary))
+                {
+                    Assert.That(query.ToSql(), Is.EqualTo("SELECT Column1, Column2 FROM Table WHERE Column1 IS NULL AND Column2 IS NULL"));
                 }
             }
         }
