@@ -1,16 +1,16 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0"?>
 <package >
   <metadata>
-    <id>$id$</id>
-    <version>$version$</version>
-    <title>$title$</title>
+    <id>Homura</id>
+    <version>1.0.1</version>
     <authors>dhq_boiler</authors>
+    <owners>dhq_boiler</owners>
+	<projectUrl>https://github.com/dhq-boiler/Homura</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
-    <license type="expression">MIT</license>
-    <projectUrl>https://github.com/dhq-boiler/Homura</projectUrl>
+	<license type="expression">MIT</license>
     <description>Homura - C# ORM</description>
     <releaseNotes>Summary of changes made in this release of the package.</releaseNotes>
-    <copyright>$copyright$</copyright>
+    <copyright>$copyright</copyright>
     <tags>C# ORM</tags>
   </metadata>
 </package>
