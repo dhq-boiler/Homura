@@ -2,7 +2,7 @@
 <package >
   <metadata>
     <id>Homura</id>
-    <version>1.0.1</version>
+    <version>1.0.2</version>
     <authors>dhq_boiler</authors>
     <owners>dhq_boiler</owners>
 	<projectUrl>https://github.com/dhq-boiler/Homura</projectUrl>
@@ -10,7 +10,7 @@
 	<license type="expression">MIT</license>
     <description>Homura - C# ORM</description>
     <releaseNotes>Summary of changes made in this release of the package.</releaseNotes>
-    <copyright>$copyright</copyright>
+    <copyright>$copyright$</copyright>
     <tags>C# ORM</tags>
   </metadata>
 </package>

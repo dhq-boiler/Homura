@@ -312,6 +312,7 @@
     <Compile Include="QueryBuilder\Vendor\SQLite\Dml\Syntaxes\LimitSyntax.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Homura.nuspec" />
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
