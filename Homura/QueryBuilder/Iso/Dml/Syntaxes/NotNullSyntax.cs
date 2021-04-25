@@ -4,7 +4,7 @@ using Homura.QueryBuilder.Core;
 
 namespace Homura.QueryBuilder.Iso.Dml.Syntaxes
 {
-    internal class NotNullSyntax : SyntaxBase, IConditionValueSyntax, ISinkStateSyntax
+    internal class NotNullSyntax : SyntaxBase, IConditionValueSyntax, ISinkStateSyntax, IJoinConditionSyntax
     {
         internal NotNullSyntax(SyntaxBase syntaxBase)
             : base(syntaxBase)
@@ -26,6 +26,14 @@ namespace Homura.QueryBuilder.Iso.Dml.Syntaxes
 
         public IUnionSyntax Union { get { return new UnionSyntax(this); } }
 
+        public IWhereSyntax<IJoinConditionSyntax, IOperatorSyntax<IJoinConditionSyntax>, IIsSyntax<IJoinConditionSyntax>> Where => throw new System.NotImplementedException();
+
+        public ICrossSyntax Cross => throw new System.NotImplementedException();
+
+        public IExceptSyntax Except => throw new System.NotImplementedException();
+
+        public IIntersectSyntax Intersect => throw new System.NotImplementedException();
+
         public string ToSql()
         {
             return Relay.RelayQuery(this);
@@ -34,6 +42,16 @@ namespace Homura.QueryBuilder.Iso.Dml.Syntaxes
         public override string Represent()
         {
             return "NOT NULL";
+        }
+
+        public IJoinTableSyntax Join(string tableName)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public IJoinTableSyntax Join(string tableName, string tableAlias)
+        {
+            throw new System.NotImplementedException();
         }
     }
 }

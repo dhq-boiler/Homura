@@ -35,15 +35,31 @@ namespace Homura.QueryBuilder.Iso.Dml.Syntaxes
                 if (ret == null)
                 {
                     var column = new SearchConditionSyntax<R, R1, R2>(this, condition.Key);
-                    var equal = new EqualToSyntax<R>(column);
-                    ret = equal.Value(condition.Value);
+                    if (condition.Value is null)
+                    {
+                        var @is = new IsSyntax<R>(column);
+                        ret = @is.Null;
+                    }
+                    else
+                    {
+                        var equal = new EqualToSyntax<R>(column);
+                        ret = equal.Value(condition.Value);
+                    }
                 }
                 else
                 {
                     var and = new AndSyntax<R, R1, R2>(ret as SyntaxBase);
                     var column = new SearchConditionSyntax<R, R1, R2>(and, condition.Key);
-                    var equal = new EqualToSyntax<R>(column);
-                    ret = equal.Value(condition.Value);
+                    if (condition.Value is null)
+                    {
+                        var @is = new IsSyntax<R>(column);
+                        ret = @is.Null;
+                    }
+                    else
+                    {
+                        var equal = new EqualToSyntax<R>(column);
+                        ret = equal.Value(condition.Value);
+                    }
                 }
             }
             return ret;

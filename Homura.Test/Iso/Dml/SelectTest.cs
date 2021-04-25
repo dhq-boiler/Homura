@@ -638,6 +638,18 @@ namespace Homura.QueryBuilder.Test.Iso.Dml
             }
 
             [Test]
+            public void Select_Column1_From_Alpha_Inner_Join_Beta_On_AlphaColumn1_Equal_BetaColumn1_Where_Column1_Is_NULL()
+            {
+                using (var query = new Select().Column("Column1")
+                                               .From.Table("Alpha")
+                                               .Inner.Join("Beta").On.Column("Alpha", "Column1").EqualTo.Column("Beta", "Column1")
+                                               .Where.KeyEqualToValue(new Dictionary<string, object>() { { "Column1", null } }))
+                {
+                    Assert.That(query.ToSql(), Is.EqualTo("SELECT Column1 FROM Alpha INNER JOIN Beta ON Alpha.Column1 = Beta.Column1 WHERE Column1 IS NULL"));
+                }
+            }
+
+            [Test]
             public void Select_Column1_From_Alpha_Inner_Join_Beta_On_AlphaColumn1_Equal_BetaColumn1_And_BetaColumn1_Equal_String1()
             {
                 using (var query = new Select().Column("Column1").From.Table("Alpha").Inner.Join("Beta").On.Column("Alpha", "Column1").EqualTo.Column("Beta", "Column1")

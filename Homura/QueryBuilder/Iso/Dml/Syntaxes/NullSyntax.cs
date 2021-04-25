@@ -1,10 +1,11 @@
 ﻿using Homura.QueryBuilder.Core;
+using Homura.QueryBuilder.Iso.Dml.Transitions;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace Homura.QueryBuilder.Iso.Dml.Syntaxes
 {
-    internal class NullSyntax : SyntaxBase, IConditionValueSyntax, ISinkStateSyntax, IValueExpressionSyntax
+    internal class NullSyntax : SyntaxBase, IConditionValueSyntax, ISinkStateSyntax, IValueExpressionSyntax, IJoinConditionSyntax
     {
         internal NullSyntax(SyntaxBase syntaxBase)
             : base(syntaxBase)
@@ -27,6 +28,14 @@ namespace Homura.QueryBuilder.Iso.Dml.Syntaxes
         public IUnionSyntax Union { get { return new UnionSyntax(this); } }
 
         public IWhereSyntax<ISinkStateSyntax, IOperatorSyntax<ISinkStateSyntax>, IIsSyntax<ISinkStateSyntax>> Where { get { return new WhereSyntax<ISinkStateSyntax, IOperatorSyntax<ISinkStateSyntax>, IIsSyntax<ISinkStateSyntax>>(this); } }
+
+        IWhereSyntax<IJoinConditionSyntax, IOperatorSyntax<IJoinConditionSyntax>, IIsSyntax<IJoinConditionSyntax>> IWhereTransition<IJoinConditionSyntax>.Where => throw new System.NotImplementedException();
+
+        public ICrossSyntax Cross => throw new System.NotImplementedException();
+
+        public IExceptSyntax Except => throw new System.NotImplementedException();
+
+        public IIntersectSyntax Intersect => throw new System.NotImplementedException();
 
         public string ToSql()
         {
@@ -89,6 +98,16 @@ namespace Homura.QueryBuilder.Iso.Dml.Syntaxes
                 }
             }
             return ret;
+        }
+
+        public IJoinTableSyntax Join(string tableName)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public IJoinTableSyntax Join(string tableName, string tableAlias)
+        {
+            throw new System.NotImplementedException();
         }
     }
 }
