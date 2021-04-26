@@ -754,6 +754,72 @@ namespace Homura.QueryBuilder.Test.Iso.Dml
                     Assert.That(query.ToSql(), Is.EqualTo("SELECT c1, c2, c3 FROM Table GROUP BY c1, c2, c3"));
                 }
             }
+
+            [Test]
+            public void Select_Columns__c1_c2_c3__From_Table_GroupBy_Columns__c1_c2_c3__Having_c1_GreaterThan_1()
+            {
+                using (var query = new Select().Columns("c1", "c2", "c3").From.Table("Table")
+                                               .GroupBy.Columns("c1", "c2", "c3")
+                                               .Having.Count("c1").GreaterThan.Value(1))
+                {
+                    Assert.That(query.ToSql(), Is.EqualTo("SELECT c1, c2, c3 FROM Table GROUP BY c1, c2, c3 HAVING COUNT(c1) > 1"));
+                }
+            }
+
+            [Test]
+            public void Select_Columns__c1_c2_c3__From_Table_GroupBy_Columns__c1_c2_c3__Having_c1_GreaterThanOrEqualTo_1()
+            {
+                using (var query = new Select().Columns("c1", "c2", "c3").From.Table("Table")
+                                               .GroupBy.Columns("c1", "c2", "c3")
+                                               .Having.Count("c1").GreaterThanOrEqualTo.Value(1))
+                {
+                    Assert.That(query.ToSql(), Is.EqualTo("SELECT c1, c2, c3 FROM Table GROUP BY c1, c2, c3 HAVING COUNT(c1) >= 1"));
+                }
+            }
+
+            [Test]
+            public void Select_Columns__c1_c2_c3__From_Table_GroupBy_Columns__c1_c2_c3__Having_c1_LessThan_1()
+            {
+                using (var query = new Select().Columns("c1", "c2", "c3").From.Table("Table")
+                                               .GroupBy.Columns("c1", "c2", "c3")
+                                               .Having.Count("c1").LessThan.Value(1))
+                {
+                    Assert.That(query.ToSql(), Is.EqualTo("SELECT c1, c2, c3 FROM Table GROUP BY c1, c2, c3 HAVING COUNT(c1) < 1"));
+                }
+            }
+
+            [Test]
+            public void Select_Columns__c1_c2_c3__From_Table_GroupBy_Columns__c1_c2_c3__Having_c1_LessThanOrEqualTo_1()
+            {
+                using (var query = new Select().Columns("c1", "c2", "c3").From.Table("Table")
+                                               .GroupBy.Columns("c1", "c2", "c3")
+                                               .Having.Count("c1").LessThanOrEqualTo.Value(1))
+                {
+                    Assert.That(query.ToSql(), Is.EqualTo("SELECT c1, c2, c3 FROM Table GROUP BY c1, c2, c3 HAVING COUNT(c1) <= 1"));
+                }
+            }
+
+            [Test]
+            public void Select_Columns__c1_c2_c3__From_Table_GroupBy_Columns__c1_c2_c3__Having_c1_EqualTo_1()
+            {
+                using (var query = new Select().Columns("c1", "c2", "c3").From.Table("Table")
+                                               .GroupBy.Columns("c1", "c2", "c3")
+                                               .Having.Count("c1").EqualTo.Value(1))
+                {
+                    Assert.That(query.ToSql(), Is.EqualTo("SELECT c1, c2, c3 FROM Table GROUP BY c1, c2, c3 HAVING COUNT(c1) = 1"));
+                }
+            }
+
+            [Test]
+            public void Select_Columns__c1_c2_c3__From_Table_GroupBy_Columns__c1_c2_c3__Having_c1_NotEqualTo_1()
+            {
+                using (var query = new Select().Columns("c1", "c2", "c3").From.Table("Table")
+                                               .GroupBy.Columns("c1", "c2", "c3")
+                                               .Having.Count("c1").NotEqualTo.Value(1))
+                {
+                    Assert.That(query.ToSql(), Is.EqualTo("SELECT c1, c2, c3 FROM Table GROUP BY c1, c2, c3 HAVING COUNT(c1) <> 1"));
+                }
+            }
         }
 
         [Category("Homura.QueryBuilder QueryBuilder")]

@@ -1,16 +1,29 @@
 ﻿using Homura.QueryBuilder.Core;
+using Homura.QueryBuilder.Iso.Dml.Transitions;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace Homura.QueryBuilder.Iso.Dml.Syntaxes
 {
-    internal class CloseFunctionSyntax : SyntaxBase, ICountSyntax, INoMarginLeftSyntax
+    internal class CloseFunctionSyntax : SyntaxBase, ICountSyntax, INoMarginLeftSyntax, IComparisonPredicateTransition<IOperatorSyntax<IConditionValueSyntax>>
     {
         internal CloseFunctionSyntax(SyntaxBase syntaxBase)
             : base(syntaxBase)
         { }
 
         public IFromSyntax<ICloseSyntax<IConditionValueSyntax>> From { get { return new FromSyntax<ICloseSyntax<IConditionValueSyntax>, IConditionValueSyntax>(this); } }
+
+        public IOperatorSyntax<IConditionValueSyntax> NotEqualTo => new NotEqualToSyntax<IConditionValueSyntax>(this, false);
+
+        public IOperatorSyntax<IConditionValueSyntax> GreaterThan => new GreaterThanSyntax<IConditionValueSyntax>(this, false);
+
+        public IOperatorSyntax<IConditionValueSyntax> LessThan => new LessThanSyntax<IConditionValueSyntax>(this, false);
+
+        public IOperatorSyntax<IConditionValueSyntax> GreaterThanOrEqualTo => new GreaterThanOrEqualToSyntax<IConditionValueSyntax>(this, false);
+
+        public IOperatorSyntax<IConditionValueSyntax> LessThanOrEqualTo => new LessThanOrEqualToSyntax<IConditionValueSyntax>(this, false);
+
+        public IOperatorSyntax<IConditionValueSyntax> EqualTo => new EqualToSyntax<IConditionValueSyntax>(this, false);
 
         public IAsSyntax As(string columnAlias)
         {

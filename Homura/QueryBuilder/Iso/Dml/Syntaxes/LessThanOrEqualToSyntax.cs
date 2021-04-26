@@ -6,9 +6,13 @@ namespace Homura.QueryBuilder.Iso.Dml.Syntaxes
 {
     internal class LessThanOrEqualToSyntax<R> : SyntaxBase, IOperatorSyntax<R>, IOperatorColumnSyntax<R> where R : class
     {
-        internal LessThanOrEqualToSyntax(SyntaxBase syntaxBase)
+        private bool isParametarize;
+
+        internal LessThanOrEqualToSyntax(SyntaxBase syntaxBase, bool isParametarize = true)
             : base(syntaxBase)
-        { }
+        {
+            this.isParametarize = isParametarize;
+        }
 
         public R Column(string name)
         {
@@ -62,7 +66,10 @@ namespace Homura.QueryBuilder.Iso.Dml.Syntaxes
 
         public R Value(object value)
         {
-            return new ParameterizedValueExpressionSyntax(this, value) as R;
+            if (isParametarize)
+                return new ParameterizedValueExpressionSyntax(this, value) as R;
+            else
+                return new NonParameterizedValueExpressionSyntax(this, value) as R;
         }
 
         public override string Represent()
