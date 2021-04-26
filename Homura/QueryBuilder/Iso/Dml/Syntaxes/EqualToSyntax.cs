@@ -9,9 +9,13 @@ namespace Homura.QueryBuilder.Iso.Dml.Syntaxes
 
         public R Default { get { return new DefaultSyntax(this) as R; } }
 
-        internal EqualToSyntax(SyntaxBase syntaxBase)
+        private bool isParametarize;
+
+        internal EqualToSyntax(SyntaxBase syntaxBase, bool isParametarize = true)
             : base(syntaxBase)
-        { }
+        {
+            this.isParametarize = isParametarize;
+        }
 
         public R Column(string name)
         {
@@ -65,7 +69,10 @@ namespace Homura.QueryBuilder.Iso.Dml.Syntaxes
 
         public R Value(object value)
         {
-            return new ParameterizedValueExpressionSyntax(this, value) as R;
+            if (isParametarize)
+                return new ParameterizedValueExpressionSyntax(this, value) as R;
+            else
+                return new NonParameterizedValueExpressionSyntax(this, value) as R;
         }
 
         public override string Represent()

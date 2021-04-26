@@ -172,6 +172,7 @@
     <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\GreaterThanSyntax.cs" />
     <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\GroupByColumnSyntax.cs" />
     <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\GroupBySyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\HavingSyntax.cs" />
     <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\IAsSyntax.cs" />
     <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\IBySyntax.cs" />
     <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\ICloseSyntax.cs" />
@@ -189,6 +190,9 @@
     <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\IFromSyntax.cs" />
     <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\IGroupByColumnSyntax.cs" />
     <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\IGroupBySyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\IHavingSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\NonParameterizedValueExpressionSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Transitions\IHavingTransaction.cs" />
     <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\IInsertColumnsSyntax.cs" />
     <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\IInsertColumnSyntax.cs" />
     <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\IInsertSyntax.cs" />

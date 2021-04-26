@@ -1,4 +1,5 @@
 ﻿using Homura.QueryBuilder.Core;
+using Homura.QueryBuilder.Iso.Dml.Transitions;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -57,6 +58,8 @@ namespace Homura.QueryBuilder.Iso.Dml.Syntaxes
         public IIntersectSyntax Intersect { get { return new IntersectSyntax(this); } }
 
         public IWhereSyntax<IConditionValueSyntax, IOperatorSyntax<IConditionValueSyntax>, IIsSyntax<IConditionValueSyntax>> Where { get { return new WhereSyntax<IConditionValueSyntax, IOperatorSyntax<IConditionValueSyntax>, IIsSyntax<IConditionValueSyntax>>(this); } }
+
+        public IHavingSyntax<IComparisonPredicateTransition<IOperatorSyntax<IConditionValueSyntax>>> Having { get { return new HavingSyntax<IComparisonPredicateTransition<IOperatorSyntax<IConditionValueSyntax>>>(this); } }
 
         public IGroupByColumnSyntax Column(string name)
         {
