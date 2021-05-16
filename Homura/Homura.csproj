@@ -182,6 +182,7 @@
     <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\ICorrespondingSyntax.cs" />
     <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\ICountParameterSyntax.cs" />
     <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\ICountSyntax.cs" />
+    <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\ICrossJoinSyntax.cs" />
     <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\ICrossSyntax.cs" />
     <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\IDeleteSyntax.cs" />
     <Compile Include="QueryBuilder\Iso\Dml\Syntaxes\IDeleteTableSyntax.cs" />

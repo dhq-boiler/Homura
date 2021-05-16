@@ -8,12 +8,12 @@ namespace Homura.QueryBuilder.Iso.Dml.Syntaxes
             : base(syntax)
         { }
 
-        public IJoinConditionSyntax Join(string tableName)
+        public ICrossJoinSyntax Join(string tableName)
         {
             return new JoinTableSyntax(this, tableName);
         }
 
-        public IJoinConditionSyntax Join(string tableName, string tableAlias)
+        public ICrossJoinSyntax Join(string tableName, string tableAlias)
         {
             return new JoinTableSyntax(this, tableName, tableAlias);
         }

@@ -4,7 +4,7 @@ using Homura.QueryBuilder.Core;
 
 namespace Homura.QueryBuilder.Iso.Dml.Syntaxes
 {
-    internal class JoinTableSyntax : SyntaxBase, IJoinTableSyntax, IJoinConditionSyntax
+    internal class JoinTableSyntax : SyntaxBase, ICrossJoinSyntax
     {
         private string _tableAlias;
         private string _tableName;

@@ -120,6 +120,27 @@ namespace Homura.QueryBuilder.Test.Iso.Dml
                     Assert.That(query.ToSql(), Is.EqualTo("SELECT COUNT(ALL Column1) FROM Table"));
                 }
             }
+
+            [Test]
+            public void Select_Column1_Column2_From_TableA_Cross_Join_TableB_On_Column1_EqualTo_Column2()
+            {
+                using (var query = new Select().Column("a", "Column1").Column("b", "Column2").From.Table("TableA", "a")
+                                               .Cross.Join("TableB", "b").On.Column("a", "Column1").EqualTo.Column("b", "Column2"))
+                {
+                    Assert.That(query.ToSql(), Is.EqualTo("SELECT a.Column1, b.Column2 FROM TableA a CROSS JOIN TableB b ON a.Column1 = b.Column2"));
+                }
+            }
+
+            [Test]
+            public void Select_a_Asterisk_b_Asterisk_From_TableA_Cross_Join_TableB_Where_a_Column1_EqualTo_0_And_b_Column1_EqualTo_1()
+            {
+                using (var query = new Select().Asterisk("a").Asterisk("b").From.Table("TableA", "a").Cross.Join("TableB", "b").Where.Column("a", "Column1").EqualTo.Value(0).And().Column("b", "Column1").EqualTo.Value(1))
+                {
+                    Assert.That(query.ToSql(), Is.EqualTo("SELECT a.*, b.* FROM TableA a CROSS JOIN TableB b WHERE a.Column1 = @val_0 AND b.Column1 = @val_1"));
+                    Assert.That(query, Has.Property("Parameters").One.EqualTo(new KeyValuePair<string, object>("@val_0", 0)));
+                    Assert.That(query, Has.Property("Parameters").One.EqualTo(new KeyValuePair<string, object>("@val_1", 1)));
+                }
+            }
         }
 
         [Category("Homura.QueryBuilder QueryBuilder")]
