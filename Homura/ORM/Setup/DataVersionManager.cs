@@ -3,7 +3,6 @@
 using Homura.Core;
 using Homura.ORM.Mapping;
 using Homura.ORM.Migration;
-using NLog;
 using System;
 using System.Diagnostics;
 using static Homura.Core.Delegate;
@@ -12,8 +11,6 @@ namespace Homura.ORM.Setup
 {
     public class DataVersionManager
     {
-        private static readonly Logger s_logger = LogManager.GetCurrentClassLogger();
-
         private VersioningStrategy _Mode;
 
         public VersioningStrategy Mode

@@ -2,7 +2,6 @@
 
 using Homura.ORM.Mapping;
 using Homura.ORM.Migration;
-using NLog;
 using System;
 using System.Collections.Generic;
 
@@ -10,8 +9,6 @@ namespace Homura.ORM.Setup
 {
     internal class VersioningStrategyByTick : VersioningStrategy
     {
-        private static readonly Logger s_logger = LogManager.GetCurrentClassLogger();
-
         private Dictionary<VersionKey, IVersionChangePlan> _planMap;
 
         internal VersioningStrategyByTick()
