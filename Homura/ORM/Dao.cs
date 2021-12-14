@@ -6,7 +6,6 @@ using Homura.ORM.Migration;
 using Homura.QueryBuilder.Iso.Dml;
 using NLog;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
@@ -27,8 +26,6 @@ namespace Homura.ORM
         public static readonly string DELIMITER_PARENTHESIS = "(";
         public static readonly string DELIMITER_COMMA = ",";
         public static readonly string CONDITION_AND = "and";
-
-        private static readonly Logger s_logger = LogManager.GetCurrentClassLogger();
 
         public IConnection CurrentConnection { get; set; }
 
@@ -171,7 +168,7 @@ namespace Homura.ORM
 
                 DefineColumns(ref sql, Columns);
 
-                s_logger.Debug(sql);
+                LogManager.GetCurrentClassLogger().Debug(sql);
                 conn.Execute(sql);
             }
         }
@@ -182,7 +179,7 @@ namespace Homura.ORM
             {
                 string sql = $"drop table {TableName}";
 
-                s_logger.Debug(sql);
+                LogManager.GetCurrentClassLogger().Debug(sql);
                 conn.Execute(sql);
             }
         }
@@ -206,7 +203,7 @@ namespace Homura.ORM
                 {
                     string sql = $"create index if not exists {indexName} on {TableName}({indexPropertyName})";
 
-                    s_logger.Debug(sql);
+                    LogManager.GetCurrentClassLogger().Debug(sql);
                     int result = conn.Execute(sql);
                     if (result != -1)
                     {
@@ -247,7 +244,7 @@ namespace Homura.ORM
                     }
                     sql += ")";
 
-                    s_logger.Debug(sql);
+                    LogManager.GetCurrentClassLogger().Debug(sql);
                     int result = conn.Execute(sql);
                     if (result != -1)
                     {
@@ -388,7 +385,7 @@ namespace Homura.ORM
 
                         command.CommandText = sql;
 
-                        s_logger.Debug(sql);
+                        LogManager.GetCurrentClassLogger().Debug(sql);
                         using (var reader = command.ExecuteReader())
                         {
                             reader.Read();
@@ -421,7 +418,7 @@ namespace Homura.ORM
                         command.CommandType = CommandType.Text;
                         query.SetParameters(command);
 
-                        s_logger.Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
+                        LogManager.GetCurrentClassLogger().Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
                         using (var reader = command.ExecuteReader())
                         {
                             reader.Read();
@@ -452,7 +449,7 @@ namespace Homura.ORM
 
                         query.SetParameters(command);
 
-                        s_logger.Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
+                        LogManager.GetCurrentClassLogger().Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
                         command.ExecuteNonQuery();
                     }
                 }
@@ -479,7 +476,7 @@ namespace Homura.ORM
 
                         query.SetParameters(command);
 
-                        s_logger.Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
+                        LogManager.GetCurrentClassLogger().Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
                         int deleted = command.ExecuteNonQuery();
                     }
                 }
@@ -507,7 +504,7 @@ namespace Homura.ORM
 
                         query.SetParameters(command);
 
-                        s_logger.Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
+                        LogManager.GetCurrentClassLogger().Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
                         int deleted = command.ExecuteNonQuery();
                     }
                 }
@@ -545,7 +542,7 @@ namespace Homura.ORM
                         command.CommandText = sql;
                         query.SetParameters(command);
 
-                        s_logger.Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
+                        LogManager.GetCurrentClassLogger().Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
                         int inserted = command.ExecuteNonQuery();
                         if (inserted == 0)
                         {
@@ -629,7 +626,7 @@ namespace Homura.ORM
                         command.CommandText = sql;
                         command.CommandType = CommandType.Text;
 
-                        s_logger.Debug(sql);
+                        LogManager.GetCurrentClassLogger().Debug(sql);
                         using (var reader = command.ExecuteReader())
                         {
                             while (reader.Read())
@@ -676,7 +673,7 @@ namespace Homura.ORM
                         command.CommandType = CommandType.Text;
                         query.SetParameters(command);
 
-                        s_logger.Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
+                        LogManager.GetCurrentClassLogger().Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
                         using (var reader = command.ExecuteReader())
                         {
                             while (reader.Read())
@@ -715,7 +712,7 @@ namespace Homura.ORM
                         command.CommandText = sql;
                         query.SetParameters(command);
 
-                        s_logger.Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
+                        LogManager.GetCurrentClassLogger().Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
                         command.ExecuteNonQuery();
                     }
                 }
@@ -798,7 +795,7 @@ namespace Homura.ORM
                         string sql = query.ToSql();
                         command.CommandText = sql;
 
-                        s_logger.Debug($"{sql}");
+                        LogManager.GetCurrentClassLogger().Debug($"{sql}");
                         command.ExecuteNonQuery();
                     }
                 }

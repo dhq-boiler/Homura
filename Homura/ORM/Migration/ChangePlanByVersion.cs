@@ -13,8 +13,6 @@ namespace Homura.ORM.Migration
     public class ChangePlanByVersion<V> : IVersionChangePlan
                                 where V : VersionOrigin
     {
-        private static readonly Logger s_logger = LogManager.GetCurrentClassLogger();
-
         public VersionOrigin TargetVersion { get { return Activator.CreateInstance<V>(); } }
 
         public virtual IEnumerable<IEntityVersionChangePlan> VersionChangePlanList { get; private set; }
@@ -44,7 +42,7 @@ namespace Homura.ORM.Migration
         {
             OnBeginToDowngradeTo(new VersionChangeEventArgs(TargetVersion));
 
-            s_logger.Info($"Begin to downgrade to {TargetVersion.GetType().Name}.");
+            LogManager.GetCurrentClassLogger().Info($"Begin to downgrade to {TargetVersion.GetType().Name}.");
 
             foreach (var vcp in VersionChangePlanList)
             {
@@ -52,7 +50,7 @@ namespace Homura.ORM.Migration
                 ModifiedCount += vcp.ModifiedCount;
             }
 
-            s_logger.Info($"Finish to downgrade to {TargetVersion.GetType().Name}.");
+            LogManager.GetCurrentClassLogger().Info($"Finish to downgrade to {TargetVersion.GetType().Name}.");
 
             OnFinishedToDowngradeTo(new VersionChangeEventArgs(TargetVersion));
         }
@@ -61,7 +59,7 @@ namespace Homura.ORM.Migration
         {
             OnBeginToUpgradeTo(new VersionChangeEventArgs(TargetVersion));
 
-            s_logger.Info($"Begin to upgrade to {TargetVersion.GetType().Name}.");
+            LogManager.GetCurrentClassLogger().Info($"Begin to upgrade to {TargetVersion.GetType().Name}.");
 
             foreach (var vcp in VersionChangePlanList)
             {
@@ -69,7 +67,7 @@ namespace Homura.ORM.Migration
                 ModifiedCount += vcp.ModifiedCount;
             }
 
-            s_logger.Info($"Finish to upgrade to {TargetVersion.GetType().Name}.");
+            LogManager.GetCurrentClassLogger().Info($"Finish to upgrade to {TargetVersion.GetType().Name}.");
 
             OnFinishedToUpgradeTo(new VersionChangeEventArgs(TargetVersion));
         }
