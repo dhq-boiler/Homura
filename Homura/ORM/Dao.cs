@@ -98,7 +98,7 @@ namespace Homura.ORM
             }
         }
 
-        public void VerifyTableDefinition(DbConnection conn)
+        public void VerifyTableDefinition(IDbConnection conn)
         {
             InitializeColumnDefinitions();
             try
@@ -111,10 +111,10 @@ namespace Homura.ORM
             }
         }
 
-        protected virtual void VerifyColumnDefinitions(DbConnection conn)
+        protected virtual void VerifyColumnDefinitions(IDbConnection conn)
         { }
 
-        protected IEnumerable<IColumn> GetColumnDefinitions(DbConnection conn = null)
+        protected IEnumerable<IColumn> GetColumnDefinitions(IDbConnection conn = null)
         {
             bool isTransaction = conn != null;
 
@@ -125,7 +125,7 @@ namespace Homura.ORM
                     conn = GetConnection();
                 }
 
-                var objSchemaInfo = conn.GetSchema(OleDbMetaDataCollectionNames.Columns, new string[] { null, null, TableName, null });
+                var objSchemaInfo = (conn as DbConnection).GetSchema(OleDbMetaDataCollectionNames.Columns, new string[] { null, null, TableName, null });
                 foreach (DataRow objRow in objSchemaInfo.Rows)
                 {
                     bool isNullable = objRow.Field<bool>(s_IS_NULLABLE);
@@ -160,35 +160,44 @@ namespace Homura.ORM
 
         protected abstract E ToEntity(IDataRecord reader);
 
-        public void CreateTableIfNotExists()
+        public void CreateTableIfNotExists(TimeSpan? timeout = null)
         {
-            using (var conn = GetConnection())
+            KeepTryingUntilProcessSucceed(() =>
             {
-                string sql = $"create table if not exists {TableName}";
+                using (var conn = GetConnection())
+                {
+                    string sql = $"create table if not exists {TableName}";
 
-                DefineColumns(ref sql, Columns);
+                    DefineColumns(ref sql, Columns);
 
-                LogManager.GetCurrentClassLogger().Debug(sql);
-                conn.Execute(sql);
-            }
+                    LogManager.GetCurrentClassLogger().Debug(sql);
+                    conn.Execute(sql);
+                }
+            }, timeout);
         }
 
-        public void DropTable()
+        public void DropTable(TimeSpan? timeout = null)
         {
-            using (var conn = GetConnection())
+            KeepTryingUntilProcessSucceed(() =>
             {
-                string sql = $"drop table {TableName}";
+                using (var conn = GetConnection())
+                {
+                    string sql = $"drop table {TableName}";
 
-                LogManager.GetCurrentClassLogger().Debug(sql);
-                conn.Execute(sql);
-            }
+                    LogManager.GetCurrentClassLogger().Debug(sql);
+                    conn.Execute(sql);
+                }
+            }, timeout);
         }
 
-        public int CreateIndexIfNotExists()
+        public int CreateIndexIfNotExists(TimeSpan? timeout = null)
         {
             int created = 0;
-            created = CreateIndexClass(created);
-            created = CreateIndexProperties(created);
+            KeepTryingUntilProcessSucceed(() =>
+            {
+                created = CreateIndexClass(created);
+                created = CreateIndexProperties(created);
+            }, timeout);
             return created;
         }
 
@@ -296,7 +305,7 @@ namespace Homura.ORM
         /// <typeparam name="R"></typeparam>
         /// <param name="body"></param>
         /// <returns></returns>
-        protected R ConnectionInternal<R>(Func<DbConnection, R> body, DbConnection conn = null)
+        protected R ConnectionInternal<R>(Func<IDbConnection, R> body, IDbConnection conn = null)
         {
             bool isTransaction = conn != null;
 
@@ -318,7 +327,7 @@ namespace Homura.ORM
             }
         }
 
-        protected IEnumerable<R> ConnectionInternalYield<R>(Func<DbConnection, IEnumerable<R>> body, DbConnection conn = null)
+        protected IEnumerable<R> ConnectionInternalYield<R>(Func<IDbConnection, IEnumerable<R>> body, IDbConnection conn = null)
         {
             bool isTransaction = conn != null;
 
@@ -344,7 +353,7 @@ namespace Homura.ORM
         /// _IsTransaction フラグによって局所的に DbConnection を使用するかどうか選択できるクエリ実行用内部メソッド
         /// </summary>
         /// <param name="body"></param>
-        protected void ConnectionInternal(Action<DbConnection> body, DbConnection conn = null)
+        protected void ConnectionInternal(Action<IDbConnection> body, IDbConnection conn = null)
         {
             bool isTransaction = conn != null;
 
@@ -366,152 +375,247 @@ namespace Homura.ORM
             }
         }
 
-        public int CountAll(DbConnection conn = null, string anotherDatabaseAliasName = null)
+        public readonly TimeSpan Timeout = TimeSpan.FromMinutes(5);
+
+        /// <summary>
+        /// Actionを成功するかタイムアウトするまで試行し続けます。
+        /// </summary>
+        /// <param name="body">試行し続ける対象のAction</param>
+        /// <param name="timeout">タイムアウト</param>
+        protected void KeepTryingUntilProcessSucceed(Action body, TimeSpan? timeout = null)
         {
-            return ConnectionInternal(new Func<DbConnection, int>((connection) =>
+            if (timeout == null)
             {
-                using (var command = connection.CreateCommand())
+                timeout = TimeSpan.FromMinutes(5);
+            }
+
+            var beginTime = DateTime.Now;
+
+            while ((DateTime.Now - beginTime) <= timeout)
+            {
+                try
                 {
-                    var table = (Homura.ORM.Table<E>)Table.Clone();
-                    if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName))
+                    LogManager.GetCurrentClassLogger().Trace("try body.Invoke()");
+                    body.Invoke();
+                    return;
+                }
+                catch (Exception ex)
+                {
+                    if (ex.Message.Contains("database is lock"))
                     {
-                        table.Schema = anotherDatabaseAliasName;
+                        LogManager.GetCurrentClassLogger().Warn("database is lock");
+                        continue;
                     }
-
-                    using (var query = new Select().Count("1").As("Count")
-                                                                    .From.Table(table))
+                    else
                     {
-                        string sql = query.ToSql();
+                        LogManager.GetCurrentClassLogger().Error(ex);
+                        throw;
+                    }
+                }
+            }
 
-                        command.CommandText = sql;
+            throw new TimeoutException();
+        }
 
-                        LogManager.GetCurrentClassLogger().Debug(sql);
-                        using (var reader = command.ExecuteReader())
+        /// <summary>
+        /// Funcを成功するかタイムアウトするまで試行し続けます。
+        /// </summary>
+        /// <param name="body">試行し続ける対象のFunc</param>
+        /// <param name="timeout">タイムアウト</param>
+        protected T KeepTryingUntilProcessSucceed<T>(Func<T> body, TimeSpan? timeout = null)
+        {
+            if (timeout == null)
+            {
+                timeout = TimeSpan.FromMinutes(5);
+            }
+
+            var beginTime = DateTime.Now;
+
+            while ((DateTime.Now - beginTime) <= timeout)
+            {
+                try
+                {
+                    LogManager.GetCurrentClassLogger().Trace("try body.Invoke()");
+                    return body.Invoke();
+                }
+                catch (Exception ex)
+                {
+                    if (ex.Message.Contains("database is lock"))
+                    {
+                        LogManager.GetCurrentClassLogger().Warn("database is lock");
+                        continue;
+                    }
+                    else
+                    {
+                        LogManager.GetCurrentClassLogger().Error(ex);
+                        throw;
+                    }
+                }
+            }
+
+            throw new TimeoutException();
+        }
+
+        public int CountAll(IDbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null)
+        {
+            return KeepTryingUntilProcessSucceed<int>(() =>
+                ConnectionInternal(new Func<IDbConnection, int>((connection) =>
+                {
+                    using (var command = connection.CreateCommand())
+                    {
+                        var table = (Homura.ORM.Table<E>)Table.Clone();
+                        if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName))
                         {
-                            reader.Read();
-                            return reader.GetInt32(reader.GetOrdinal("Count"));
+                            table.Schema = anotherDatabaseAliasName;
+                        }
+
+                        using (var query = new Select().Count("1").As("Count")
+                                                                        .From.Table(table))
+                        {
+                            string sql = query.ToSql();
+
+                            command.CommandText = sql;
+
+                            LogManager.GetCurrentClassLogger().Debug(sql);
+                            using (var reader = command.ExecuteReader())
+                            {
+                                reader.Read();
+                                return reader.GetInt32(reader.GetOrdinal("Count"));
+                            }
                         }
                     }
-                }
-            }), conn);
+                }), conn)
+            , timeout);
         }
 
-        public int CountBy(Dictionary<string, object> idDic, DbConnection conn = null, string anotherDatabaseAliasName = null)
+        public int CountBy(Dictionary<string, object> idDic, IDbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null)
         {
-            return ConnectionInternal(new Func<IDbConnection, int>((connection) =>
-            {
-                using (var command = connection.CreateCommand())
+            return KeepTryingUntilProcessSucceed<int>(() =>
+                ConnectionInternal(new Func<IDbConnection, int>((connection) =>
                 {
-                    var table = (Table<E>)Table.Clone();
-                    if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName))
+                    using (var command = connection.CreateCommand())
                     {
-                        table.Schema = anotherDatabaseAliasName;
-                    }
-
-                    using (var query = new Select().Count("1").As("Count")
-                                                                    .From.Table(table)
-                                                                    .Where.KeyEqualToValue(idDic))
-                    {
-                        string sql = query.ToSql();
-
-                        command.CommandText = sql;
-                        command.CommandType = CommandType.Text;
-                        query.SetParameters(command);
-
-                        LogManager.GetCurrentClassLogger().Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
-                        using (var reader = command.ExecuteReader())
+                        var table = (Table<E>)Table.Clone();
+                        if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName))
                         {
-                            reader.Read();
-                            return reader.GetInt32(reader.GetOrdinal("Count"));
+                            table.Schema = anotherDatabaseAliasName;
+                        }
+
+                        using (var query = new Select().Count("1").As("Count")
+                                                                        .From.Table(table)
+                                                                        .Where.KeyEqualToValue(idDic))
+                        {
+                            string sql = query.ToSql();
+
+                            command.CommandText = sql;
+                            command.CommandType = CommandType.Text;
+                            query.SetParameters(command);
+
+                            LogManager.GetCurrentClassLogger().Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
+                            using (var reader = command.ExecuteReader())
+                            {
+                                reader.Read();
+                                return reader.GetInt32(reader.GetOrdinal("Count"));
+                            }
                         }
                     }
-                }
-            }), conn);
+                }), conn)
+            , timeout);
         }
 
-        public void DeleteWhereIDIs(Guid id, DbConnection conn = null, string anotherDatabaseAliasName = null)
+        public void DeleteWhereIDIs(Guid id, IDbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null)
         {
-            ConnectionInternal(new Action<IDbConnection>((connection) =>
+            KeepTryingUntilProcessSucceed(() =>
             {
-                using (var command = connection.CreateCommand())
+                ConnectionInternal(new Action<IDbConnection>((connection) =>
                 {
-                    var table = (Table<E>)Table.Clone();
-                    if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName))
+                    using (var command = connection.CreateCommand())
                     {
-                        table.Schema = anotherDatabaseAliasName;
+                        var table = (Table<E>)Table.Clone();
+                        if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName))
+                        {
+                            table.Schema = anotherDatabaseAliasName;
+                        }
+
+                        using (var query = new Delete().From.Table(table)
+                                                                        .Where.Column("ID").EqualTo.Value(id))
+                        {
+                            string sql = query.ToSql();
+                            command.CommandText = sql;
+
+                            query.SetParameters(command);
+
+                            LogManager.GetCurrentClassLogger().Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
+                            command.ExecuteNonQuery();
+                        }
                     }
+                }), conn);
 
-                    using (var query = new Delete().From.Table(table)
-                                                                    .Where.Column("ID").EqualTo.Value(id))
-                    {
-                        string sql = query.ToSql();
-                        command.CommandText = sql;
-
-                        query.SetParameters(command);
-
-                        LogManager.GetCurrentClassLogger().Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
-                        command.ExecuteNonQuery();
-                    }
-                }
-            }), conn);
+            }, timeout);
         }
 
-        public void DeleteAll(DbConnection conn = null, string anotherDatabaseAliasName = null)
+        public void DeleteAll(IDbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null)
         {
-            ConnectionInternal(new Action<IDbConnection>((connection) =>
+            KeepTryingUntilProcessSucceed(() =>
             {
-                using (var command = connection.CreateCommand())
+                ConnectionInternal(new Action<IDbConnection>((connection) =>
                 {
-                    var table = (Table<E>)Table.Clone();
-                    if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName))
+                    using (var command = connection.CreateCommand())
                     {
-                        table.Schema = anotherDatabaseAliasName;
+                        var table = (Table<E>)Table.Clone();
+                        if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName))
+                        {
+                            table.Schema = anotherDatabaseAliasName;
+                        }
+
+                        using (var query = new Delete().From.Table(table))
+                        {
+                            string sql = query.ToSql();
+                            command.CommandText = sql;
+                            command.CommandType = CommandType.Text;
+
+                            query.SetParameters(command);
+
+                            LogManager.GetCurrentClassLogger().Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
+                            int deleted = command.ExecuteNonQuery();
+                        }
                     }
-
-                    using (var query = new Delete().From.Table(table))
-                    {
-                        string sql = query.ToSql();
-                        command.CommandText = sql;
-                        command.CommandType = CommandType.Text;
-
-                        query.SetParameters(command);
-
-                        LogManager.GetCurrentClassLogger().Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
-                        int deleted = command.ExecuteNonQuery();
-                    }
-                }
-            }), conn);
+                }), conn);
+            }, timeout);
         }
 
-        public void Delete(Dictionary<string, object> idDic, DbConnection conn = null, string anotherDatabaseAliasName = null)
+        public void Delete(Dictionary<string, object> idDic, IDbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null)
         {
-            ConnectionInternal(new Action<IDbConnection>((connection) =>
+            KeepTryingUntilProcessSucceed(() =>
             {
-                using (var command = connection.CreateCommand())
+                ConnectionInternal(new Action<IDbConnection>((connection) =>
                 {
-                    var table = (Table<E>)Table.Clone();
-                    if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName))
+                    using (var command = connection.CreateCommand())
                     {
-                        table.Schema = anotherDatabaseAliasName;
+                        var table = (Table<E>)Table.Clone();
+                        if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName))
+                        {
+                            table.Schema = anotherDatabaseAliasName;
+                        }
+
+                        using (var query = new Delete().From.Table(table)
+                                                                        .Where.KeyEqualToValue(idDic))
+                        {
+                            string sql = query.ToSql();
+                            command.CommandText = sql;
+                            command.CommandType = CommandType.Text;
+
+                            query.SetParameters(command);
+
+                            LogManager.GetCurrentClassLogger().Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
+                            int deleted = command.ExecuteNonQuery();
+                        }
                     }
-
-                    using (var query = new Delete().From.Table(table)
-                                                                    .Where.KeyEqualToValue(idDic))
-                    {
-                        string sql = query.ToSql();
-                        command.CommandText = sql;
-                        command.CommandType = CommandType.Text;
-
-                        query.SetParameters(command);
-
-                        LogManager.GetCurrentClassLogger().Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
-                        int deleted = command.ExecuteNonQuery();
-                    }
-                }
-            }), conn);
+                }), conn);
+            }, timeout);
         }
 
-        public void Insert(E entity, DbConnection conn = null, string anotherDatabaseAliasName = null)
+        public void Insert(E entity, IDbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null)
         {
             InitializeColumnDefinitions();
             try
@@ -523,64 +627,38 @@ namespace Homura.ORM
                 throw new DatabaseSchemaException($"Didn't insert because mismatch definition of table:{TableName}", e);
             }
 
-            ConnectionInternal(new Action<IDbConnection>((connection) =>
+            KeepTryingUntilProcessSucceed(() =>
             {
-                using (var command = connection.CreateCommand())
+                ConnectionInternal(new Action<IDbConnection>((connection) =>
                 {
-                    var overrideColumns = SwapIfOverrided(Columns);
-
-                    var table = (Table<E>)Table.Clone();
-                    if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName))
+                    using (var command = connection.CreateCommand())
                     {
-                        table.Schema = anotherDatabaseAliasName;
-                    }
+                        var overrideColumns = SwapIfOverrided(Columns);
 
-                    using (var query = new Insert().Into.Table(table).Columns(overrideColumns.Select(c => c.ColumnName))
-                                                                                      .Values.Value(overrideColumns.Select(c => c.PropInfo.GetValue(entity))))
-                    {
-                        string sql = query.ToSql();
-                        command.CommandText = sql;
-                        query.SetParameters(command);
-
-                        LogManager.GetCurrentClassLogger().Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
-                        int inserted = command.ExecuteNonQuery();
-                        if (inserted == 0)
+                        var table = (Table<E>)Table.Clone();
+                        if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName))
                         {
-                            throw new NoEntityInsertedException($"Failed:{sql} {query.GetParameters().ToStringKeyIsValue()}");
+                            table.Schema = anotherDatabaseAliasName;
+                        }
+
+                        using (var query = new Insert().Into.Table(table).Columns(overrideColumns.Select(c => c.ColumnName))
+                                                                                          .Values.Value(overrideColumns.Select(c => c.PropInfo.GetValue(entity))))
+                        {
+                            string sql = query.ToSql();
+                            command.CommandText = sql;
+                            query.SetParameters(command);
+
+                            LogManager.GetCurrentClassLogger().Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
+                            int inserted = command.ExecuteNonQuery();
+                            if (inserted == 0)
+                            {
+                                throw new NoEntityInsertedException($"Failed:{sql} {query.GetParameters().ToStringKeyIsValue()}");
+                            }
                         }
                     }
-                }
-            }), conn);
+                }), conn);
+            }, timeout);
         }
-
-        //protected void SetWhere(IQueryBuilder query, Dictionary<string, object> idDic)
-        //{
-        //    foreach (var x in idDic)
-        //    {
-        //        if (x.Value != null && x.Value.GetType().IsArray)
-        //        {
-        //            IEnumerable list = (IEnumerable)x.Value;
-        //            var col = new List<object>();
-        //            foreach (object o in list)
-        //            {
-        //                col.Add(o);
-        //            }
-        //            query.AddWhere(new In(x.Key, col.ToArray()));
-        //        }
-        //        else if (x.Value is DaoConst.IsNull)
-        //        {
-        //            query.AddWhere(new IsNull(x.Key));
-        //        }
-        //        else if (x.Value is DaoConst.IsNotNull)
-        //        {
-        //            query.AddWhere(new IsNotNull(x.Key));
-        //        }
-        //        else
-        //        {
-        //            query.AddWhere(x.Key, x.Value);
-        //        }
-        //    }
-        //}
 
         protected IEnumerable<IColumn> SwapIfOverrided(IEnumerable<IColumn> columns)
         {
@@ -601,122 +679,187 @@ namespace Homura.ORM
             return ret.OrderBy(c => c.Order);
         }
 
-        public IEnumerable<E> FindAll(DbConnection conn = null, string anotherDatabaseAliasName = null)
+        public IEnumerable<E> FindAll(IDbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null)
         {
-            bool isTransaction = conn != null;
-
-            try
+            if (timeout == null)
             {
-                if (!isTransaction)
+                timeout = TimeSpan.FromMinutes(5);
+            }
+
+            var beginTime = DateTime.Now;
+
+            List<E> ret = new List<E>();
+
+            while ((DateTime.Now - beginTime) <= timeout)
+            {
+                try
                 {
-                    conn = GetConnection();
-                }
+                    bool isTransaction = conn != null;
 
-                using (var command = conn.CreateCommand())
-                {
-                    var table = (Table<E>)Table.Clone();
-                    if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName))
+                    try
                     {
-                        table.Schema = anotherDatabaseAliasName;
-                    }
-
-                    using (var query = new Select().Asterisk().From.Table(table))
-                    {
-                        string sql = query.ToSql();
-                        command.CommandText = sql;
-                        command.CommandType = CommandType.Text;
-
-                        LogManager.GetCurrentClassLogger().Debug(sql);
-                        using (var reader = command.ExecuteReader())
+                        if (!isTransaction)
                         {
-                            while (reader.Read())
+                            conn = GetConnection();
+                        }
+
+                        using (var command = conn.CreateCommand())
+                        {
+                            var table = (Table<E>)Table.Clone();
+                            if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName))
                             {
-                                yield return ToEntity(reader);
+                                table.Schema = anotherDatabaseAliasName;
                             }
+
+                            using (var query = new Select().Asterisk().From.Table(table))
+                            {
+                                string sql = query.ToSql();
+                                command.CommandText = sql;
+                                command.CommandType = CommandType.Text;
+
+                                LogManager.GetCurrentClassLogger().Debug(sql);
+                                using (var reader = command.ExecuteReader())
+                                {
+                                    while (reader.Read())
+                                    {
+                                        ret.Add(ToEntity(reader));
+                                    }
+                                }
+                            }
+                        }
+                        return ret;
+                    }
+                    finally
+                    {
+                        if (!isTransaction)
+                        {
+                            conn.Dispose();
                         }
                     }
                 }
-            }
-            finally
-            {
-                if (!isTransaction)
+                catch (Exception ex)
                 {
-                    conn.Dispose();
+                    if (ex.Message.Contains("database is lock"))
+                    {
+                        LogManager.GetCurrentClassLogger().Warn("database is lock");
+                        continue;
+                    }
+                    else
+                    {
+                        LogManager.GetCurrentClassLogger().Error(ex);
+                        throw;
+                    }
                 }
             }
+
+            throw new TimeoutException();
         }
 
-        public IEnumerable<E> FindBy(Dictionary<string, object> idDic, DbConnection conn = null, string anotherDatabaseAliasName = null)
+        public IEnumerable<E> FindBy(Dictionary<string, object> idDic, IDbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null)
         {
-            bool isTransaction = conn != null;
-
-            try
+            if (timeout == null)
             {
-                if (!isTransaction)
+                timeout = TimeSpan.FromMinutes(5);
+            }
+
+            var beginTime = DateTime.Now;
+
+            List<E> ret = new List<E>();
+
+            while ((DateTime.Now - beginTime) <= timeout)
+            {
+                try
                 {
-                    conn = GetConnection();
-                }
+                    bool isTransaction = conn != null;
 
-                using (var command = conn.CreateCommand())
-                {
-                    var table = (Table<E>)Table.Clone();
-                    if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName))
+                    try
                     {
-                        table.Schema = anotherDatabaseAliasName;
-                    }
-
-                    using (var query = new Select().Asterisk().From.Table(table)
-                                                                               .Where.KeyEqualToValue(idDic))
-                    {
-                        string sql = query.ToSql();
-                        command.CommandText = sql;
-                        command.CommandType = CommandType.Text;
-                        query.SetParameters(command);
-
-                        LogManager.GetCurrentClassLogger().Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
-                        using (var reader = command.ExecuteReader())
+                        if (!isTransaction)
                         {
-                            while (reader.Read())
+                            conn = GetConnection();
+                        }
+
+                        using (var command = conn.CreateCommand())
+                        {
+                            var table = (Table<E>)Table.Clone();
+                            if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName))
                             {
-                                yield return ToEntity(reader);
+                                table.Schema = anotherDatabaseAliasName;
                             }
+
+                            using (var query = new Select().Asterisk().From.Table(table)
+                                                                                       .Where.KeyEqualToValue(idDic))
+                            {
+                                string sql = query.ToSql();
+                                command.CommandText = sql;
+                                command.CommandType = CommandType.Text;
+                                query.SetParameters(command);
+
+                                LogManager.GetCurrentClassLogger().Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
+                                using (var reader = command.ExecuteReader())
+                                {
+                                    while (reader.Read())
+                                    {
+                                        ret.Add(ToEntity(reader));
+                                    }
+                                }
+                            }
+                        }
+                        return ret;
+                    }
+                    finally
+                    {
+                        if (!isTransaction)
+                        {
+                            conn.Dispose();
                         }
                     }
                 }
-            }
-            finally
-            {
-                if (!isTransaction)
+                catch (Exception ex)
                 {
-                    conn.Dispose();
+                    if (ex.Message.Contains("database is lock"))
+                    {
+                        LogManager.GetCurrentClassLogger().Warn("database is lock");
+                        continue;
+                    }
+                    else
+                    {
+                        LogManager.GetCurrentClassLogger().Error(ex);
+                        throw;
+                    }
                 }
             }
+
+            throw new TimeoutException();
         }
 
-        public void Update(E entity, DbConnection conn = null, string anotherDatabaseAliasName = null)
+        public void Update(E entity, IDbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null)
         {
-            ConnectionInternal(new Action<DbConnection>((connection) =>
+            KeepTryingUntilProcessSucceed(() =>
             {
-                using (var command = connection.CreateCommand())
+                ConnectionInternal(new Action<IDbConnection>((connection) =>
                 {
-                    var table = (Table<E>)Table.Clone();
-                    if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName))
+                    using (var command = connection.CreateCommand())
                     {
-                        table.Schema = anotherDatabaseAliasName;
-                    }
+                        var table = (Table<E>)Table.Clone();
+                        if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName))
+                        {
+                            table.Schema = anotherDatabaseAliasName;
+                        }
 
-                    using (var query = new Update().Table(table).Set.KeyEqualToValue(table.ColumnsWithoutPrimaryKeys.ToDictionary(c => c.ColumnName, c => c.PropInfo.GetValue(entity)))
-                                                                                 .Where.KeyEqualToValue(table.PrimaryKeyColumns.ToDictionary(c => c.ColumnName, c => c.PropInfo.GetValue(entity))))
-                    {
-                        string sql = query.ToSql();
-                        command.CommandText = sql;
-                        query.SetParameters(command);
+                        using (var query = new Update().Table(table).Set.KeyEqualToValue(table.ColumnsWithoutPrimaryKeys.ToDictionary(c => c.ColumnName, c => c.PropInfo.GetValue(entity)))
+                                                                                     .Where.KeyEqualToValue(table.PrimaryKeyColumns.ToDictionary(c => c.ColumnName, c => c.PropInfo.GetValue(entity))))
+                        {
+                            string sql = query.ToSql();
+                            command.CommandText = sql;
+                            query.SetParameters(command);
 
-                        LogManager.GetCurrentClassLogger().Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
-                        command.ExecuteNonQuery();
+                            LogManager.GetCurrentClassLogger().Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
+                            command.ExecuteNonQuery();
+                        }
                     }
-                }
-            }), conn);
+                }), conn);
+            }, timeout);
         }
 
         private static string sqlToDefineColumns(IColumn c)
@@ -779,27 +922,30 @@ namespace Homura.ORM
             }
         }
 
-        public void UpgradeTable(VersionChangeUnit upgradePath, DbConnection conn = null)
+        public void UpgradeTable(VersionChangeUnit upgradePath, IDbConnection conn = null, TimeSpan? timeout = null)
         {
-            ConnectionInternal(new Action<DbConnection>((connection) =>
+            KeepTryingUntilProcessSucceed(() =>
             {
-                using (var command = connection.CreateCommand())
+                ConnectionInternal(new Action<IDbConnection>((connection) =>
                 {
-                    var newTable = new Table<E>(upgradePath.To);
-                    var oldTable = new Table<E>(upgradePath.From);
-
-                    using (var query = new Insert().Into.Table(newTable)
-                                                                    .Columns(oldTable.Columns.Select(c => c.ColumnName))
-                                                                    .Select.Columns(oldTable.Columns.Select(c => c.ColumnName)).From.Table(oldTable))
+                    using (var command = connection.CreateCommand())
                     {
-                        string sql = query.ToSql();
-                        command.CommandText = sql;
+                        var newTable = new Table<E>(upgradePath.To);
+                        var oldTable = new Table<E>(upgradePath.From);
 
-                        LogManager.GetCurrentClassLogger().Debug($"{sql}");
-                        command.ExecuteNonQuery();
+                        using (var query = new Insert().Into.Table(newTable)
+                                                                        .Columns(oldTable.Columns.Select(c => c.ColumnName))
+                                                                        .Select.Columns(oldTable.Columns.Select(c => c.ColumnName)).From.Table(oldTable))
+                        {
+                            string sql = query.ToSql();
+                            command.CommandText = sql;
+
+                            LogManager.GetCurrentClassLogger().Debug($"{sql}");
+                            command.ExecuteNonQuery();
+                        }
                     }
-                }
-            }), conn);
+                }), conn);
+            }, timeout);
         }
     }
 }
