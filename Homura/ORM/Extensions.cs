@@ -54,7 +54,7 @@ namespace Homura.ORM
                 conn.Open();
             }
 
-            var objSchemaInfo = conn.GetSchema(OleDbMetaDataCollectionNames.Tables, new string[] { null, null, null, null });
+            var objSchemaInfo = conn.GetSchema(OleDbMetaDataCollectionNames.Tables);
             return objSchemaInfo.AsEnumerable().Select(r => r.Field<string>("TABLE_NAME"));
         }
 
