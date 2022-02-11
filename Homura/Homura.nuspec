@@ -2,7 +2,7 @@
 <package >
   <metadata>
     <id>Homura</id>
-    <version>3.3</version>
+	<version>1.0.0</version>
     <authors>dhq_boiler</authors>
     <owners>dhq_boiler</owners>
 	<projectUrl>https://github.com/dhq-boiler/Homura</projectUrl>
