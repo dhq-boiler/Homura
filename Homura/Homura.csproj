@@ -5,7 +5,7 @@
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 	<NuspecFile>Homura.nuspec</NuspecFile>
 	<NuspecProperties>$(NuspecProperties);configuration=$(Configuration)</NuspecProperties>
-	<NuspecProperties>$(NuspecProperties);version=$(Version)</NuspecProperties>
+	<NuspecProperties>$(NuspecProperties);version=$(PackageVersion)</NuspecProperties>
 	<NuspecProperties>$(NuspecProperties);id=$(PackageId)</NuspecProperties>
 	<NuspecProperties>$(NuspecProperties);author=$(Authors)</NuspecProperties>
 	<NuspecProperties>$(NuspecProperties);PackageProjectUrl=$(PackageProjectUrl)</NuspecProperties>
@@ -18,6 +18,10 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Dapper.StrongName" Version="2.0.123" />
+    <PackageReference Include="GitVersion.MsBuild" Version="5.8.1">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
     <PackageReference Include="NLog" Version="4.7.13" />
     <PackageReference Include="NuGet.CommandLine" Version="6.0.0">

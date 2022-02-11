@@ -2,5 +2,5 @@
 # How to pack
 
 ```
-dotnet pack -c Release
+dotnet pack /p:PackageVersion=3.4.0 -c Release
 ```
