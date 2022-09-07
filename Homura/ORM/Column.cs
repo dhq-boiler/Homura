@@ -22,12 +22,12 @@ namespace Homura.ORM
 
         public override PropertyInfo PropInfo { get; protected set; }
 
-        public override PassAsColumnOrValue PassType { get; protected set; }
+        public override HandlingDefaultValue PassType { get; protected set; }
 
         protected Column()
         { }
 
-        public Column(string columnName, Type entityDataType, string dbDataType, IEnumerable<IDdlConstraint> constraints, int order, PropertyInfo propertyInfo, PassAsColumnOrValue passType = PassAsColumnOrValue.AsColumn, object defaultValue = null)
+        public Column(string columnName, Type entityDataType, string dbDataType, IEnumerable<IDdlConstraint> constraints, int order, PropertyInfo propertyInfo, HandlingDefaultValue passType = ORM.HandlingDefaultValue.AsColumn, object defaultValue = null)
         {
             ColumnName = columnName;
             EntityDataType = entityDataType;
