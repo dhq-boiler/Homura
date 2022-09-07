@@ -80,9 +80,6 @@ namespace Homura.Extensions
         public static bool SafeGetBoolean(this IDataRecord rdr, string columnName, ITable table)
         {
             int index = CheckColumnExists(rdr, columnName, table);
-
-            bool isNull = rdr.IsDBNull(index);
-
             return rdr.GetBoolean(index);
         }
 
