@@ -110,5 +110,10 @@ namespace Homura.Extensions
 
             return index;
         }
+
+        public static bool IsDBNull(this IDataRecord rdr, string columnName)
+        {
+            return rdr.IsDBNull(rdr.GetOrdinal(columnName));
+        }
     }
 }
