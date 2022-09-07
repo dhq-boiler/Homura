@@ -4,6 +4,7 @@ using Homura.ORM;
 using Homura.Test.TestFixture.Entity;
 using System;
 using System.Data;
+using static Homura.Extensions.Extensions;
 
 namespace Homura.Test.TestFixture.Dao
 {
@@ -21,28 +22,17 @@ namespace Homura.Test.TestFixture.Dao
         {
             return new Alpha()
             {
-                Id = SafeGetGuid(reader, "Id"),
-                Item1 = SafeGetString(reader, "Item1"),
-                Item2 = SafeGetString(reader, "Item2"),
-                Item3 = SafeGetString(reader, "Item3"),
-                Item4 = SafeGetString(reader, "Item4")
+                Id = CatchThrow(() => reader.SafeGetGuid("Id", Table)),
+                Item1 = CatchThrow(() => reader.SafeGetString("Item1", Table)),
+                Item2 = CatchThrow(() => reader.SafeGetString("Item2", Table)),
+                Item3 = CatchThrow(() => reader.SafeGetGuid("Item3", Table)),
+                Item4 = CatchThrow(() => reader.SafeGetString("Item4", Table)),
+                Item5 = CatchThrow(() => reader.SafeGetInt("Item5", Table)),
+                Item6 = CatchThrow(() => reader.SafeGetLong("Item6", Table)),
+                Item7 = CatchThrow(() => reader.SafeGetString("Item7", Table)),
+                Item8 = CatchThrow(() => reader.SafeGetBoolean("Item8", Table)),
+                Item9 = CatchThrow(() => reader.SafeGetBoolean("Item9", Table)),
             };
-        }
-
-        private static Guid SafeGetGuid(IDataRecord rdr, string columnName)
-        {
-            int index = rdr.GetOrdinal(columnName);
-            bool isNull = rdr.IsDBNull(index);
-
-            return isNull ? Guid.Empty : rdr.GetGuid(index);
-        }
-
-        private static string SafeGetString(IDataRecord rdr, string columnName)
-        {
-            int index = rdr.GetOrdinal(columnName);
-            bool isNull = rdr.IsDBNull(index);
-
-            return isNull ? null : rdr.GetString(index);
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -11,13 +12,19 @@ namespace Homura.ORM
     {
         public abstract string ColumnName { get; protected set; }
 
-        public abstract string DataType { get; protected set; }
+        public abstract Type EntityDataType { get; protected set; }
+
+        public abstract string DBDataType { get; protected set; }
 
         public abstract IEnumerable<IDdlConstraint> Constraints { get; protected set; }
 
         public abstract int Order { get; protected set; }
 
+        public abstract object DefaultValue { get; protected set; }
+
         public abstract PropertyInfo PropInfo { get; protected set; }
+
+        public abstract HandlingDefaultValue PassType { get; protected set; }
 
         public string ConstraintsToSql()
         {
@@ -43,6 +50,41 @@ namespace Homura.ORM
         public PlaceholderRightValue ToParameter(EntityBaseObject entity)
         {
             return new PlaceholderRightValue($"@{ColumnName.ToLower()}", PropInfo.GetValue(entity));
+        }
+
+        public string WrapOutput()
+        {
+            if (PassType == ORM.HandlingDefaultValue.AsColumn)
+            {
+                return ColumnName.ToString();
+            }
+            else if (PassType == ORM.HandlingDefaultValue.AsValue)
+            {
+                if (DBDataType == "TEXT")
+                {
+                    if (DefaultValue is null)
+                    {
+                        return "null";
+                    }
+                    return $"\"{DefaultValue}\"";
+                }
+                else
+                {
+                    switch (EntityDataType.Name)
+                    {
+                        case "String":
+                            return $"\"{DefaultValue}\"";
+                        case "int":
+                            return DefaultValue.ToString();
+                        case "Boolean":
+                            return bool.Parse(DefaultValue.ToString()) ? "1" : "0";
+                        case "Guid":
+                            return Guid.Parse(DefaultValue.ToString()).ToString();
+                    }
+                    return DefaultValue.ToString();
+                }
+            }
+            throw new System.Exception("No match");
         }
     }
 }

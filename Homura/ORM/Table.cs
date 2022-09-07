@@ -105,15 +105,26 @@ namespace Homura.ORM
                                               select (a as IDdlConstraintAttribute).ToConstraint();
 
                         columns.Add(new Column(columnAttribute.ColumnName,
+                                               pinfo.PropertyType,
                                                columnAttribute.ColumnType,
                                                constraintAttrs,
                                                columnAttribute.Order,
-                                               pinfo));
+                                               pinfo,
+                                               columnAttribute.PassType,
+                                               columnAttribute.DefaultValue));
                     }
                 }
 
                 return columns.OrderBy(a => a.Order).ToList();
             }
+        }
+
+        public IEnumerable<IColumn> NewColumns(ITable from, ITable to)
+        {
+            var fromColumns = from.Columns;
+            var toColumns = to.Columns;
+            var diff = toColumns.Except(fromColumns);
+            return diff;
         }
 
         public IEnumerable<IColumn> PrimaryKeyColumns
@@ -139,6 +150,7 @@ namespace Homura.ORM
                                               select (a as IDdlConstraintAttribute).ToConstraint();
 
                         columns.Add(new Column(columnAttr.ColumnName,
+                                               pinfo.GetType(),
                                                columnAttr.ColumnType,
                                                constraintAttrs,
                                                columnAttr.Order,
@@ -174,6 +186,7 @@ namespace Homura.ORM
                                               select (a as IDdlConstraintAttribute).ToConstraint();
 
                         columns.Add(new Column(columnAttr.ColumnName,
+                                               pinfo.GetType(),
                                                columnAttr.ColumnType,
                                                constraintAttrs,
                                                columnAttr.Order,

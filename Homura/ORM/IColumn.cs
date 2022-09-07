@@ -1,5 +1,6 @@
 ﻿
 
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 
@@ -9,11 +10,15 @@ namespace Homura.ORM
     {
         string ColumnName { get; }
 
-        string DataType { get; }
+        Type EntityDataType { get; }
+
+        string DBDataType { get; }
 
         IEnumerable<IDdlConstraint> Constraints { get; }
 
         int Order { get; }
+
+        object DefaultValue { get; }
 
         PropertyInfo PropInfo { get; }
 
@@ -22,5 +27,8 @@ namespace Homura.ORM
         PlaceholderRightValue ToParameter(EntityBaseObject entity);
 
         PlaceholderRightValue ToParameter(Dictionary<string, object> idDic);
+        string WrapOutput();
+
+        PassAsColumnOrValue PassType { get; }
     }
 }
