@@ -135,6 +135,9 @@ namespace Homura.ORM
 
                     yield return new Column(
                         objRow.Field<string>(s_COLUMN_NAME),
+                        AppDomain.CurrentDomain.GetAssemblies().Select(x => x.GetTypes().Where(y => y.Name.Equals(Table.EntityName)).Select(z => z))
+                                                               .First()
+                                                               .First(),
                         objRow.Field<string>(s_DATA_TYPE).ToUpper(),
                         constraints,
                         objSchemaInfo.Rows.IndexOf(objRow),
@@ -864,7 +867,7 @@ namespace Homura.ORM
 
         private static string sqlToDefineColumns(IColumn c)
         {
-            string r = $"{c.ColumnName} {c.DataType}";
+            string r = $"{c.ColumnName} {c.DBDataType}";
             if (c.Constraints != null && c.Constraints.Count() > 0)
             {
                 r += $" {c.ConstraintsToSql()}";
@@ -934,8 +937,8 @@ namespace Homura.ORM
                         var oldTable = new Table<E>(upgradePath.From);
 
                         using (var query = new Insert().Into.Table(newTable)
-                                                                        .Columns(oldTable.Columns.Select(c => c.ColumnName))
-                                                                        .Select.Columns(oldTable.Columns.Select(c => c.ColumnName)).From.Table(oldTable))
+                                                       .Columns(newTable.Columns.Select(c => c.ColumnName))
+                                                       .Select.Columns(oldTable.Columns.Select(c => c.ColumnName).Union(newTable.NewColumns(oldTable, newTable).Select(v => v.WrapOutput()))).From.Table(oldTable))
                         {
                             string sql = query.ToSql();
                             command.CommandText = sql;
@@ -946,6 +949,18 @@ namespace Homura.ORM
                     }
                 }), conn);
             }, timeout);
+        }
+
+        public T CatchThrow<T>(Func<T> func)
+        {
+            try
+            {
+                return func();
+            }
+            catch (Exception)
+            {
+                return default(T);
+            }
         }
     }
 }

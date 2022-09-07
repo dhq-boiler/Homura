@@ -1,6 +1,7 @@
 ﻿
 
 using Homura.ORM;
+using System;
 using System.Collections.Generic;
 
 namespace Homura.Test.TestFixture
@@ -20,9 +21,9 @@ namespace Homura.Test.TestFixture
             get
             {
                 List<IColumn> list = new List<IColumn>();
-                list.Add(new Column("ID", "datatype", null, 0, null));
-                list.Add(new Column("ImageID", "datatype", null, 1, null));
-                list.Add(new Column("Path", "datatype", null, 2, null));
+                list.Add(new Column("ID", typeof(Guid), "datatype", null, 0, null));
+                list.Add(new Column("ImageID", typeof(Guid), "datatype", null, 1, null));
+                list.Add(new Column("Path", typeof(string), "datatype", null, 2, null));
                 return list;
             }
         }

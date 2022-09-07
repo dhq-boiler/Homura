@@ -28,6 +28,7 @@ namespace Homura.ORM
         Type DefaultVersion { get; }
 
         Type SpecifiedVersion { get; set; }
+        string EntityName { get; }
 
         ITable SetAttachedDatabaseAliasName(string attachedDbAliasName);
 

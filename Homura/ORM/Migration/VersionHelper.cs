@@ -207,6 +207,7 @@ namespace Homura.ORM.Migration
                                           select (a as IDdlConstraintAttribute).ToConstraint();
 
                     columns.Add(new Column(columnAttribute.ColumnName,
+                                           pinfo.GetType(),
                                            columnAttribute.ColumnType,
                                            constraintAttrs,
                                            columnAttribute.Order,

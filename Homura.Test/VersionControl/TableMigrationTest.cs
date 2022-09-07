@@ -13,6 +13,7 @@ using System;
 using System.Data.SQLite;
 using System.IO;
 using System.Linq;
+using System.Xml.Linq;
 
 namespace Sunctum.Infrastructure.Test.IntegrationTest.Data.Rdbms.VersionControl
 {
@@ -365,6 +366,96 @@ namespace Sunctum.Infrastructure.Test.IntegrationTest.Data.Rdbms.VersionControl
                 Assert.That(tablenames, Has.One.EqualTo("Alpha"));
                 Assert.That(tablenames, Has.One.EqualTo("Alpha_1"));
                 Assert.That(tablenames, Has.One.EqualTo("Alpha_2"));
+
+                Assert.That(tablenames, Has.One.EqualTo("Beta"));
+                Assert.That(tablenames, Has.One.EqualTo("Beta_1"));
+                Assert.That(tablenames, Has.One.EqualTo("Beta_2"));
+
+                Assert.That(tablenames, Has.One.EqualTo("Gamma"));
+                Assert.That(tablenames, Has.One.EqualTo("Gamma_1"));
+                Assert.That(tablenames, Has.None.EqualTo("Gamma_2"));
+            }
+
+            var registeringPlan4 = new ChangePlanByVersion<Version_4>();
+            registeringPlan4.AddVersionChangePlan(new AlphaChangePlan_Version_3());
+            svManager.RegisterChangePlan(registeringPlan4);
+
+            var dao = new AlphaDao(typeof(Version_2));
+            dao.CurrentConnection = ConnectionManager.DefaultConnection;
+
+            dao.Insert(new Alpha()
+            {
+                Id = Guid.Parse("26D55FA7-1662-4E74-9143-290940A8E8D4"),
+                Item1 = "org_item1",
+                Item2 = "org_item2",
+                Item3 = Guid.Empty,
+                Item4 = "org_item4",
+                Item5 = 1,
+                Item6 = 2,
+                Item7 = "org_item7",
+                Item8 = true,
+                Item9 = true,
+            });
+
+            svManager.UpgradeToTargetVersion();
+
+            using (var conn = new SQLiteConnection($"Data Source={_filePath}"))
+            {
+                conn.Open();
+
+                var tablenames = conn.GetTableNames();
+
+                Assert.That(tablenames, Has.One.EqualTo("Alpha"));
+                Assert.That(tablenames, Has.One.EqualTo("Alpha_1"));
+                Assert.That(tablenames, Has.One.EqualTo("Alpha_2"));
+
+                dao = new AlphaDao(typeof(Version_2));
+                dao.CurrentConnection = ConnectionManager.DefaultConnection;
+
+                var all = dao.FindAll();
+                var arecord = all.Take(1).Single();
+                Assert.That(arecord, Has.Property("Id").EqualTo(Guid.Parse("26D55FA7-1662-4E74-9143-290940A8E8D4")));
+                Assert.That(arecord, Has.Property("Item1").EqualTo("org_item1"));
+                Assert.That(arecord, Has.Property("Item2").EqualTo("org_item2"));
+                Assert.That(arecord, Has.Property("Item3").EqualTo(Guid.Empty));
+                Assert.That(arecord, Has.Property("Item4").EqualTo("org_item4"));
+                Assert.That(arecord, Has.Property("Item5").EqualTo(1));
+                Assert.That(arecord, Has.Property("Item6").EqualTo(2));
+                Assert.That(arecord, Has.Property("Item7").EqualTo("org_item7"));
+                Assert.That(arecord, Has.Property("Item8").False);
+                Assert.That(arecord, Has.Property("Item9").False);
+
+                Assert.That(tablenames, Has.One.EqualTo("Alpha_3"));
+
+                dao =  new AlphaDao(typeof(Version_3));
+                dao.CurrentConnection = ConnectionManager.DefaultConnection;
+
+                dao.Insert(new Alpha()
+                {
+                    Id = Guid.Parse("8069BD2D-2BC9-4C89-966D-8E966FB87546"),
+                    Item1 = "org_item1",
+                    Item2 = "org_item2",
+                    Item3 = Guid.Empty,
+                    Item4 = "org_item4",
+                    Item5 = 1,
+                    Item6 = 2,
+                    Item7 = "org_item7",
+                    Item8 = true,
+                    Item9 = true,
+                });
+                
+                all = dao.FindAll();
+                arecord = all.Skip(1).Take(1).Single();
+                Assert.That(arecord, Has.Property("Id").EqualTo(Guid.Parse("8069BD2D-2BC9-4C89-966D-8E966FB87546")));
+                Assert.That(arecord, Has.Property("Item1").EqualTo("org_item1"));
+                Assert.That(arecord, Has.Property("Item2").EqualTo("org_item2"));
+                Assert.That(arecord, Has.Property("Item3").EqualTo(Guid.Empty));
+                Assert.That(arecord, Has.Property("Item4").EqualTo("org_item4"));
+                Assert.That(arecord, Has.Property("Item5").EqualTo(1));
+                Assert.That(arecord, Has.Property("Item6").EqualTo(2));
+                Assert.That(arecord, Has.Property("Item7").EqualTo("org_item7"));
+                Assert.That(arecord, Has.Property("Item8").True);
+                Assert.That(arecord, Has.Property("Item9").True);
 
                 Assert.That(tablenames, Has.One.EqualTo("Beta"));
                 Assert.That(tablenames, Has.One.EqualTo("Beta_1"));

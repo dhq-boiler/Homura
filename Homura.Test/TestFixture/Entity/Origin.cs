@@ -20,7 +20,7 @@ namespace Homura.Test.TestFixture.Entity
         [Since(typeof(VersionOrigin))]
         public string Item2 { get; set; }
 
-        [Column("Item3", "TEXT", 3)]
+        [Column("Item3", "TEXT", 3, PassAsColumnOrValue.AsValue)]
         [Since(typeof(Version_1))]
         public string Item3 { get; set; }
     }
