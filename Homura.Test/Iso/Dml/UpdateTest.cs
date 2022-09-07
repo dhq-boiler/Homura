@@ -23,6 +23,26 @@ namespace Homura.QueryBuilder.Test.Iso.Dml
             }
 
             [Test]
+            public void Update_Table_Set_Column1_Equal_True()
+            {
+                using (var query = new Update().Table("Table").Set.Column("Column1").EqualTo.Value(true))
+                {
+                    Assert.That(query.ToSql(), Is.EqualTo("UPDATE Table SET Column1 = @val_0"));
+                    Assert.That(query, Has.Property("Parameters").One.EqualTo(new KeyValuePair<string, object>("@val_0", 1)));
+                }
+            }
+
+            [Test]
+            public void Update_Table_Set_Column1_Equal_False()
+            {
+                using (var query = new Update().Table("Table").Set.Column("Column1").EqualTo.Value(false))
+                {
+                    Assert.That(query.ToSql(), Is.EqualTo("UPDATE Table SET Column1 = @val_0"));
+                    Assert.That(query, Has.Property("Parameters").One.EqualTo(new KeyValuePair<string, object>("@val_0", 0)));
+                }
+            }
+
+            [Test]
             public void Update_aTable_Set_Column1_Equal_Value1()
             {
                 using (var query = new Update().Table("Table", "a").Set.Column("a", "Column1").EqualTo.Value("Value1"))

@@ -16,7 +16,16 @@ namespace Homura.QueryBuilder.Iso.Dml.Syntaxes
         internal ParameterizedValueExpressionSyntax(SyntaxBase syntaxBase, object value)
             : this(syntaxBase)
         {
-            AddParameter(value);
+            //↓ for SQLite ↓
+            if (value is bool b)
+            {
+                AddParameter(b ? 1 : 0);
+            }
+            else
+            {
+                AddParameter(value);
+            }
+            //↑ for SQLite ↑
         }
 
         public IWhereSyntax<IJoinConditionSyntax, IOperatorSyntax<IJoinConditionSyntax>, IIsSyntax<IJoinConditionSyntax>> Where { get { return new WhereSyntax<IJoinConditionSyntax, IOperatorSyntax<IJoinConditionSyntax>, IIsSyntax<IJoinConditionSyntax>>(this); } }
