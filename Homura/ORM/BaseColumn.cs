@@ -24,7 +24,7 @@ namespace Homura.ORM
 
         public abstract PropertyInfo PropInfo { get; protected set; }
 
-        public abstract PassAsColumnOrValue PassType { get; protected set; }
+        public abstract HandlingDefaultValue PassType { get; protected set; }
 
         public string ConstraintsToSql()
         {
@@ -54,11 +54,11 @@ namespace Homura.ORM
 
         public string WrapOutput()
         {
-            if (PassType == PassAsColumnOrValue.AsColumn)
+            if (PassType == ORM.HandlingDefaultValue.AsColumn)
             {
                 return ColumnName.ToString();
             }
-            else if (PassType == PassAsColumnOrValue.AsValue)
+            else if (PassType == ORM.HandlingDefaultValue.AsValue)
             {
                 if (DBDataType == "TEXT")
                 {
