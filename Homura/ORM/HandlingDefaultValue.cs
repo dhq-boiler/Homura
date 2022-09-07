@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace Homura.ORM
 {
 
-    public enum PassAsColumnOrValue
+    public enum HandlingDefaultValue
     {
         AsColumn,
         AsValue,

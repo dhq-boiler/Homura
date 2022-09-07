@@ -39,11 +39,11 @@ namespace Homura.Test.TestFixture.Entity
         [Since(typeof(Version_2))]
         public string Item7 { get; set; }
 
-        [Column("Item8", "INTEGER", 8, PassAsColumnOrValue.AsValue, false)]
+        [Column("Item8", "INTEGER", 8, HandlingDefaultValue.AsValue, false)]
         [Since(typeof(Version_3))]
         public bool Item8 { get; set; }
 
-        [Column("Item9", "INTEGER", 9, PassAsColumnOrValue.AsValue, true)]
+        [Column("Item9", "INTEGER", 9, HandlingDefaultValue.AsValue, true)]
         [Since(typeof(Version_3))]
         public bool Item9 { get; set; }
     }
