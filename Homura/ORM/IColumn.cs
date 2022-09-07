@@ -29,6 +29,6 @@ namespace Homura.ORM
         PlaceholderRightValue ToParameter(Dictionary<string, object> idDic);
         string WrapOutput();
 
-        PassAsColumnOrValue PassType { get; }
+        HandlingDefaultValue PassType { get; }
     }
 }
