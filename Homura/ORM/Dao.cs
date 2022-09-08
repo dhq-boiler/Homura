@@ -135,9 +135,7 @@ namespace Homura.ORM
 
                     yield return new Column(
                         objRow.Field<string>(s_COLUMN_NAME),
-                        AppDomain.CurrentDomain.GetAssemblies().Select(x => x.GetTypes().Where(y => y.Name.Equals(Table.EntityName)).Select(z => z))
-                                                               .First()
-                                                               .First(),
+                        typeof(E).GetProperty(objRow.Field<string>(s_COLUMN_NAME)).PropertyType,
                         objRow.Field<string>(s_DATA_TYPE).ToUpper(),
                         constraints,
                         objSchemaInfo.Rows.IndexOf(objRow),
