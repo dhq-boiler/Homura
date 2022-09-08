@@ -467,6 +467,55 @@ namespace Sunctum.Infrastructure.Test.IntegrationTest.Data.Rdbms.VersionControl
             }
         }
 
+        [Test]
+        public void ByVersion_Book_ComplexCase()
+        {
+            var svManager = new DataVersionManager();
+            svManager.CurrentConnection = ConnectionManager.DefaultConnection;
+            svManager.Mode = VersioningStrategy.ByTick;
+            var registeringPlan = new ChangePlanByVersion<VersionOrigin>();
+            registeringPlan.AddVersionChangePlan(new BookChangePlan_VersionOrigin());
+            svManager.RegisterChangePlan(registeringPlan);
+            svManager.SetDefault();
+            svManager.UpgradeToTargetVersion();
+
+            using (var conn = new SQLiteConnection($"Data Source={_filePath}"))
+            {
+                conn.Open();
+
+                var dao = new BookDao(typeof(VersionOrigin));
+                dao.Insert(new Book()
+                {
+                    ID = Guid.Parse("8069BD2D-2BC9-4C89-966D-8E966FB87546"),
+                    Title = "kintama",
+                    AuthorID = Guid.Parse("3320FF3E-B7F0-42CC-A994-C6DF57B2067D"),
+                    PublishDate = DateTime.Parse("2022/09/08 00:00:00"),
+                    ByteSize = 1024,
+                    FingerPrint = "9834876dcfb05cb167a5c24953eba58c4ac89b1adf57f28f2f9d09af107ee8f0",
+                });
+            }
+
+            var registeringPlan1 = new ChangePlanByVersion<Version_1>();
+            registeringPlan1.AddVersionChangePlan(new BookChangePlan_Version_1());
+            svManager.RegisterChangePlan(registeringPlan1);
+            svManager.UpgradeToTargetVersion();
+
+            using (var conn = new SQLiteConnection($"Data Source={_filePath}"))
+            {
+                conn.Open();
+
+                var dao = new BookDao(typeof(Version_1));
+
+                var records = dao.FindAll().ToList();
+                Assert.That(records.Count(), Is.EqualTo(1));
+                Assert.That(records[0], Has.Property("Title").EqualTo("kintama"));
+                Assert.That(records[0], Has.Property("AuthorID").EqualTo(Guid.Parse("3320FF3E-B7F0-42CC-A994-C6DF57B2067D")));
+                Assert.That(records[0], Has.Property("PublishDate").EqualTo(DateTime.Parse("2022/09/08 00:00:00")));
+                Assert.That(records[0], Has.Property("ByteSize").Null);
+                Assert.That(records[0], Has.Property("FingerPrint").Null);
+            }
+        }
+
         [TearDown]
         public void TearDown()
         {
