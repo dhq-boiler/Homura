@@ -70,6 +70,10 @@ namespace Homura.ORM
                 }
                 else
                 {
+                    if (DefaultValue is null)
+                    {
+                        return "null";
+                    }
                     switch (EntityDataType.Name)
                     {
                         case "String":
