@@ -6,5 +6,5 @@ binフォルダとobjフォルダは事前に削除します。
 ```
 dotnet clean
 dotnet build
-dotnet pack /p:PackageVersion=3.4.0 -c Release
+dotnet pack -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg -p:PackageVersion=3.5.7 -c Release
 ```
