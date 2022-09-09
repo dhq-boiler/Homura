@@ -15,6 +15,8 @@
 	<NuspecProperties>$(NuspecProperties);PackageTags=$(PackageTags)</NuspecProperties>
 	<NuspecProperties>$(NuspecProperties);RepositoryType=$(RepositoryType)</NuspecProperties>
 	<NuspecProperties>$(NuspecProperties);RepositoryUrl=$(RepositoryUrl)</NuspecProperties>
+	<IncludeSymbols>true</IncludeSymbols>
+	<SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Dapper.StrongName" Version="2.0.123" />
