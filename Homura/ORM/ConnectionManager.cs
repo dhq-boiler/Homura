@@ -42,7 +42,7 @@ namespace Homura.ORM
         {
             lock (s_lock)
             {
-                var remove = Attendances.SingleOrDefault(x => x.Value.Connection.Equals(connection));
+                var remove = Attendances.SingleOrDefault(x => x.Value.Connection is not null && x.Value.Connection.Equals(connection));
                 if (remove.Key != Guid.Empty)
                 {
                     Attendances.Remove(remove.Key);
@@ -59,7 +59,7 @@ namespace Homura.ORM
         {
             lock (s_lock)
             {
-                var remove = Attendances.SingleOrDefault(x => x.Value.Transaction.Equals(transaction));
+                var remove = Attendances.SingleOrDefault(x => x.Value.Transaction is not null && x.Value.Transaction.Equals(transaction));
                 if (remove.Key != Guid.Empty)
                 {
                     Attendances.Remove(remove.Key);
