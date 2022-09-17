@@ -1,5 +1,6 @@
 ﻿
 
+using NLog;
 using System;
 using System.Data;
 using System.Data.Common;
@@ -8,6 +9,7 @@ namespace Homura.ORM
 {
     public class Connection : IConnection
     {
+        private static readonly Logger s_logger = LogManager.GetCurrentClassLogger();
         public string ConnectionString { get; private set; }
 
         private DbSelector _selector;
@@ -25,13 +27,20 @@ namespace Homura.ORM
             try
             {
                 connection.Open();
+                s_logger.Debug($"Connection Opened. ConnectionString={ConnectionString} StackTrace={Environment.StackTrace}");
             }
             catch (ArgumentException e)
             {
                 Console.Error.WriteLine(e.ToString());
                 throw new FailedOpeningDatabaseException("", e);
             }
+            connection.Disposed += Connection_Disposed;
             return connection;
+        }
+
+        private void Connection_Disposed(object sender, EventArgs e)
+        {
+            s_logger.Debug($"Connection Disposed. ConnectionString={ConnectionString} StackTrace={Environment.StackTrace}");
         }
 
         public bool TableExists(string tableName)
