@@ -18,5 +18,6 @@
 	  <file src="bin\Release\net5.0\Homura.pdb" target="lib\net5.0" />
 	  <file src="bin\Release\net6.0\*.dll" target="lib\net6.0" />
 	  <file src="bin\Release\net6.0\Homura.pdb" target="lib\net6.0" />
+	  <file src="**\*.cs" target="src" />
   </files>
 </package>
