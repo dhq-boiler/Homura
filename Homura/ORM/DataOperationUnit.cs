@@ -1,5 +1,6 @@
 ﻿
 
+using NLog;
 using System;
 using System.Data.Common;
 
@@ -7,9 +8,12 @@ namespace Homura.ORM
 {
     public class DataOperationUnit : IDisposable
     {
+        private static readonly Logger s_logger = LogManager.GetCurrentClassLogger();
         public DbConnection CurrentConnection { get; private set; }
 
         public DbTransaction CurrentTransaction { get; private set; }
+
+        private Guid CurrentTransactionId { get; set; }
 
         public DataOperationUnit()
         { }
@@ -25,17 +29,28 @@ namespace Homura.ORM
             {
                 throw new InvalidOperationException("Connection is not opened");
             }
+            CurrentTransactionId = Guid.NewGuid();
+            s_logger.Debug($"BeginTransaction Id={CurrentTransactionId} \n{Environment.StackTrace}");
             CurrentTransaction = CurrentConnection.BeginTransaction(System.Data.IsolationLevel.ReadCommitted);
+            ConnectionManager.PutAttendance(Guid.NewGuid(), new ConnectionManager.Attendance(CurrentTransaction, Environment.StackTrace));
         }
 
         public void Commit()
         {
             CurrentTransaction.Commit();
+            s_logger.Debug($"Commit Id={CurrentTransactionId}");
+            ConnectionManager.RemoveAttendance(CurrentTransaction);
+            CurrentTransaction.Dispose();
+            CurrentTransaction = null;
         }
 
         public void Rollback()
         {
             CurrentTransaction.Rollback();
+            s_logger.Debug($"Rollback Id={CurrentTransactionId}");
+            ConnectionManager.RemoveAttendance(CurrentTransaction);
+            CurrentTransaction.Dispose();
+            CurrentTransaction = null;
         }
 
         #region IDisposable Support
