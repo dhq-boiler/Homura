@@ -20,10 +20,7 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Dapper.StrongName" Version="2.0.123" />
-    <PackageReference Include="GitVersion.MsBuild" Version="5.8.1">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
+    <PackageReference Include="GitInfo" Version="2.2.0" />
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
     <PackageReference Include="NLog" Version="4.7.13" />
     <PackageReference Include="NuGet.CommandLine" Version="6.0.0">
