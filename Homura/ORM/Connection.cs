@@ -27,7 +27,8 @@ namespace Homura.ORM
             try
             {
                 connection.Open();
-                s_logger.Debug($"Connection Opened. ConnectionString={ConnectionString} StackTrace={Environment.StackTrace}");
+                ConnectionManager.PutAttendance(Guid.NewGuid(), new ConnectionManager.Attendance(connection, Environment.StackTrace));
+                s_logger.Debug($"Connection Opened. ConnectionString={ConnectionString}\n{Environment.StackTrace}");
             }
             catch (ArgumentException e)
             {
@@ -40,7 +41,8 @@ namespace Homura.ORM
 
         private void Connection_Disposed(object sender, EventArgs e)
         {
-            s_logger.Debug($"Connection Disposed. ConnectionString={ConnectionString} StackTrace={Environment.StackTrace}");
+            ConnectionManager.RemoveAttendance(sender as DbConnection);
+            s_logger.Debug($"Connection Disposed. ConnectionString={ConnectionString}\n{Environment.StackTrace}");
         }
 
         public bool TableExists(string tableName)
