@@ -1,10 +1,12 @@
 ﻿
 
+using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
 namespace Homura.Core
 {
+    [Obsolete]
     public class NotifyPropertyChangedImpl : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
