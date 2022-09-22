@@ -1,11 +1,12 @@
 ﻿
 
+using Prism.Mvvm;
 using System;
 using System.Reflection;
 
 namespace Homura.Core
 {
-    public class BaseObject : NotifyPropertyChangedImpl
+    public class BaseObject : BindableBase
     {
         public override string ToString()
         {
