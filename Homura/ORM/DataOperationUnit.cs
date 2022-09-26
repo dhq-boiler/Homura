@@ -15,8 +15,15 @@ namespace Homura.ORM
 
         private Guid CurrentTransactionId { get; set; }
 
+        public virtual Guid InstanceId { get; set; } 
+
         public DataOperationUnit()
         { }
+
+        public DataOperationUnit(Guid instanceId)
+        {
+            InstanceId = instanceId;
+        }
 
         public void Open(IConnection connection)
         {
@@ -32,7 +39,7 @@ namespace Homura.ORM
             CurrentTransactionId = Guid.NewGuid();
             s_logger.Debug($"BeginTransaction Id={CurrentTransactionId} \n{Environment.StackTrace}");
             CurrentTransaction = CurrentConnection.BeginTransaction(System.Data.IsolationLevel.ReadCommitted);
-            ConnectionManager.PutAttendance(Guid.NewGuid(), new ConnectionManager.Attendance(CurrentTransaction, Environment.StackTrace));
+            ConnectionManager.PutAttendance(Guid.NewGuid(), new ConnectionManager.Attendance(InstanceId, CurrentTransaction, Environment.StackTrace));
         }
 
         public void Commit()

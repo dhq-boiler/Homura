@@ -13,9 +13,9 @@ namespace Homura.ORM
         private static readonly Logger s_logger = LogManager.GetCurrentClassLogger();
         public static IConnection DefaultConnection { get; set; }
 
-        public static void SetDefaultConnection(string v, Type dbConnectionType)
+        public static void SetDefaultConnection(Guid instanceId, string v, Type dbConnectionType)
         {
-            DefaultConnection = new Connection(v, dbConnectionType);
+            DefaultConnection = new Connection(instanceId, v, dbConnectionType);
         }
 
         private static ConcurrentDictionary<Guid, Attendance> Attendances = new ConcurrentDictionary<Guid, Attendance>();
@@ -80,6 +80,29 @@ namespace Homura.ORM
         }
 
         /// <summary>
+        /// すべての接続とすべてのトランザクションを廃棄します。
+        /// </summary>
+        public static void DisposeDebris(Guid instanceId)
+        {
+            var list = Attendances.Where(x => x.Value.InstanceId.Equals(instanceId)).ToList();
+
+            list.ForEach(x =>
+            {
+                if (x.Value.Transaction is not null)
+                {
+                    x.Value.Transaction.Dispose();
+                    s_logger.Debug($"Dispose Transaction Guid={x.Key}");
+                }
+                if (x.Value.Connection is not null)
+                {
+                    x.Value.Connection.Dispose();
+                    s_logger.Debug($"Dispose Connection Guid={x.Key}");
+                }
+                Attendances.TryRemove(x);
+            });
+        }
+
+        /// <summary>
         /// すべての接続とすべてのトランザクションのスタックトレースを取得します。
         /// </summary>
         /// <returns>スタックトレースのコレクション</returns>
@@ -90,18 +113,21 @@ namespace Homura.ORM
 
         public class Attendance
         {
-            public Attendance(DbConnection connection, string stackTrace)
+            public Attendance(Guid instanceId, DbConnection connection, string stackTrace)
             {
+                InstanceId = instanceId;
                 Connection = connection;
                 StackTrace = stackTrace;
             }
 
-            public Attendance(DbTransaction transaction, string stackTrace)
+            public Attendance(Guid instanceId, DbTransaction transaction, string stackTrace)
             {
+                InstanceId = instanceId;
                 Transaction = transaction;
                 StackTrace = stackTrace;
             }
 
+            public Guid InstanceId { get; }
             public DbConnection Connection { get; }
             public DbTransaction Transaction { get; }
             public string StackTrace { get; }

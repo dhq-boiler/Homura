@@ -21,7 +21,13 @@ namespace Homura.Test.UnitTest
         public void Initialize()
         {
             _filePath = Path.Combine(TestContext.CurrentContext.TestDirectory, "TableNameTest.db");
-            ConnectionManager.SetDefaultConnection($"Data Source={_filePath}", typeof(SQLiteConnection));
+            ConnectionManager.SetDefaultConnection(Guid.Parse("BC9FF11A-3A7C-451F-8B38-0A6B1632D24D"), $"Data Source={_filePath}", typeof(SQLiteConnection));
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            ConnectionManager.DisposeDebris(Guid.Parse("BC9FF11A-3A7C-451F-8B38-0A6B1632D24D"));
         }
 
         [Test]

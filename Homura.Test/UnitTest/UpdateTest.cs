@@ -25,7 +25,7 @@ namespace Homura.Test.UnitTest
         public void Initialize()
         {
             _filePath = Path.Combine(TestContext.CurrentContext.TestDirectory, "Update.db");
-            ConnectionManager.SetDefaultConnection($"Data Source={_filePath}", typeof(SQLiteConnection));
+            ConnectionManager.SetDefaultConnection(Guid.Parse("3EC3B843-847A-42D0-B0CA-C8228062CACB"), $"Data Source={_filePath}", typeof(SQLiteConnection));
         }
 
         [Test]
@@ -81,6 +81,7 @@ namespace Homura.Test.UnitTest
         [TearDown]
         public void TearDown()
         {
+            ConnectionManager.DisposeDebris(Guid.Parse("3EC3B843-847A-42D0-B0CA-C8228062CACB"));
             if (File.Exists(_filePath))
             {
                 File.Delete(_filePath);
