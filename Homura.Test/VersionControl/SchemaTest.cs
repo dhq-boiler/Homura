@@ -6,6 +6,7 @@ using Homura.ORM.Setup;
 using Homura.Test.TestFixture.Dao;
 using Homura.Test.TestFixture.Migration;
 using NUnit.Framework;
+using System;
 using System.Data.SQLite;
 using System.IO;
 using System.Linq;
@@ -23,7 +24,7 @@ namespace Homura.Test.VersionControl
         public void Initialize()
         {
             _filePath = Path.Combine(TestContext.CurrentContext.TestDirectory, "TableNameTest.db");
-            ConnectionManager.SetDefaultConnection($"Data Source={_filePath}", typeof(SQLiteConnection));
+            ConnectionManager.SetDefaultConnection(Guid.Parse("95D40F7F-63BA-49D8-BD74-1B63F5531CB5"), $"Data Source={_filePath}", typeof(SQLiteConnection));
         }
 
         [Test]
@@ -169,6 +170,7 @@ namespace Homura.Test.VersionControl
         [TearDown]
         public void TearDown()
         {
+            ConnectionManager.DisposeDebris(Guid.Parse("95D40F7F-63BA-49D8-BD74-1B63F5531CB5"));
             if (File.Exists(_filePath))
             {
                 File.Delete(_filePath);

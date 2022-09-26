@@ -6,6 +6,7 @@ using Homura.Test.TestFixture.Dao;
 using Homura.Test.TestFixture.Migration;
 using Homura.Test.TestFixture.Migration.Plan;
 using NUnit.Framework;
+using System;
 using System.Collections.Generic;
 using System.Data.SQLite;
 using System.IO;
@@ -19,7 +20,7 @@ namespace Homura.Test.UnitTest
         public void OneTimeSetUp()
         {
             var _filePath = Path.Combine(TestContext.CurrentContext.TestDirectory, "DeleteTest.db");
-            ConnectionManager.SetDefaultConnection($"Data Source={_filePath}", typeof(SQLiteConnection));
+            ConnectionManager.SetDefaultConnection(Guid.Parse("B9464890-845E-4295-B3BA-20BC50C7136F"), $"Data Source={_filePath}", typeof(SQLiteConnection));
 
             var svManager = new DataVersionManager();
             svManager.CurrentConnection = ConnectionManager.DefaultConnection;
@@ -52,6 +53,12 @@ namespace Homura.Test.UnitTest
         {
             var dao = new AlphaDao(typeof(Version_3));
             dao.Delete(new Dictionary<string, object>());
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            ConnectionManager.DisposeDebris(Guid.Parse("B9464890-845E-4295-B3BA-20BC50C7136F"));
         }
     }
 }

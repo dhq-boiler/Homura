@@ -10,12 +10,15 @@ namespace Homura.ORM
     public class Connection : IConnection
     {
         private static readonly Logger s_logger = LogManager.GetCurrentClassLogger();
+
+        public Guid InstanceId { get; }
         public string ConnectionString { get; private set; }
 
         private DbSelector _selector;
 
-        public Connection(string connectionString, Type dbConnectionType)
+        public Connection(Guid instanceId, string connectionString, Type dbConnectionType)
         {
+            InstanceId = instanceId;
             ConnectionString = connectionString;
             _selector = new DbSelector(dbConnectionType);
         }
@@ -27,7 +30,7 @@ namespace Homura.ORM
             try
             {
                 connection.Open();
-                ConnectionManager.PutAttendance(Guid.NewGuid(), new ConnectionManager.Attendance(connection, Environment.StackTrace));
+                ConnectionManager.PutAttendance(Guid.NewGuid(), new ConnectionManager.Attendance(InstanceId, connection, Environment.StackTrace));
                 s_logger.Debug($"Connection Opened. ConnectionString={ConnectionString}\n{Environment.StackTrace}");
             }
             catch (ArgumentException e)

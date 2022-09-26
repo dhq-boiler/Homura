@@ -30,7 +30,7 @@ namespace Sunctum.Infrastructure.Test.IntegrationTest.Data.Rdbms.VersionControl
         public void Initialize()
         {
             _filePath = Path.Combine(TestContext.CurrentContext.TestDirectory, "TableMigrationTest.db");
-            ConnectionManager.SetDefaultConnection($"Data Source={_filePath}", typeof(SQLiteConnection));
+            ConnectionManager.SetDefaultConnection(Guid.Parse("7F39B3C1-1DDE-4B81-933F-FEAF4336F1B5"), $"Data Source={_filePath}", typeof(SQLiteConnection));
             if (File.Exists(_filePath))
             {
                 File.Delete(_filePath);
@@ -554,9 +554,11 @@ namespace Sunctum.Infrastructure.Test.IntegrationTest.Data.Rdbms.VersionControl
             }
         }
 
-            [TearDown]
+
+        [TearDown]
         public void TearDown()
         {
+            ConnectionManager.DisposeDebris(Guid.Parse("7F39B3C1-1DDE-4B81-933F-FEAF4336F1B5"));
             if (File.Exists(_filePath))
             {
                 File.Delete(_filePath);
