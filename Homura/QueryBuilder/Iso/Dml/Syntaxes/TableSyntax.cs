@@ -6,7 +6,7 @@ using System.Linq;
 
 namespace Homura.QueryBuilder.Iso.Dml.Syntaxes
 {
-    internal class TableSyntax<R> : SyntaxBase, ICloseSyntax<R>, IDeleteTableSyntax<R>, IInsertColumnSyntax, IUpdateTableSyntax where R : class
+    internal class TableSyntax<R> : SyntaxBase, ICloseSyntax<R>, IDeleteTableSyntax<R>, IInsertColumnSyntax, IUpdateTableSyntax, ISinkStateSyntax where R : class
     {
         private string _catalogName;
         private string _schemaName;

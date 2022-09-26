@@ -2,6 +2,7 @@
 
 using Homura.QueryBuilder.Core;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Homura.QueryBuilder.Iso.Dml.Syntaxes
 {
@@ -61,6 +62,10 @@ namespace Homura.QueryBuilder.Iso.Dml.Syntaxes
                         ret = equal.Value(condition.Value);
                     }
                 }
+            }
+            if (ret is null)
+            {
+                ret = this.Relay.Last() as R;
             }
             return ret;
         }
