@@ -1,6 +1,7 @@
 ﻿
 using NLog;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Linq;
@@ -11,14 +12,13 @@ namespace Homura.ORM
     {
         private static readonly Logger s_logger = LogManager.GetCurrentClassLogger();
         public static IConnection DefaultConnection { get; set; }
-        private static object s_lock = new object();
 
         public static void SetDefaultConnection(string v, Type dbConnectionType)
         {
             DefaultConnection = new Connection(v, dbConnectionType);
         }
 
-        private static Dictionary<Guid, Attendance> Attendances = new Dictionary<Guid, Attendance>();
+        private static ConcurrentDictionary<Guid, Attendance> Attendances = new ConcurrentDictionary<Guid, Attendance>();
 
         /// <summary>
         /// 接続中またはトランザクション中のオブジェクトを登録します。
@@ -27,10 +27,7 @@ namespace Homura.ORM
         /// <param name="attendance"></param>
         internal static void PutAttendance(Guid guid, Attendance attendance)
         {
-            lock (s_lock)
-            {
-                Attendances.Add(guid, attendance);
-            }
+            Attendances.TryAdd(guid, attendance);
         }
 
         /// <summary>
@@ -40,13 +37,10 @@ namespace Homura.ORM
         /// <param name="connection"></param>
         internal static void RemoveAttendance(DbConnection connection)
         {
-            lock (s_lock)
+            var remove = Attendances.SingleOrDefault(x => x.Value.Connection is not null && x.Value.Connection.Equals(connection));
+            if (remove.Key != Guid.Empty)
             {
-                var remove = Attendances.SingleOrDefault(x => x.Value.Connection is not null && x.Value.Connection.Equals(connection));
-                if (remove.Key != Guid.Empty)
-                {
-                    Attendances.Remove(remove.Key);
-                }
+                Attendances.TryRemove(remove);
             }
         }
 
@@ -57,13 +51,10 @@ namespace Homura.ORM
         /// <param name="transaction"></param>
         internal static void RemoveAttendance(DbTransaction transaction)
         {
-            lock (s_lock)
+            var remove = Attendances.SingleOrDefault(x => x.Value.Transaction is not null && x.Value.Transaction.Equals(transaction));
+            if (remove.Key != Guid.Empty)
             {
-                var remove = Attendances.SingleOrDefault(x => x.Value.Transaction is not null && x.Value.Transaction.Equals(transaction));
-                if (remove.Key != Guid.Empty)
-                {
-                    Attendances.Remove(remove.Key);
-                }
+                Attendances.TryRemove(remove);
             }
         }
 
@@ -72,23 +63,20 @@ namespace Homura.ORM
         /// </summary>
         public static void DisposeAllDebris()
         {
-            lock (s_lock)
+            Attendances.ToList().ForEach(x =>
             {
-                Attendances.ToList().ForEach(x =>
+                if (x.Value.Transaction is not null)
                 {
-                    if (x.Value.Transaction is not null)
-                    {
-                        x.Value.Transaction.Dispose();
-                        s_logger.Debug($"Dispose Transaction Guid={x.Key}");
-                    }
-                    if (x.Value.Connection is not null)
-                    {
-                        x.Value.Connection.Dispose();
-                        s_logger.Debug($"Dispose Connection Guid={x.Key}");
-                    }
-                });
-                Attendances.Clear();
-            }
+                    x.Value.Transaction.Dispose();
+                    s_logger.Debug($"Dispose Transaction Guid={x.Key}");
+                }
+                if (x.Value.Connection is not null)
+                {
+                    x.Value.Connection.Dispose();
+                    s_logger.Debug($"Dispose Connection Guid={x.Key}");
+                }
+            });
+            Attendances.Clear();
         }
 
         /// <summary>
