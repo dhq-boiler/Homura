@@ -39,21 +39,10 @@ namespace Sunctum.Infrastructure.Test.UnitTest.Data.Setup
         }
 
         [Test]
-        public void RegisterChangePlan_GetPlan_ByTable()
-        {
-            var defMng = DataVersionManager.DefaultSchemaVersion;
-            defMng.Mode = VersioningStrategy.ByTable;
-            defMng.RegisterChangePlan(new OriginChangePlan_VersionOrigin());
-
-            var plan = defMng.GetPlan(typeof(Origin), new VersionOrigin());
-            Assert.That(plan, Is.TypeOf<OriginChangePlan_VersionOrigin>());
-        }
-
-        [Test]
         public void RegisterChangePlan_GetPlan_ByTick()
         {
             var defMng = DataVersionManager.DefaultSchemaVersion;
-            defMng.Mode = VersioningStrategy.ByTick;
+            defMng.Mode = VersioningMode.ByTick;
             defMng.RegisterChangePlan(new VersionChangePlan_VersionOrigin());
 
             var plan = defMng.GetPlan(new VersionOrigin());
@@ -61,21 +50,10 @@ namespace Sunctum.Infrastructure.Test.UnitTest.Data.Setup
         }
 
         [Test]
-        public void GetPlan_NotRegistered_ByTable()
-        {
-            var defMng = DataVersionManager.DefaultSchemaVersion;
-            defMng.Mode = VersioningStrategy.ByTable;
-            Assert.Throws<KeyNotFoundException>(() => defMng.GetPlan(typeof(Header), new VersionOrigin()));
-
-            defMng.RegisterChangePlan(new OriginChangePlan_Version_1());
-            Assert.Throws<KeyNotFoundException>(() => defMng.GetPlan(typeof(Header), new VersionOrigin()));
-        }
-
-        [Test]
         public void GetPlan_NotRegistered_ByTick()
         {
             var defMng = DataVersionManager.DefaultSchemaVersion;
-            defMng.Mode = VersioningStrategy.ByTick;
+            defMng.Mode = VersioningMode.ByTick;
             Assert.Throws<KeyNotFoundException>(() => defMng.GetPlan(new VersionOrigin()));
 
             defMng.RegisterChangePlan(new VersionChangePlan_Version_1());

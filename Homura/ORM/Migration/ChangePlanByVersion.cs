@@ -1,6 +1,7 @@
 ﻿
 
 using Homura.ORM.Mapping;
+using Homura.ORM.Setup;
 using NLog;
 using System;
 using System.Collections.Generic;
@@ -18,6 +19,8 @@ namespace Homura.ORM.Migration
         public virtual IEnumerable<IEntityVersionChangePlan> VersionChangePlanList { get; private set; }
 
         public int ModifiedCount {[DebuggerStepThrough] get; set; }
+
+        public VersioningMode Mode { get; set; }
 
         public ChangePlanByVersion()
         {
@@ -63,6 +66,7 @@ namespace Homura.ORM.Migration
 
             foreach (var vcp in VersionChangePlanList)
             {
+                vcp.Mode = Mode;
                 vcp.UpgradeToTargetVersion(connection);
                 ModifiedCount += vcp.ModifiedCount;
             }

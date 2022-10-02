@@ -7,34 +7,34 @@ using System.Collections.Generic;
 
 namespace Homura.ORM.Setup
 {
-    internal class VersioningStrategyByTable : VersioningStrategy
+    internal class VersioningStrategyByAlterTable : VersioningStrategy
     {
-        private Dictionary<EntityVersionKey, IEntityVersionChangePlan> _planMap;
+        private Dictionary<VersionKey, IVersionChangePlan> _planMap;
 
-        internal VersioningStrategyByTable()
+        internal VersioningStrategyByAlterTable()
         {
-            _planMap = new Dictionary<EntityVersionKey, IEntityVersionChangePlan>();
+            _planMap = new Dictionary<VersionKey, IVersionChangePlan>();
         }
 
         internal override IVersionChangePlan GetPlan(VersionOrigin targetVersion)
         {
-            throw new NotSupportedException();
+            return _planMap[new VersionKey(targetVersion)];
         }
 
         internal override IEntityVersionChangePlan GetPlan(Type targetEntityType, VersionOrigin targetVersion)
         {
-            return _planMap[new EntityVersionKey(targetEntityType, targetVersion)];
+            throw new NotSupportedException();
         }
 
         internal override void RegisterChangePlan(IEntityVersionChangePlan plan)
         {
-            plan.Mode = VersioningMode;
-            _planMap.Add(new EntityVersionKey(plan.TargetEntityType, plan.TargetVersion), plan);
+            throw new NotSupportedException();
         }
 
         internal override void RegisterChangePlan(IVersionChangePlan plan)
         {
-            throw new NotSupportedException();
+            plan.Mode = VersioningMode;
+            _planMap.Add(new VersionKey(plan.TargetVersion), plan);
         }
 
         internal override void Reset()
@@ -45,12 +45,12 @@ namespace Homura.ORM.Setup
 
         internal override void UnregisterChangePlan(VersionOrigin targetVersion)
         {
-            throw new NotSupportedException();
+            _planMap.Remove(new VersionKey(targetVersion));
         }
 
         internal override void UnregisterChangePlan(Type targetEntityType, VersionOrigin targetVersion)
         {
-            _planMap.Remove(new EntityVersionKey(targetEntityType, targetVersion));
+            throw new NotSupportedException();
         }
 
         internal override void UpgradeToTargetVersion(IConnection connection)
@@ -59,12 +59,11 @@ namespace Homura.ORM.Setup
             IEnumerable<string> existingTableNames = DbInfoRetriever.GetTableNames(connection);
 
             //テーブル名をキーに変換
-            IEnumerable<EntityVersionKey> existingTableKey = UpgradeHelper.ConvertTablenameToKey(_planMap, existingTableNames);
+            var existingTableKey = UpgradeHelper.ConvertTablenameToKey(_planMap, existingTableNames);
 
-            //定義されている変更プランから、指定した基準キーの前方にある変更プランを取得
-            IEnumerable<IEntityVersionChangePlan> plans = UpgradeHelper.GetForwardChangePlans(_planMap, existingTableKey);
+            //定義されている変更プランから、指定した基準キーの前方にある変更プランを取得？
+            IEnumerable<IVersionChangePlan> plans = UpgradeHelper.GetForwardChangePlans(_planMap, existingTableKey);
 
-            //変更プランを実行
             foreach (var plan in plans)
             {
                 plan.UpgradeToTargetVersion(connection);

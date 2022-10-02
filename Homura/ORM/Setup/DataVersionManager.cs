@@ -11,18 +11,38 @@ namespace Homura.ORM.Setup
 {
     public class DataVersionManager
     {
-        private VersioningStrategy _Mode;
+        private VersioningStrategy _Strategy;
+        private VersioningMode _Mode;
 
-        public VersioningStrategy Mode
+        public VersioningMode Mode
         {
-            [DebuggerStepThrough]
-            get
-            { return _Mode; }
+            get { return _Mode; }
             set
             {
-                value.Reset();
+                if (HasFlag(value, VersioningMode.ByTick))
+                {
+                    _Strategy = VersioningStrategy.ByTick;
+                }
+                if (HasFlag(value, VersioningMode.ByAlterTable))
+                {
+                    _Strategy = VersioningStrategy.ByAlterTable;
+                }
+                if (HasFlag(value, VersioningMode.DropTableCastedOff))
+                {
+                    _Strategy.SetOption(VersioningMode.DropTableCastedOff);
+                }
+                if (HasFlag(value, VersioningMode.DeleteAllRecordInTableCastedOff))
+                {
+                    _Strategy.SetOption(VersioningMode.DeleteAllRecordInTableCastedOff);
+                }
+                _Strategy.Reset();
                 _Mode = value;
             }
+        }
+
+        private static bool HasFlag(VersioningMode value, VersioningMode target)
+        {
+            return (value & target) == target;
         }
 
         public IConnection CurrentConnection { get; set; }
@@ -31,7 +51,7 @@ namespace Homura.ORM.Setup
 
         public DataVersionManager()
         {
-            Mode = new VersioningStrategyNotSupported();
+            _Strategy = new VersioningStrategyNotSupported();
         }
 
         public DataVersionManager(IConnection connection)
@@ -41,22 +61,24 @@ namespace Homura.ORM.Setup
 
         public void RegisterChangePlan(IVersionChangePlan plan)
         {
-            Mode.RegisterChangePlan(plan);
+            _Strategy.VersioningMode = Mode;
+            _Strategy.RegisterChangePlan(plan);
         }
 
         public void UnregisterChangePlan(VersionOrigin targetVersion)
         {
-            Mode.UnregisterChangePlan(targetVersion);
+            _Strategy.UnregisterChangePlan(targetVersion);
         }
 
         public void RegisterChangePlan(IEntityVersionChangePlan plan)
         {
-            Mode.RegisterChangePlan(plan);
+            _Strategy.VersioningMode = Mode;
+            _Strategy.RegisterChangePlan(plan);
         }
 
         public void UnregisterChangePlan(Type targetEntityType, VersionOrigin targetVersion)
         {
-            Mode.UnregisterChangePlan(targetEntityType, targetVersion);
+            _Strategy.UnregisterChangePlan(targetEntityType, targetVersion);
         }
 
         public void SetDefault()
@@ -66,19 +88,19 @@ namespace Homura.ORM.Setup
 
         public IVersionChangePlan GetPlan(VersionOrigin targetVersion)
         {
-            return Mode.GetPlan(targetVersion);
+            return _Strategy.GetPlan(targetVersion);
         }
 
         public IEntityVersionChangePlan GetPlan(Type entityType, VersionOrigin targetVersion)
         {
-            return Mode.GetPlan(entityType, targetVersion);
+            return _Strategy.GetPlan(entityType, targetVersion);
         }
 
         public void UpgradeToTargetVersion()
         {
-            Mode.UpgradeToTargetVersion(CurrentConnection);
+            _Strategy.UpgradeToTargetVersion(CurrentConnection);
 
-            OnFinishedToUpgradeTo(new ModifiedEventArgs(Mode.ModifiedCount));
+            OnFinishedToUpgradeTo(new ModifiedEventArgs(_Strategy.ModifiedCount));
         }
 
         public event ModifiedEventHandler FinishedToUpgradeTo;

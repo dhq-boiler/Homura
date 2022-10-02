@@ -2,6 +2,7 @@
 
 using Homura.Core;
 using Homura.ORM.Mapping;
+using Homura.ORM.Setup;
 using System.Collections.Generic;
 using static Homura.Core.Delegate;
 
@@ -10,6 +11,8 @@ namespace Homura.ORM.Migration
     public interface IVersionChangePlan : IModifiedCounter
     {
         VersionOrigin TargetVersion { get; }
+
+        VersioningMode Mode { get; set; }
 
         IEnumerable<IEntityVersionChangePlan> VersionChangePlanList { get; }
 

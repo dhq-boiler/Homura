@@ -2,6 +2,7 @@
 
 using Homura.Core;
 using Homura.ORM.Mapping;
+using Homura.ORM.Setup;
 using System;
 using System.Diagnostics;
 
@@ -17,6 +18,8 @@ namespace Homura.ORM.Migration
 
         public int ModifiedCount {[DebuggerStepThrough] get; set; }
 
+        public VersioningMode Mode { get; set; }
+
         protected ChangePlanByTable()
         {
             TargetEntityType = typeof(E);
@@ -25,22 +28,22 @@ namespace Homura.ORM.Migration
 
         public virtual void CreateTable(IConnection connection)
         {
-            throw new NotSupportedException();
+            throw new NotImplementedException();
         }
 
         public virtual void DropTable(IConnection connection)
         {
-            throw new NotSupportedException();
+            throw new NotImplementedException();
         }
 
         public virtual void UpgradeToTargetVersion(IConnection connection)
         {
-            throw new NotSupportedException();
+            throw new NotImplementedException();
         }
 
         public virtual void DowngradeToTargetVersion(IConnection connection)
         {
-            throw new NotSupportedException();
+            throw new NotImplementedException();
         }
 
         public override bool Equals(object obj)

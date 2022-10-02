@@ -3,6 +3,7 @@ using Dapper;
 using Homura.Core;
 using Homura.ORM.Mapping;
 using Homura.ORM.Migration;
+using Homura.ORM.Setup;
 using Homura.QueryBuilder.Iso.Dml;
 using NLog;
 using System;
@@ -923,7 +924,7 @@ namespace Homura.ORM
             }
         }
 
-        public void UpgradeTable(VersionChangeUnit upgradePath, IDbConnection conn = null, TimeSpan? timeout = null)
+        public void UpgradeTable(VersionChangeUnit upgradePath, VersioningMode mode, IDbConnection conn = null, TimeSpan? timeout = null)
         {
             KeepTryingUntilProcessSucceed(() =>
             {
@@ -945,6 +946,29 @@ namespace Homura.ORM
                             command.ExecuteNonQuery();
                         }
                     }
+
+                    if ((mode & VersioningMode.DeleteAllRecordInTableCastedOff) == VersioningMode.DeleteAllRecordInTableCastedOff)
+                    {
+                        using (var command = connection.CreateCommand())
+                        {
+                            string sql = $"delete from {new Table<E>(upgradePath.From).Name}";
+                            command.CommandText = sql;
+                            LogManager.GetCurrentClassLogger().Debug($"{sql}");
+                            command.ExecuteNonQuery();
+                        }
+                    }
+
+                    if ((mode & VersioningMode.DropTableCastedOff) == VersioningMode.DropTableCastedOff)
+                    {
+                        using (var command = connection.CreateCommand())
+                        {
+                            string sql = $"drop table {new Table<E>(upgradePath.From).Name}";
+                            command.CommandText = sql;
+                            LogManager.GetCurrentClassLogger().Debug($"{sql}");
+                            command.ExecuteNonQuery();
+                        }
+                    }
+
                 }), conn);
             }, timeout);
         }

@@ -2,6 +2,7 @@
 
 using Homura.Core;
 using Homura.ORM.Mapping;
+using Homura.ORM.Setup;
 using System;
 
 namespace Homura.ORM.Migration
@@ -9,6 +10,8 @@ namespace Homura.ORM.Migration
     public interface IEntityVersionChangePlan : IModifiedCounter
     {
         VersionOrigin TargetVersion { get; set; }
+
+        VersioningMode Mode { get; set; }
 
         void UpgradeToTargetVersion(IConnection connection);
 

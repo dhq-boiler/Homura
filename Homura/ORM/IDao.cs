@@ -1,10 +1,10 @@
 ﻿
 
 using Homura.ORM.Migration;
+using Homura.ORM.Setup;
 using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.Common;
 
 namespace Homura.ORM
 {
@@ -26,7 +26,11 @@ namespace Homura.ORM
 
         void DeleteWhereIDIs(Guid id, IDbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null);
 
-        void UpgradeTable(VersionChangeUnit upgradePath, IDbConnection conn = null, TimeSpan? timeout = null);
+        void UpgradeTable(VersionChangeUnit upgradePath, VersioningMode mode, IDbConnection conn = null, TimeSpan? timeout = null);
+
+        void DeleteAll(IDbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null);
+
+        void DropTable(TimeSpan? timeout = null);
     }
 
     public interface IDao<E> : IDao where E : EntityBaseObject
