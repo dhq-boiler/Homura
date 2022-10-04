@@ -42,5 +42,7 @@ namespace Homura.ORM
         IEnumerable<E> FindBy(Dictionary<string, object> idDic, IDbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null);
 
         void Update(E entity, IDbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null);
+        
+        void AdjustColumns(Type versionFrom, Type versionTo, IDbConnection conn = null, TimeSpan? timeout = null);
     }
 }

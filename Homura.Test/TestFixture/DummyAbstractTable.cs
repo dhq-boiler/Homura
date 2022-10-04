@@ -75,6 +75,10 @@ namespace Homura.Test.TestFixture
 
         public string EntityName => throw new NotImplementedException();
 
+        public string Catalog => throw new NotImplementedException();
+
+        public string Schema => throw new NotImplementedException();
+
         public ITable SetAttachedDatabaseAliasName(string attachedDbAliasName)
         {
             AttachedDatabaseAlias = attachedDbAliasName;

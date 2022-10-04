@@ -8,7 +8,7 @@ using Homura.Test.TestFixture.Entity;
 
 namespace Sunctum.Domain.Data.Dao.Migration.Plan
 {
-    internal class Valkyrie_1_ChangePlan_VersionOrigin : ChangePlanByTable<Valkyrie_1, VersionOrigin>
+    internal class Valkyrie_1_ChangePlan_VersionOrigin : ChangePlan<Valkyrie_1, VersionOrigin>
     {
         public override void CreateTable(IConnection connection)
         {

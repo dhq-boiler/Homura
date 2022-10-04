@@ -8,7 +8,7 @@ using System.Collections.Generic;
 
 namespace Sunctum.Domain.Data.Dao.Migration.Plan
 {
-    internal class Valkyrie_1_ChangePlan_Version_1 : ChangePlanByTable<Valkyrie_1, Version_1>
+    internal class Valkyrie_1_ChangePlan_Version_1 : ChangePlan<Valkyrie_1, Version_1>
     {
         public override void CreateTable(IConnection connection)
         {
