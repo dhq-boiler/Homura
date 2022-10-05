@@ -4,7 +4,6 @@ using Homura.Core;
 using Homura.ORM.Mapping;
 using Homura.ORM.Migration;
 using System;
-using System.Diagnostics;
 using static Homura.Core.Delegate;
 
 namespace Homura.ORM.Setup
