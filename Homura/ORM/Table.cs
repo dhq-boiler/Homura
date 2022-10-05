@@ -10,7 +10,7 @@ using System.Reflection;
 
 namespace Homura.ORM
 {
-    public sealed class Table<E> : Table, ITable, ICloneable where E : EntityBaseObject
+    public sealed class Table<E> : NeutralTable, ITable, ICloneable where E : EntityBaseObject
     {
         private int _internalVersionNumber;
 

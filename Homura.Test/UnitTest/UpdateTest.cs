@@ -34,8 +34,8 @@ namespace Homura.Test.UnitTest
 
             var svManager = new DataVersionManager();
             svManager.CurrentConnection = ConnectionManager.DefaultConnection;
-            svManager.Mode = VersioningStrategy.ByTick;
-            var registeringPlan = new ChangePlanByVersion<VersionOrigin>();
+            svManager.Mode = VersioningMode.ByTick;
+            var registeringPlan = new ChangePlan<VersionOrigin>();
             registeringPlan.AddVersionChangePlan(new PageChangePlan_VersionOrigin());
             svManager.RegisterChangePlan(registeringPlan);
             svManager.SetDefault();

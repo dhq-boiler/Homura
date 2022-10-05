@@ -3,6 +3,8 @@ using Dapper;
 using Homura.Core;
 using Homura.ORM.Mapping;
 using Homura.ORM.Migration;
+using Homura.ORM.Setup;
+using Homura.QueryBuilder.Core;
 using Homura.QueryBuilder.Iso.Dml;
 using NLog;
 using System;
@@ -923,7 +925,7 @@ namespace Homura.ORM
             }
         }
 
-        public void UpgradeTable(VersionChangeUnit upgradePath, IDbConnection conn = null, TimeSpan? timeout = null)
+        public void UpgradeTable(VersionChangeUnit upgradePath, VersioningMode mode, IDbConnection conn = null, TimeSpan? timeout = null)
         {
             KeepTryingUntilProcessSucceed(() =>
             {
@@ -945,6 +947,29 @@ namespace Homura.ORM
                             command.ExecuteNonQuery();
                         }
                     }
+
+                    if ((mode & VersioningMode.DeleteAllRecordInTableCastedOff) == VersioningMode.DeleteAllRecordInTableCastedOff)
+                    {
+                        using (var command = connection.CreateCommand())
+                        {
+                            string sql = $"delete from {new Table<E>(upgradePath.From).Name}";
+                            command.CommandText = sql;
+                            LogManager.GetCurrentClassLogger().Debug($"{sql}");
+                            command.ExecuteNonQuery();
+                        }
+                    }
+
+                    if ((mode & VersioningMode.DropTableCastedOff) == VersioningMode.DropTableCastedOff)
+                    {
+                        using (var command = connection.CreateCommand())
+                        {
+                            string sql = $"drop table {new Table<E>(upgradePath.From).Name}";
+                            command.CommandText = sql;
+                            LogManager.GetCurrentClassLogger().Debug($"{sql}");
+                            command.ExecuteNonQuery();
+                        }
+                    }
+
                 }), conn);
             }, timeout);
         }
@@ -959,6 +984,64 @@ namespace Homura.ORM
             {
                 return default(T);
             }
+        }
+
+        public void AdjustColumns(Type versionFrom, Type versionTo, IDbConnection conn = null, TimeSpan? timeout = null)
+        {
+            KeepTryingUntilProcessSucceed(() =>
+            {
+                ConnectionInternal(new Action<IDbConnection>((connection) =>
+                {
+                    var newTable = new Table<E>(versionTo);
+                    var oldTable = new Table<E>(versionFrom);
+                    using (var command = connection.CreateCommand())
+                    {
+                        //Toテーブル作成
+                        string sql = $"create table {newTable.Name}_To(";
+                        foreach (var c in newTable.Columns)
+                        {
+                            sql += $"{c.ColumnName} {c.DBDataType}";
+                            if (!c.Equals(newTable.Columns.Last()))
+                                sql += ", ";
+                        }
+                        sql += ")";
+                        command.CommandText = sql;
+                        LogManager.GetCurrentClassLogger().Debug($"{sql}");
+                        command.ExecuteNonQuery();
+                    }
+
+                    using (var command = connection.CreateCommand())
+                    {
+                        //fromテーブルからToテーブルへコピー
+                        using (var query = new Insert().Into.Table(new NeutralTable($"{newTable.Name}_To"))
+                                                        .Columns(newTable.Columns.Select(c => c.ColumnName))
+                                                        .Select.Columns(oldTable.Columns.Select(c => c.ColumnName).Union(newTable.NewColumns(oldTable, newTable).Select(v => v.WrapOutput()))).From.Table(oldTable))
+                        {
+                            command.CommandText = query.ToSql();
+                            LogManager.GetCurrentClassLogger().Debug($"{query.ToSql()}");
+                            command.ExecuteNonQuery();
+                        }
+                    }
+
+                    using (var command = connection.CreateCommand())
+                    {
+                        //Drop fromテーブル
+                        var sql = $"drop table {oldTable.Name}";
+                        command.CommandText = sql;
+                        LogManager.GetCurrentClassLogger().Debug($"{sql}");
+                        command.ExecuteNonQuery();
+                    }
+
+                    using (var command = connection.CreateCommand())
+                    {
+                        //ToテーブルをリネームしてFromテーブルに
+                        var sql = $"alter table {newTable.Name}_To rename to {oldTable.Name}";
+                        command.CommandText = sql;
+                        LogManager.GetCurrentClassLogger().Debug($"{sql}");
+                        command.ExecuteNonQuery();
+                    }
+                }), conn);
+            }, timeout);
         }
     }
 }

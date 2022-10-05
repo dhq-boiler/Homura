@@ -1,4 +1,5 @@
-﻿using Homura.QueryBuilder.Core;
+﻿using Homura.ORM;
+using Homura.QueryBuilder.Core;
 
 namespace Homura.QueryBuilder.Iso.Dml.Syntaxes
 {
@@ -8,7 +9,7 @@ namespace Homura.QueryBuilder.Iso.Dml.Syntaxes
             : base(syntaxBase)
         { }
 
-        public IInsertColumnSyntax Table(Table table)
+        public IInsertColumnSyntax Table(ITableBase table)
         {
             return new TableSyntax<SyntaxBase>(table.Catalog, table.Schema, table.Name, this, table.Alias);
         }

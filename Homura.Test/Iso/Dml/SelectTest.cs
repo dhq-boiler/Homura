@@ -487,7 +487,7 @@ namespace Homura.QueryBuilder.Test.Iso.Dml
             [Test]
             public void Select_Asterisk_From_TableObject__Name()
             {
-                var table = new Table()
+                var table = new NeutralTable()
                 {
                     Name = "Table"
                 };
@@ -500,7 +500,7 @@ namespace Homura.QueryBuilder.Test.Iso.Dml
             [Test]
             public void Select_Asterisk_From_TableObject__Name_alias()
             {
-                var table = new Table()
+                var table = new NeutralTable()
                 {
                     Name = "Table",
                     Alias = "alias"
@@ -514,7 +514,7 @@ namespace Homura.QueryBuilder.Test.Iso.Dml
             [Test]
             public void Select_Asterisk_From_TableObject__Schema_Name()
             {
-                var table = new Table()
+                var table = new NeutralTable()
                 {
                     Schema = "Schema",
                     Name = "Table"
@@ -528,7 +528,7 @@ namespace Homura.QueryBuilder.Test.Iso.Dml
             [Test]
             public void Select_Asterisk_From_TableObject__Catalog_Schema_Name()
             {
-                var table = new Table()
+                var table = new NeutralTable()
                 {
                     Catalog = "Catalog",
                     Schema = "Schema",
@@ -543,7 +543,7 @@ namespace Homura.QueryBuilder.Test.Iso.Dml
             [Test]
             public void Select_Asterisk_From_TableObject__Catalog_null_Name()
             {
-                var table = new Table()
+                var table = new NeutralTable()
                 {
                     Catalog = "Catalog",
                     Schema = null,

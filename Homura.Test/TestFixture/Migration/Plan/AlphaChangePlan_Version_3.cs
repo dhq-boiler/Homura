@@ -20,7 +20,7 @@ namespace Homura.Test.TestFixture.Migration.Plan
                 dao.Delete(new Dictionary<string, object>());
             }
 
-            dao.UpgradeTable(new VersionChangeUnit(typeof(Version_2), TargetVersion.GetType()));
+            dao.UpgradeTable(new VersionChangeUnit(typeof(Version_2), TargetVersion.GetType()), Mode);
         }
     }
 }

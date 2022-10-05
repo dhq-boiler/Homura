@@ -1,4 +1,5 @@
-﻿using Homura.QueryBuilder.Core;
+﻿using Homura.ORM;
+using Homura.QueryBuilder.Core;
 
 namespace Homura.QueryBuilder.Iso.Dml.Syntaxes
 {
@@ -49,7 +50,7 @@ namespace Homura.QueryBuilder.Iso.Dml.Syntaxes
             return end as Return1;
         }
 
-        public Return1 Table(Table table)
+        public Return1 Table(ITableBase table)
         {
             return new TableSyntax<Return2>(table.Catalog, table.Schema, table.Name, this, table.Alias) as Return1;
         }
