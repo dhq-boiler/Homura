@@ -24,7 +24,7 @@ namespace Homura.Test.TestFixture.Migration.Plan
                 ++ModifiedCount;
             }
 
-            dao.UpgradeTable(new VersionChangeUnit(typeof(VersionOrigin), TargetVersion.GetType()));
+            dao.UpgradeTable(new VersionChangeUnit(typeof(VersionOrigin), TargetVersion.GetType()), Mode);
             ++ModifiedCount;
         }
     }

@@ -8,7 +8,7 @@ using Homura.Test.TestFixture.Entity;
 
 namespace Homura.Test.TestFixture.Migration.Plan
 {
-    internal abstract class DetailChangePlan_Abstract<V> : ChangePlanByTable<Detail, V> where V : VersionOrigin
+    internal abstract class DetailChangePlan_Abstract<V> : ChangePlan<Detail, V> where V : VersionOrigin
     {
         public override void CreateTable(IConnection connection)
         {

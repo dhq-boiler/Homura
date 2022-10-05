@@ -2,6 +2,7 @@
 
 using NLog;
 using System;
+using System.Data;
 using System.Data.Common;
 
 namespace Homura.ORM
@@ -30,7 +31,7 @@ namespace Homura.ORM
             CurrentConnection = connection.OpenConnection();
         }
 
-        public void BeginTransaction()
+        public void BeginTransaction(IsolationLevel isolationLevel = IsolationLevel.ReadCommitted)
         {
             if (CurrentConnection == null)
             {
@@ -38,7 +39,7 @@ namespace Homura.ORM
             }
             CurrentTransactionId = Guid.NewGuid();
             s_logger.Debug($"BeginTransaction Id={CurrentTransactionId} \n{Environment.StackTrace}");
-            CurrentTransaction = CurrentConnection.BeginTransaction(System.Data.IsolationLevel.ReadCommitted);
+            CurrentTransaction = CurrentConnection.BeginTransaction(isolationLevel);
             ConnectionManager.PutAttendance(Guid.NewGuid(), new ConnectionManager.Attendance(InstanceId, CurrentTransaction, Environment.StackTrace));
         }
 

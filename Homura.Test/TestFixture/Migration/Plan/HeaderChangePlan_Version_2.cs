@@ -21,7 +21,7 @@ namespace Homura.Test.TestFixture.Migration.Plan
                 dao.Delete(new Dictionary<string, object>());
             }
 
-            dao.UpgradeTable(new VersionChangeUnit(typeof(Version_1), TargetVersion.GetType()));
+            dao.UpgradeTable(new VersionChangeUnit(typeof(Version_1), TargetVersion.GetType()), Mode);
         }
     }
 }

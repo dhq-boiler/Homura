@@ -1,4 +1,5 @@
-﻿using Homura.QueryBuilder.Core;
+﻿using Homura.ORM;
+using Homura.QueryBuilder.Core;
 using Homura.QueryBuilder.Iso.Dml.Syntaxes;
 using System;
 
@@ -31,7 +32,7 @@ namespace Homura.QueryBuilder.Iso.Dml
             return _syntax.Table(catalogName, schemaName, name, alias);
         }
 
-        public IUpdateTableSyntax Table(Table table)
+        public IUpdateTableSyntax Table(ITableBase table)
         {
             return _syntax.Table(table);
         }

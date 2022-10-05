@@ -5,10 +5,8 @@ using System.Collections.Generic;
 
 namespace Homura.ORM
 {
-    public interface ITable : ICloneable
+    public interface ITable : ITableBase, ICloneable
     {
-        IEnumerable<IColumn> Columns { get; }
-
         IEnumerable<IColumn> PrimaryKeyColumns { get; }
 
         IEnumerable<IColumn> ColumnsWithoutPrimaryKeys { get; }
@@ -16,6 +14,9 @@ namespace Homura.ORM
         string AttachedDatabaseAlias { get; }
 
         bool HasAttachedDatabaseAlias { get; }
+        string Catalog { get; }
+
+        string Schema { get; }
 
         string Name { get; }
 

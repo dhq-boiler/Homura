@@ -1,4 +1,5 @@
-﻿using Homura.QueryBuilder.Core;
+﻿using Homura.ORM;
+using Homura.QueryBuilder.Core;
 
 namespace Homura.QueryBuilder.Iso.Dml.Transitions
 {
@@ -12,6 +13,6 @@ namespace Homura.QueryBuilder.Iso.Dml.Transitions
 
         Return Table(string catalogName, string schemaName, string name, string alias);
 
-        Return Table(Table table);
+        Return Table(ITableBase table);
     }
 }

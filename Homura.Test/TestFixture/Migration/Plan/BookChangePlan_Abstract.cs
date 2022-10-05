@@ -8,7 +8,7 @@ using Homura.Test.TestFixture.Entity;
 
 namespace Homura.Test.TestFixture.Migration.Plan
 {
-    internal class BookChangePlan_Abstract<V> : ChangePlanByTable<Book, V> where V : VersionOrigin
+    internal class BookChangePlan_Abstract<V> : ChangePlan<Book, V> where V : VersionOrigin
     {
         public override void CreateTable(IConnection connection)
         {
