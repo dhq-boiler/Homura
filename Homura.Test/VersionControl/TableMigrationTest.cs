@@ -42,9 +42,9 @@ namespace Sunctum.Infrastructure.Test.IntegrationTest.Data.Rdbms.VersionControl
         {
             var svManager = new DataVersionManager();
             svManager.CurrentConnection = ConnectionManager.DefaultConnection;
-            svManager.Mode = VersioningMode.ByTick;
-            var registeringPlan = new ChangePlan<VersionOrigin>();
-            registeringPlan.AddVersionChangePlan(new OriginChangePlan_VersionOrigin());
+            //svManager.Mode = VersioningMode.ByTick;
+            var registeringPlan = new ChangePlan<VersionOrigin>(VersioningMode.ByTick);
+            registeringPlan.AddVersionChangePlan(new OriginChangePlan_VersionOrigin(VersioningMode.ByTick));
             svManager.RegisterChangePlan(registeringPlan);
             svManager.SetDefault();
 
@@ -70,8 +70,8 @@ namespace Sunctum.Infrastructure.Test.IntegrationTest.Data.Rdbms.VersionControl
                 Assert.That(conn.GetTableNames(), Has.None.EqualTo("Origin_1"));
             }
 
-            var registeringPlan1 = new ChangePlan<Version_1>();
-            registeringPlan1.AddVersionChangePlan(new OriginChangePlan_Version_1());
+            var registeringPlan1 = new ChangePlan<Version_1>(VersioningMode.ByTick);
+            registeringPlan1.AddVersionChangePlan(new OriginChangePlan_Version_1(VersioningMode.ByTick));
             svManager.RegisterChangePlan(registeringPlan1);
 
             svManager.UpgradeToTargetVersion();
@@ -97,11 +97,11 @@ namespace Sunctum.Infrastructure.Test.IntegrationTest.Data.Rdbms.VersionControl
         {
             var svManager = new DataVersionManager();
             svManager.CurrentConnection = ConnectionManager.DefaultConnection;
-            svManager.Mode = VersioningMode.ByTick;
-            var registeringPlan = new ChangePlan<VersionOrigin>();
-            registeringPlan.AddVersionChangePlan(new AlphaChangePlan_VersionOrigin());
-            registeringPlan.AddVersionChangePlan(new BetaChangePlan_VersionOrigin());
-            registeringPlan.AddVersionChangePlan(new GammaChangePlan_VersionOrigin());
+            //svManager.Mode = VersioningMode.ByTick;
+            var registeringPlan = new ChangePlan<VersionOrigin>(VersioningMode.ByTick);
+            registeringPlan.AddVersionChangePlan(new AlphaChangePlan_VersionOrigin(VersioningMode.ByTick));
+            registeringPlan.AddVersionChangePlan(new BetaChangePlan_VersionOrigin(VersioningMode.ByTick));
+            registeringPlan.AddVersionChangePlan(new GammaChangePlan_VersionOrigin(VersioningMode.ByTick));
             svManager.RegisterChangePlan(registeringPlan);
             svManager.SetDefault();
             svManager.UpgradeToTargetVersion();
@@ -125,8 +125,8 @@ namespace Sunctum.Infrastructure.Test.IntegrationTest.Data.Rdbms.VersionControl
                 Assert.That(tablenames, Has.None.EqualTo("Gamma_2"));
             }
 
-            var registeringPlan1 = new ChangePlan<Version_1>();
-            registeringPlan1.AddVersionChangePlan(new AlphaChangePlan_Version_1());
+            var registeringPlan1 = new ChangePlan<Version_1>(VersioningMode.ByTick);
+            registeringPlan1.AddVersionChangePlan(new AlphaChangePlan_Version_1(VersioningMode.ByTick));
             svManager.RegisterChangePlan(registeringPlan1);
             svManager.UpgradeToTargetVersion();
 
@@ -149,9 +149,9 @@ namespace Sunctum.Infrastructure.Test.IntegrationTest.Data.Rdbms.VersionControl
                 Assert.That(tablenames, Has.None.EqualTo("Gamma_2"));
             }
 
-            var registeringPlan2 = new ChangePlan<Version_2>();
-            registeringPlan2.AddVersionChangePlan(new AlphaChangePlan_Version_2());
-            registeringPlan2.AddVersionChangePlan(new BetaChangePlan_Version_1());
+            var registeringPlan2 = new ChangePlan<Version_2>(VersioningMode.ByTick);
+            registeringPlan2.AddVersionChangePlan(new AlphaChangePlan_Version_2(VersioningMode.ByTick));
+            registeringPlan2.AddVersionChangePlan(new BetaChangePlan_Version_1(VersioningMode.ByTick));
             svManager.RegisterChangePlan(registeringPlan2);
             svManager.UpgradeToTargetVersion();
 
@@ -174,9 +174,9 @@ namespace Sunctum.Infrastructure.Test.IntegrationTest.Data.Rdbms.VersionControl
                 Assert.That(tablenames, Has.None.EqualTo("Gamma_2"));
             }
 
-            var registeringPlan3 = new ChangePlan<Version_3>();
-            registeringPlan3.AddVersionChangePlan(new BetaChangePlan_Version_2());
-            registeringPlan3.AddVersionChangePlan(new GammaChangePlan_Version_1());
+            var registeringPlan3 = new ChangePlan<Version_3>(VersioningMode.ByTick);
+            registeringPlan3.AddVersionChangePlan(new BetaChangePlan_Version_2(VersioningMode.ByTick));
+            registeringPlan3.AddVersionChangePlan(new GammaChangePlan_Version_1(VersioningMode.ByTick));
             svManager.RegisterChangePlan(registeringPlan3);
             svManager.UpgradeToTargetVersion();
 
@@ -199,8 +199,8 @@ namespace Sunctum.Infrastructure.Test.IntegrationTest.Data.Rdbms.VersionControl
                 Assert.That(tablenames, Has.None.EqualTo("Gamma_2"));
             }
 
-            var registeringPlan4 = new ChangePlan<Version_4>();
-            registeringPlan4.AddVersionChangePlan(new AlphaChangePlan_Version_3());
+            var registeringPlan4 = new ChangePlan<Version_4>(VersioningMode.ByTick);
+            registeringPlan4.AddVersionChangePlan(new AlphaChangePlan_Version_3(VersioningMode.ByTick));
             svManager.RegisterChangePlan(registeringPlan4);
 
             var dao = new AlphaDao(typeof(Version_2));
@@ -295,9 +295,9 @@ namespace Sunctum.Infrastructure.Test.IntegrationTest.Data.Rdbms.VersionControl
         {
             var svManager = new DataVersionManager();
             svManager.CurrentConnection = ConnectionManager.DefaultConnection;
-            svManager.Mode = VersioningMode.ByTick;
-            var registeringPlan = new ChangePlan<VersionOrigin>();
-            registeringPlan.AddVersionChangePlan(new BookChangePlan_VersionOrigin());
+            //svManager.Mode = VersioningMode.ByTick;
+            var registeringPlan = new ChangePlan<VersionOrigin>(VersioningMode.ByTick);
+            registeringPlan.AddVersionChangePlan(new BookChangePlan_VersionOrigin(VersioningMode.ByTick));
             svManager.RegisterChangePlan(registeringPlan);
             svManager.SetDefault();
             svManager.UpgradeToTargetVersion();
@@ -318,8 +318,8 @@ namespace Sunctum.Infrastructure.Test.IntegrationTest.Data.Rdbms.VersionControl
                 });
             }
 
-            var registeringPlan1 = new ChangePlan<Version_1>();
-            registeringPlan1.AddVersionChangePlan(new BookChangePlan_Version_1());
+            var registeringPlan1 = new ChangePlan<Version_1>(VersioningMode.ByTick);
+            registeringPlan1.AddVersionChangePlan(new BookChangePlan_Version_1(VersioningMode.ByTick));
             svManager.RegisterChangePlan(registeringPlan1);
             svManager.UpgradeToTargetVersion();
 
@@ -344,9 +344,9 @@ namespace Sunctum.Infrastructure.Test.IntegrationTest.Data.Rdbms.VersionControl
         {
             var svManager = new DataVersionManager();
             svManager.CurrentConnection = ConnectionManager.DefaultConnection;
-            svManager.Mode = VersioningMode.ByTick;
-            var registeringPlan = new ChangePlan<VersionOrigin>();
-            registeringPlan.AddVersionChangePlan(new PageChangePlan_VersionOrigin());
+            //svManager.Mode = VersioningMode.ByTick;
+            var registeringPlan = new ChangePlan<VersionOrigin>(VersioningMode.ByTick);
+            registeringPlan.AddVersionChangePlan(new PageChangePlan_VersionOrigin(VersioningMode.ByTick));
             svManager.RegisterChangePlan(registeringPlan);
             svManager.SetDefault();
             svManager.UpgradeToTargetVersion();

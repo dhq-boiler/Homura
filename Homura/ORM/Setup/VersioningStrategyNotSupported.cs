@@ -8,6 +8,16 @@ namespace Homura.ORM.Setup
 {
     internal class VersioningStrategyNotSupported : VersioningStrategy
     {
+        internal override bool ExistsPlan(VersionOrigin targetVersion)
+        {
+            throw new NotSupportedException();
+        }
+
+        internal override bool ExistsPlan(Type entityType, VersionOrigin targetVersion)
+        {
+            throw new NotSupportedException();
+        }
+
         internal override IVersionChangePlan GetPlan(VersionOrigin targetVersion)
         {
             throw new NotSupportedException();

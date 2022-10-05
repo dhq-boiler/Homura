@@ -3,6 +3,7 @@
 using Homura.ORM;
 using Homura.ORM.Mapping;
 using Homura.ORM.Migration;
+using Homura.ORM.Setup;
 using Homura.Test.TestFixture.Dao;
 using Homura.Test.TestFixture.Entity;
 
@@ -10,6 +11,10 @@ namespace Homura.Test.TestFixture.Migration.Plan
 {
     internal abstract class DetailChangePlan_Abstract<V> : ChangePlan<Detail, V> where V : VersionOrigin
     {
+        protected DetailChangePlan_Abstract(VersioningMode mode) : base(mode)
+        {
+        }
+
         public override void CreateTable(IConnection connection)
         {
             var dao = new DetailDao(TargetVersion.GetType());

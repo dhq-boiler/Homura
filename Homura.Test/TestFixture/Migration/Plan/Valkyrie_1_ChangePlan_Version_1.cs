@@ -1,6 +1,7 @@
 ﻿using Homura.ORM;
 using Homura.ORM.Mapping;
 using Homura.ORM.Migration;
+using Homura.ORM.Setup;
 using Homura.Test.TestFixture.Dao;
 using Homura.Test.TestFixture.Entity;
 using Homura.Test.TestFixture.Migration;
@@ -10,6 +11,10 @@ namespace Sunctum.Domain.Data.Dao.Migration.Plan
 {
     internal class Valkyrie_1_ChangePlan_Version_1 : ChangePlan<Valkyrie_1, Version_1>
     {
+        public Valkyrie_1_ChangePlan_Version_1(VersioningMode mode) : base(mode)
+        {
+        }
+
         public override void CreateTable(IConnection connection)
         {
             var dao = new Valkyrie_1_Dao(typeof(Version_1));

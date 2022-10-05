@@ -8,7 +8,7 @@ using System.Diagnostics;
 
 namespace Homura.ORM.Setup
 {
-    public abstract class VersioningStrategy : IModifiedCounter
+    internal abstract class VersioningStrategy : IModifiedCounter
     {
         internal static readonly VersioningStrategy ByTable = new VersioningStrategyByTable();
         internal static readonly VersioningStrategy ByTick = new VersioningStrategyByTick();
@@ -33,6 +33,10 @@ namespace Homura.ORM.Setup
         internal abstract void Reset();
 
         internal abstract void UpgradeToTargetVersion(IConnection connection);
+
+        internal abstract bool ExistsPlan(VersionOrigin targetVersion);
+
+        internal abstract bool ExistsPlan(Type entityType, VersionOrigin targetVersion);
 
         internal void SetOption(VersioningMode options)
         {

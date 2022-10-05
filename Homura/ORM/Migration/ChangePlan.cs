@@ -15,24 +15,52 @@ namespace Homura.ORM.Migration
     public class ChangePlan<E, V> : IEntityVersionChangePlan, IModifiedCounter where E : EntityBaseObject
                                                                                where V : VersionOrigin
     {
+        private VersioningStrategy _Strategy;
+        private VersioningMode _Mode;
+
+        public ChangePlan(VersioningMode mode)
+        {
+            Mode = mode;
+            TargetEntityType = typeof(E);
+            TargetVersion = Activator.CreateInstance<V>();
+        }
+
+        public VersioningMode Mode
+        {
+            get { return _Mode; }
+            set
+            {
+                if (HasFlag(value, VersioningMode.ByTick))
+                {
+                    _Strategy = VersioningStrategy.ByTick;
+                }
+                if (HasFlag(value, VersioningMode.ByAlterTable))
+                {
+                    _Strategy = VersioningStrategy.ByAlterTable;
+                }
+                if (HasFlag(value, VersioningMode.DropTableCastedOff))
+                {
+                    _Strategy.SetOption(VersioningMode.DropTableCastedOff);
+                }
+                if (HasFlag(value, VersioningMode.DeleteAllRecordInTableCastedOff))
+                {
+                    _Strategy.SetOption(VersioningMode.DeleteAllRecordInTableCastedOff);
+                }
+                _Strategy.Reset();
+                _Mode = value;
+            }
+        }
+
+        private static bool HasFlag(VersioningMode value, VersioningMode target)
+        {
+            return (value & target) == target;
+        }
+
         public Type TargetEntityType { get; set; }
 
         public VersionOrigin TargetVersion { get; set; }
 
         public int ModifiedCount {[DebuggerStepThrough] get; set; }
-
-        public VersioningMode Mode { get; set; }
-
-        public ChangePlan()
-        {
-            TargetEntityType = typeof(E);
-            TargetVersion = Activator.CreateInstance<V>();
-        }
-
-        public ChangePlan<E, V> CreateInstance()
-        {
-            return new ChangePlan<E, V>();
-        }
 
         public virtual void CreateTable(IConnection connection)
         {
@@ -96,18 +124,52 @@ namespace Homura.ORM.Migration
 
     public class ChangePlan<V> : IVersionChangePlan where V : VersionOrigin
     {
+        private VersioningStrategy _Strategy;
+        private VersioningMode _Mode;
+
+        public ChangePlan(VersioningMode mode)
+        {
+            Mode = mode;
+            VersionChangePlanList = new List<IEntityVersionChangePlan>();
+        }
+
+        public VersioningMode Mode
+        {
+            get { return _Mode; }
+            set
+            {
+                if (HasFlag(value, VersioningMode.ByTick))
+                {
+                    _Strategy = VersioningStrategy.ByTick;
+                }
+                if (HasFlag(value, VersioningMode.ByAlterTable))
+                {
+                    _Strategy = VersioningStrategy.ByAlterTable;
+                }
+                if (HasFlag(value, VersioningMode.DropTableCastedOff))
+                {
+                    _Strategy.SetOption(VersioningMode.DropTableCastedOff);
+                }
+                if (HasFlag(value, VersioningMode.DeleteAllRecordInTableCastedOff))
+                {
+                    _Strategy.SetOption(VersioningMode.DeleteAllRecordInTableCastedOff);
+                }
+                _Strategy.Reset();
+                _Mode = value;
+            }
+        }
+
+        private static bool HasFlag(VersioningMode value, VersioningMode target)
+        {
+            return (value & target) == target;
+        }
+
         public VersionOrigin TargetVersion { get { return Activator.CreateInstance<V>(); } }
 
         public virtual IEnumerable<IEntityVersionChangePlan> VersionChangePlanList { get; private set; }
 
         public int ModifiedCount { [DebuggerStepThrough] get; set; }
 
-        public VersioningMode Mode { get; set; }
-
-        public ChangePlan()
-        {
-            VersionChangePlanList = new List<IEntityVersionChangePlan>();
-        }
 
         public void AddVersionChangePlan(IEntityVersionChangePlan plan)
         {
@@ -131,6 +193,7 @@ namespace Homura.ORM.Migration
 
             foreach (var vcp in VersionChangePlanList)
             {
+                vcp.Mode = Mode;
                 vcp.DowngradeToTargetVersion(connection);
                 ModifiedCount += vcp.ModifiedCount;
             }

@@ -1,6 +1,7 @@
 ﻿
 using Homura.ORM;
 using Homura.ORM.Migration;
+using Homura.ORM.Setup;
 using Homura.Test.TestFixture.Dao;
 using System.Collections.Generic;
 
@@ -8,6 +9,10 @@ namespace Homura.Test.TestFixture.Migration.Plan
 {
     internal class AlphaChangePlan_Version_3 : AlphaChangePlan_Abstract<Version_3>
     {
+        public AlphaChangePlan_Version_3(VersioningMode mode) : base(mode)
+        {
+        }
+
         public override void UpgradeToTargetVersion(IConnection connection)
         {
             var dao = new AlphaDao(TargetVersion.GetType());
