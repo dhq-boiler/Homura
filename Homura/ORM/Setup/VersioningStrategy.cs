@@ -18,6 +18,8 @@ namespace Homura.ORM.Setup
 
         public VersioningMode VersioningMode { get; set; }
 
+        public VersionStrategyState State { get; internal set; }
+
         internal abstract void RegisterChangePlan(IVersionChangePlan plan);
 
         internal abstract void RegisterChangePlan(IEntityVersionChangePlan plan);

@@ -133,9 +133,10 @@ namespace Homura.ORM.Setup
 
         public void UpgradeToTargetVersion()
         {
-            foreach (var strategy in versioningStrategies)
+            foreach (var strategy in versioningStrategies.Where(x => x.State == VersionStrategyState.Ready))
             {
                 strategy.UpgradeToTargetVersion(CurrentConnection);
+                strategy.State = VersionStrategyState.Processed;
             }
 
             OnFinishedToUpgradeTo(new ModifiedEventArgs(versioningStrategies.Sum(x => x.ModifiedCount)));
