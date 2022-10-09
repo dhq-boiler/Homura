@@ -4,30 +4,27 @@ using Homura.ORM.Migration;
 using Homura.ORM.Setup;
 using Homura.Test.TestFixture.Dao;
 using Homura.Test.TestFixture.Entity;
-using Homura.Test.TestFixture.Migration;
 using System.Collections.Generic;
 
-namespace Sunctum.Domain.Data.Dao.Migration.Plan
+namespace Homura.Test.TestFixture.Migration.Plan
 {
-    internal class Valkyrie_1_ChangePlan_Version_1 : ChangePlan<Valkyrie_1, Version_1>
+    internal class Roki_ChangePlan_Version_1 : ChangePlan<Roki, Version_1>
     {
-        public Valkyrie_1_ChangePlan_Version_1(VersioningMode mode) : base("Valkyrie_1_1", PostMigrationVerification.TableExists, mode)
+        public Roki_ChangePlan_Version_1(VersioningMode mode) : base("Roki_1", PostMigrationVerification.TableExists, mode)
         {
         }
 
         public override void CreateTable(IConnection connection)
         {
-            var dao = new Valkyrie_1_Dao(typeof(Version_1));
+            var dao = new RokiDao(TargetVersion.GetType());
             dao.CurrentConnection = connection;
             dao.CreateTableIfNotExists();
-            ++ModifiedCount;
-            dao.CreateIndexIfNotExists();
             ++ModifiedCount;
         }
 
         public override void DropTable(IConnection connection)
         {
-            var dao = new Valkyrie_1_Dao(typeof(Version_1));
+            var dao = new RokiDao(TargetVersion.GetType());
             dao.CurrentConnection = connection;
             dao.DropTable();
             ++ModifiedCount;
@@ -37,7 +34,7 @@ namespace Sunctum.Domain.Data.Dao.Migration.Plan
         {
             CreateTable(connection);
 
-            var dao = new Valkyrie_1_Dao(TargetVersion.GetType());
+            var dao = new RokiDao(TargetVersion.GetType());
             if (dao.CountAll() > 0)
             {
                 dao.Delete(new Dictionary<string, object>());

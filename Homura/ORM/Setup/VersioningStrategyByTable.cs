@@ -4,6 +4,7 @@ using Homura.ORM.Mapping;
 using Homura.ORM.Migration;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Homura.ORM.Setup
 {
@@ -14,6 +15,18 @@ namespace Homura.ORM.Setup
         internal VersioningStrategyByTable()
         {
             _planMap = new Dictionary<EntityVersionKey, IEntityVersionChangePlan>();
+        }
+
+        public override IEnumerable<ChangePlanBase> ChangePlans => _planMap.Values.OfType<ChangePlanBase>();
+
+        internal override bool ExistsPlan(VersionOrigin targetVersion)
+        {
+            throw new NotSupportedException();
+        }
+
+        internal override bool ExistsPlan(Type entityType, VersionOrigin targetVersion)
+        {
+            return _planMap.ContainsKey(new EntityVersionKey(entityType, targetVersion));
         }
 
         internal override IVersionChangePlan GetPlan(VersionOrigin targetVersion)
@@ -28,7 +41,6 @@ namespace Homura.ORM.Setup
 
         internal override void RegisterChangePlan(IEntityVersionChangePlan plan)
         {
-            plan.Mode = VersioningMode;
             _planMap.Add(new EntityVersionKey(plan.TargetEntityType, plan.TargetVersion), plan);
         }
 

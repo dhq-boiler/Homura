@@ -12,9 +12,21 @@ namespace Homura.ORM.Setup
     {
         private Dictionary<VersionKey, IVersionChangePlan> _planMap;
 
+        public override IEnumerable<ChangePlanBase> ChangePlans => _planMap.Values.OfType<ChangePlanBase>();
+
         internal VersioningStrategyByTick()
         {
             _planMap = new Dictionary<VersionKey, IVersionChangePlan>();
+        }
+
+        internal override bool ExistsPlan(VersionOrigin targetVersion)
+        {
+            return _planMap.ContainsKey(new VersionKey(targetVersion));
+        }
+
+        internal override bool ExistsPlan(Type entityType, VersionOrigin targetVersion)
+        {
+            throw new NotSupportedException();
         }
 
         internal override IVersionChangePlan GetPlan(VersionOrigin targetVersion)
@@ -34,7 +46,6 @@ namespace Homura.ORM.Setup
 
         internal override void RegisterChangePlan(IVersionChangePlan plan)
         {
-            plan.Mode = VersioningMode;
             _planMap.Add(new VersionKey(plan.TargetVersion), plan);
         }
 

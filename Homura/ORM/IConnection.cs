@@ -2,6 +2,7 @@
 
 using System;
 using System.Data.Common;
+using System.Threading.Tasks;
 
 namespace Homura.ORM
 {
@@ -12,6 +13,8 @@ namespace Homura.ORM
         string ConnectionString { get; }
 
         DbConnection OpenConnection();
+
+        Task<DbConnection> OpenConnectionAsync();
 
         bool TableExists(string tableName);
     }

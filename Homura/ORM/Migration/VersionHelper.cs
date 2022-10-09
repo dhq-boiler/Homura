@@ -1,6 +1,8 @@
 ﻿
 
+using Homura.Core;
 using Homura.ORM.Mapping;
+using Homura.ORM.Setup;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -44,6 +46,41 @@ namespace Homura.ORM.Migration
             }
 
             return chainCount;
+        }
+
+        public static Type GetVersionTypeFromDataVersionManager<E>(DataVersionManager dataVersionManager)
+        {
+            if (dataVersionManager is null)
+            {
+                throw new ArgumentNullException(nameof(dataVersionManager));
+            }
+
+            int versionCandidate = 0;
+
+            foreach (var strategy in dataVersionManager.Strategies)
+            {
+                foreach (var plan in strategy.ChangePlans)
+                {
+                    foreach (var plan2 in plan.VersionChangePlanList.OfType<ChangePlanHasTable>())
+                    {
+                        var entityName = plan2.TargetTableName.IndexOf("_") != -1 ? plan2.TargetTableName.Substring(0, plan2.TargetTableName.IndexOf("_")) : plan2.TargetTableName;
+
+                        if (!entityName.Equals(typeof(E).Name))
+                            continue;
+
+                        var versionNumber = plan2.TargetTableName.IndexOf("_") != -1 ? int.Parse(plan2.TargetTableName.Substring(plan2.TargetTableName.IndexOf("_") + 1)) : 0;
+                        if (plan2.MigrationAction != MigrationAction.AlterTable && plan2.MigrationAction != MigrationAction.ChangeRecords)
+                        {
+                            versionCandidate = versionNumber;
+                        }
+                    }
+                }
+            }
+
+            var types1 = Assembly.GetAssembly(typeof(E)).GetTypes();
+            var types2 = Assembly.GetExecutingAssembly().GetTypes();
+            var versionFlow = types2.Union(types1.OrderBy(t => t.Name, new NaturalStringComparer())).Where(x => x.Name.Equals(typeof(VersionOrigin).Name) || x.IsSubclassOf(typeof(VersionOrigin)));
+            return versionFlow.ElementAt(versionCandidate);
         }
 
         public static int GetInternalVersionNumberFromVersionType(VersionOrigin version)
