@@ -1,10 +1,9 @@
 ﻿using Homura.ORM.Mapping;
 using Homura.ORM.Migration;
 using Homura.ORM.Setup;
-using Homura.Test.TestFixture.Migration.Plan;
 using System.Collections.Generic;
 
-namespace Homura.Test.UnitTest
+namespace Homura.Test.TestFixture.Migration.Plan
 {
     internal class Roki_VersionChangePlan_VersionOrigin : ChangePlan<VersionOrigin>
     {

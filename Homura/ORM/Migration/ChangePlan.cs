@@ -12,13 +12,60 @@ using static Homura.Core.Delegate;
 
 namespace Homura.ORM.Migration
 {
-    public class ChangePlan<E, V> : IEntityVersionChangePlan, IModifiedCounter where E : EntityBaseObject
+    public class ChangePlanBase
+    {
+        public virtual IEnumerable<IEntityVersionChangePlan> VersionChangePlanList { get; protected set; }
+    }
+
+    public class ChangePlanHasTable : ChangePlanBase
+    {
+        public string TargetTableName { get; set; }
+        public PostMigrationVerification PostMigrationVerification { get; set; }
+        public MigrationAction MigrationAction { get; }
+
+        public ChangePlanHasTable(string targetTableName, PostMigrationVerification postMigrationVerification, MigrationAction migrationAction = MigrationAction.NotSpecified)
+        {
+            TargetTableName = targetTableName;
+            PostMigrationVerification = postMigrationVerification;
+            MigrationAction = migrationAction;
+        }
+
+        public void VerifyAndThrowExceptionIfError(IConnection connection)
+        {
+            var tableExists = connection.TableExists(TargetTableName);
+            if (tableExists && PostMigrationVerification == PostMigrationVerification.TableNotExists)
+            {
+                throw new MigrationFailedException($"expect: {TargetTableName} does not exist but actual: {TargetTableName} exists.");
+            }
+            if (!tableExists && PostMigrationVerification == PostMigrationVerification.TableExists)
+            {
+                throw new MigrationFailedException($"expect: {TargetTableName} exists but actual: {TargetTableName} does not exist.");
+            }
+        }
+    }
+
+    public enum PostMigrationVerification
+    {
+        TableExists,
+        TableNotExists,
+    }
+
+    public enum MigrationAction
+    {
+        NotSpecified,
+        CreateTable,
+        DropTable,
+        AlterTable,
+        ChangeRecords,
+    }
+
+    public class ChangePlan<E, V> : ChangePlanHasTable, IEntityVersionChangePlan, IModifiedCounter where E : EntityBaseObject
                                                                                where V : VersionOrigin
     {
         private VersioningStrategy _Strategy;
         private VersioningMode _Mode;
 
-        public ChangePlan(VersioningMode mode)
+        public ChangePlan(string targetTableName, PostMigrationVerification postMigrationVerification, VersioningMode mode, MigrationAction migrationAction = MigrationAction.NotSpecified) : base(targetTableName, postMigrationVerification, migrationAction)
         {
             Mode = mode;
             TargetEntityType = typeof(E);
@@ -122,7 +169,7 @@ namespace Homura.ORM.Migration
     }
 
 
-    public class ChangePlan<V> : IVersionChangePlan where V : VersionOrigin
+    public class ChangePlan<V> : ChangePlanBase, IVersionChangePlan where V : VersionOrigin
     {
         private VersioningStrategy _Strategy;
         private VersioningMode _Mode;
@@ -166,7 +213,7 @@ namespace Homura.ORM.Migration
 
         public VersionOrigin TargetVersion { get { return Activator.CreateInstance<V>(); } }
 
-        public virtual IEnumerable<IEntityVersionChangePlan> VersionChangePlanList { get; private set; }
+        public override IEnumerable<IEntityVersionChangePlan> VersionChangePlanList { get; protected set; }
 
         public int ModifiedCount { [DebuggerStepThrough] get; set; }
 

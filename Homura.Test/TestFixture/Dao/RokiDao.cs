@@ -1,5 +1,6 @@
 ﻿using Homura.Extensions;
 using Homura.ORM;
+using Homura.ORM.Setup;
 using Homura.Test.TestFixture.Entity;
 using System;
 using System.Data;
@@ -15,6 +16,10 @@ namespace Homura.Test.TestFixture.Dao
         public RokiDao(Type entityVersionType)
             : base(entityVersionType)
         { }
+
+        public RokiDao(DataVersionManager dataVersionManager) : base(dataVersionManager)
+        {
+        }
 
         protected override Roki ToEntity(IDataRecord reader)
         {

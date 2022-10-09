@@ -227,7 +227,7 @@ namespace Homura.Test.UnitTest
                 Assert.That(conn.GetTableNames(), Has.None.EqualTo("Roki"));
                 Assert.That(conn.GetTableNames(), Has.One.EqualTo("Roki_1"));
                 {
-                    dao = new RokiDao(typeof(Version_2));
+                    dao = new RokiDao(DataVersionManager.DefaultSchemaVersion);
                     dao.CurrentConnection = ConnectionManager.DefaultConnection;
                     var items = dao.FindAll();
                     Assert.That(items.Count(), Is.EqualTo(1)); //default version:Version_1

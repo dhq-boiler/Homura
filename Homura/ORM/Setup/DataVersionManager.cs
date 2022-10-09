@@ -12,40 +12,7 @@ namespace Homura.ORM.Setup
 {
     public class DataVersionManager
     {
-        private List<VersioningStrategy> versioningStrategies = new List<VersioningStrategy>();
-        //private VersioningStrategy _Strategy;
-        //private VersioningMode _Mode;
-
-        //public VersioningMode Mode
-        //{
-        //    get { return _Mode; }
-        //    set
-        //    {
-        //        if (HasFlag(value, VersioningMode.ByTick))
-        //        {
-        //            _Strategy = VersioningStrategy.ByTick;
-        //        }
-        //        if (HasFlag(value, VersioningMode.ByAlterTable))
-        //        {
-        //            _Strategy = VersioningStrategy.ByAlterTable;
-        //        }
-        //        if (HasFlag(value, VersioningMode.DropTableCastedOff))
-        //        {
-        //            _Strategy.SetOption(VersioningMode.DropTableCastedOff);
-        //        }
-        //        if (HasFlag(value, VersioningMode.DeleteAllRecordInTableCastedOff))
-        //        {
-        //            _Strategy.SetOption(VersioningMode.DeleteAllRecordInTableCastedOff);
-        //        }
-        //        _Strategy.Reset();
-        //        _Mode = value;
-        //    }
-        //}
-
-        //private static bool HasFlag(VersioningMode value, VersioningMode target)
-        //{
-        //    return (value & target) == target;
-        //}
+        public List<VersioningStrategy> Strategies { get; } = new List<VersioningStrategy>();
 
         public IConnection CurrentConnection { get; set; }
 
@@ -75,13 +42,13 @@ namespace Homura.ORM.Setup
             {
                 strategy = new VersioningStrategyByAlterTable();
             }
-            versioningStrategies.Add(strategy);
+            Strategies.Add(strategy);
             strategy.RegisterChangePlan(plan);
         }
 
         public void UnregisterChangePlan(VersionOrigin targetVersion)
         {
-            foreach (var strategy in versioningStrategies)
+            foreach (var strategy in Strategies)
             {
                 strategy.UnregisterChangePlan(targetVersion);
             }
@@ -98,13 +65,13 @@ namespace Homura.ORM.Setup
             {
                 strategy = new VersioningStrategyByAlterTable();
             }
-            versioningStrategies.Add(strategy);
+            Strategies.Add(strategy);
             strategy.RegisterChangePlan(plan);
         }
 
         public void UnregisterChangePlan(Type targetEntityType, VersionOrigin targetVersion)
         {
-            foreach (var strategy in versioningStrategies)
+            foreach (var strategy in Strategies)
             {
                 strategy.UnregisterChangePlan(targetEntityType, targetVersion);
             }
@@ -117,7 +84,7 @@ namespace Homura.ORM.Setup
 
         public IVersionChangePlan GetPlan(VersionOrigin targetVersion)
         {
-            var a = versioningStrategies.FirstOrDefault(x => x.ExistsPlan(targetVersion));
+            var a = Strategies.FirstOrDefault(x => x.ExistsPlan(targetVersion));
             if (a is null)
                 throw new KeyNotFoundException();
             return a.GetPlan(targetVersion);
@@ -125,7 +92,7 @@ namespace Homura.ORM.Setup
 
         public IEntityVersionChangePlan GetPlan(Type entityType, VersionOrigin targetVersion)
         {
-            var a = versioningStrategies.FirstOrDefault(x => x.ExistsPlan(entityType, targetVersion));
+            var a = Strategies.FirstOrDefault(x => x.ExistsPlan(entityType, targetVersion));
             if (a is null)
                 throw new KeyNotFoundException();
             return a.GetPlan(entityType, targetVersion);
@@ -133,13 +100,13 @@ namespace Homura.ORM.Setup
 
         public void UpgradeToTargetVersion()
         {
-            foreach (var strategy in versioningStrategies.Where(x => x.State == VersionStrategyState.Ready))
+            foreach (var strategy in Strategies.Where(x => x.State == VersionStrategyState.Ready))
             {
                 strategy.UpgradeToTargetVersion(CurrentConnection);
                 strategy.State = VersionStrategyState.Processed;
             }
 
-            OnFinishedToUpgradeTo(new ModifiedEventArgs(versioningStrategies.Sum(x => x.ModifiedCount)));
+            OnFinishedToUpgradeTo(new ModifiedEventArgs(Strategies.Sum(x => x.ModifiedCount)));
         }
 
         public event ModifiedEventHandler FinishedToUpgradeTo;

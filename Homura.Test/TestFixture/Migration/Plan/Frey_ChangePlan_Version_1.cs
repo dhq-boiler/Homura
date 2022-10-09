@@ -9,7 +9,7 @@ namespace Homura.Test.TestFixture.Migration.Plan
 {
     internal class Frey_ChangePlan_Version_1 : ChangePlan<Frey, Version_1>
     {
-        public Frey_ChangePlan_Version_1(VersioningMode mode) : base(mode)
+        public Frey_ChangePlan_Version_1(VersioningMode mode) : base("Frey_1", PostMigrationVerification.TableExists, mode)
         {
         }
 

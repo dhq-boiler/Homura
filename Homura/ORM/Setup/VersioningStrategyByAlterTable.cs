@@ -4,12 +4,15 @@ using Homura.ORM.Mapping;
 using Homura.ORM.Migration;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Homura.ORM.Setup
 {
     internal class VersioningStrategyByAlterTable : VersioningStrategy
     {
         private Dictionary<VersionKey, IVersionChangePlan> _planMap;
+
+        public override IEnumerable<ChangePlanBase> ChangePlans => _planMap.Values.OfType<ChangePlanBase>();
 
         internal VersioningStrategyByAlterTable()
         {

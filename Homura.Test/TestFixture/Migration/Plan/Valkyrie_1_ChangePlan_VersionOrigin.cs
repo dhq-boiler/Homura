@@ -11,7 +11,7 @@ namespace Sunctum.Domain.Data.Dao.Migration.Plan
 {
     internal class Valkyrie_1_ChangePlan_VersionOrigin : ChangePlan<Valkyrie_1, VersionOrigin>
     {
-        public Valkyrie_1_ChangePlan_VersionOrigin(VersioningMode mode) : base(mode)
+        public Valkyrie_1_ChangePlan_VersionOrigin(VersioningMode mode) : base("Valkyrie_1", PostMigrationVerification.TableExists, mode)
         {
         }
 

@@ -8,7 +8,7 @@ namespace Homura.Test.TestFixture.Migration.Plan
 {
     internal class GammaChangePlan_VersionOrigin : GammaChangePlan_Abstract<VersionOrigin>
     {
-        public GammaChangePlan_VersionOrigin(VersioningMode mode) : base(mode)
+        public GammaChangePlan_VersionOrigin(VersioningMode mode) : base("Gamma", ORM.Migration.PostMigrationVerification.TableExists, mode)
         {
         }
 

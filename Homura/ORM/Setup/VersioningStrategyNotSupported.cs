@@ -3,11 +3,14 @@
 using Homura.ORM.Mapping;
 using Homura.ORM.Migration;
 using System;
+using System.Collections.Generic;
 
 namespace Homura.ORM.Setup
 {
     internal class VersioningStrategyNotSupported : VersioningStrategy
     {
+        public override IEnumerable<ChangePlanHasTable> ChangePlans => throw new NotSupportedException();
+
         internal override bool ExistsPlan(VersionOrigin targetVersion)
         {
             throw new NotSupportedException();

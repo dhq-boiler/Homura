@@ -11,7 +11,7 @@ namespace Homura.Test.TestFixture.Migration.Plan
 {
     internal class BookChangePlan_Abstract<V> : ChangePlan<Book, V> where V : VersionOrigin
     {
-        public BookChangePlan_Abstract(VersioningMode mode) : base(mode)
+        public BookChangePlan_Abstract(string targetTableName, PostMigrationVerification postMigrationVerification, VersioningMode mode) : base(targetTableName, postMigrationVerification, mode)
         {
         }
 

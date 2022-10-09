@@ -4,11 +4,12 @@ using Homura.Core;
 using Homura.ORM.Mapping;
 using Homura.ORM.Migration;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 
 namespace Homura.ORM.Setup
 {
-    internal abstract class VersioningStrategy : IModifiedCounter
+    public abstract class VersioningStrategy : IModifiedCounter
     {
         internal static readonly VersioningStrategy ByTable = new VersioningStrategyByTable();
         internal static readonly VersioningStrategy ByTick = new VersioningStrategyByTick();
@@ -19,6 +20,8 @@ namespace Homura.ORM.Setup
         public VersioningMode VersioningMode { get; set; }
 
         public VersionStrategyState State { get; internal set; }
+
+        public abstract IEnumerable<ChangePlanBase> ChangePlans { get; }
 
         internal abstract void RegisterChangePlan(IVersionChangePlan plan);
 

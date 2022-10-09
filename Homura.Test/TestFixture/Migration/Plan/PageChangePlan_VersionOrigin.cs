@@ -11,7 +11,7 @@ namespace Sunctum.Domain.Data.Dao.Migration.Plan
 {
     internal class PageChangePlan_VersionOrigin : ChangePlan<Page, VersionOrigin>
     {
-        public PageChangePlan_VersionOrigin(VersioningMode mode) : base(mode)
+        public PageChangePlan_VersionOrigin(VersioningMode mode) : base("Page", PostMigrationVerification.TableExists, mode)
         {
         }
 

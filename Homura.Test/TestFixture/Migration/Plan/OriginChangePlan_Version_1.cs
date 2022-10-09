@@ -11,7 +11,7 @@ namespace Homura.Test.TestFixture.Migration.Plan
 {
     internal class OriginChangePlan_Version_1 : OriginChangePlan_Abstract<Version_1>
     {
-        public OriginChangePlan_Version_1(VersioningMode mode) : base(mode)
+        public OriginChangePlan_Version_1(VersioningMode mode) : base("Origin_1", ORM.Migration.PostMigrationVerification.TableExists, mode)
         {
         }
 

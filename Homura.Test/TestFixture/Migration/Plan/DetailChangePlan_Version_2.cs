@@ -10,7 +10,7 @@ namespace Homura.Test.TestFixture.Migration.Plan
 {
     internal class DetailChangePlan_Version_2 : DetailChangePlan_Abstract<Version_2>
     {
-        public DetailChangePlan_Version_2(VersioningMode mode) : base(mode)
+        public DetailChangePlan_Version_2(VersioningMode mode) : base("Detail_2", PostMigrationVerification.TableExists, mode)
         {
         }
 

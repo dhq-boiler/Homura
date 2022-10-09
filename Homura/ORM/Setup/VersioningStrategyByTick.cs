@@ -12,6 +12,8 @@ namespace Homura.ORM.Setup
     {
         private Dictionary<VersionKey, IVersionChangePlan> _planMap;
 
+        public override IEnumerable<ChangePlanBase> ChangePlans => _planMap.Values.OfType<ChangePlanBase>();
+
         internal VersioningStrategyByTick()
         {
             _planMap = new Dictionary<VersionKey, IVersionChangePlan>();

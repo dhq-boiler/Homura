@@ -55,6 +55,12 @@ namespace Homura.ORM
             EntityVersionType = entityVersionType;
         }
 
+        public Dao(DataVersionManager dataVersionManager) : base(VersionHelper.GetVersionTypeFromDataVersionManager<E>(dataVersionManager))
+        {
+            OverridedColumns = new List<IColumn>();
+            EntityVersionType = VersionHelper.GetVersionTypeFromDataVersionManager<E>(dataVersionManager);
+        }
+
         public Type EntityVersionType { get; set; }
 
         public ITable Table

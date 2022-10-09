@@ -4,6 +4,7 @@ using Homura.ORM.Mapping;
 using Homura.ORM.Migration;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Homura.ORM.Setup
 {
@@ -15,6 +16,8 @@ namespace Homura.ORM.Setup
         {
             _planMap = new Dictionary<EntityVersionKey, IEntityVersionChangePlan>();
         }
+
+        public override IEnumerable<ChangePlanBase> ChangePlans => _planMap.Values.OfType<ChangePlanBase>();
 
         internal override bool ExistsPlan(VersionOrigin targetVersion)
         {

@@ -36,7 +36,7 @@ namespace Homura.Test.UnitTest
             svManager.RegisterChangePlan(registeringPlan1);
             var registeringPlan2 = new ChangePlan<Version_2>(VersioningMode.ByTick);
             registeringPlan2.AddVersionChangePlan(new AlphaChangePlan_Version_2(VersioningMode.ByTick));
-            registeringPlan2.AddVersionChangePlan(new BetaChangePlan_Version_1(VersioningMode.ByTick));
+            registeringPlan2.AddVersionChangePlan(new BetaChangePlan_Version_1( VersioningMode.ByTick));
             svManager.RegisterChangePlan(registeringPlan2);
             var registeringPlan3 = new ChangePlan<Version_3>(VersioningMode.ByTick);
             registeringPlan3.AddVersionChangePlan(new BetaChangePlan_Version_2(VersioningMode.ByTick));

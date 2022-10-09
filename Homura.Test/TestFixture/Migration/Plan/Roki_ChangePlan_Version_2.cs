@@ -3,13 +3,12 @@ using Homura.ORM.Migration;
 using Homura.ORM.Setup;
 using Homura.Test.TestFixture.Dao;
 using Homura.Test.TestFixture.Entity;
-using Homura.Test.TestFixture.Migration;
 
-namespace Homura.Test.UnitTest
+namespace Homura.Test.TestFixture.Migration.Plan
 {
     internal class Roki_ChangePlan_Version_2 : ChangePlan<Roki, Version_2>
     {
-        public Roki_ChangePlan_Version_2(VersioningMode mode) : base(mode)
+        public Roki_ChangePlan_Version_2(VersioningMode mode) : base("Roki_2", PostMigrationVerification.TableExists, mode, MigrationAction.AlterTable)
         {
         }
 

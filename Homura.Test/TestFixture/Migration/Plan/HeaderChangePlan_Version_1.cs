@@ -11,7 +11,7 @@ namespace Homura.Test.TestFixture.Migration.Plan
 {
     internal class HeaderChangePlan_Version_1 : HeaderChangePlan_Abstract<Version_1>
     {
-        public HeaderChangePlan_Version_1(VersioningMode mode) : base(mode)
+        public HeaderChangePlan_Version_1(VersioningMode mode) : base("Header_1", PostMigrationVerification.TableExists, mode)
         {
         }
 

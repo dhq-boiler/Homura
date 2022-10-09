@@ -9,7 +9,7 @@ namespace Homura.Test.TestFixture.Migration.Plan
 {
     internal class AlphaChangePlan_Version_3 : AlphaChangePlan_Abstract<Version_3>
     {
-        public AlphaChangePlan_Version_3(VersioningMode mode) : base(mode)
+        public AlphaChangePlan_Version_3(VersioningMode mode) : base("Alpha_3", PostMigrationVerification.TableExists, mode)
         {
         }
 
