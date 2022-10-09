@@ -35,8 +35,7 @@ namespace Homura.Test.UnitTest
         {
             var svManager = new DataVersionManager();
             svManager.CurrentConnection = ConnectionManager.DefaultConnection;
-            svManager.Mode = VersioningMode.ByTick;
-            svManager.RegisterChangePlan(new Valkyrie_0_VersionChangePlan_VersionOrigin());
+            svManager.RegisterChangePlan(new Valkyrie_0_VersionChangePlan_VersionOrigin(VersioningMode.ByTick));
             svManager.SetDefault();
 
             svManager.UpgradeToTargetVersion();
@@ -61,7 +60,7 @@ namespace Homura.Test.UnitTest
                 Assert.That(conn.GetTableNames(), Has.None.EqualTo("Valkyrie_0_1"));
             }
 
-            svManager.RegisterChangePlan(new Valkyrie_1_VersionChangePlan_Version_1());
+            svManager.RegisterChangePlan(new Valkyrie_1_VersionChangePlan_Version_1(VersioningMode.ByTick));
 
             svManager.UpgradeToTargetVersion();
 
@@ -80,7 +79,7 @@ namespace Homura.Test.UnitTest
                 Assert.That(items.First().Item3, Is.Null);
             }
 
-            svManager.RegisterChangePlan(new Valkyrie_1_VersionChangePlan_Version_2());
+            svManager.RegisterChangePlan(new Valkyrie_1_VersionChangePlan_Version_2(VersioningMode.ByTick));
 
             svManager.UpgradeToTargetVersion();
 
@@ -106,8 +105,7 @@ namespace Homura.Test.UnitTest
         {
             var svManager = new DataVersionManager();
             svManager.CurrentConnection = ConnectionManager.DefaultConnection;
-            svManager.Mode = VersioningMode.ByAlterTable;
-            svManager.RegisterChangePlan(new Frey_VersionChangePlan_VersionOrigin());
+            svManager.RegisterChangePlan(new Frey_VersionChangePlan_VersionOrigin(VersioningMode.ByAlterTable));
             svManager.SetDefault();
 
             svManager.UpgradeToTargetVersion();
@@ -138,7 +136,7 @@ namespace Homura.Test.UnitTest
 
                 Assert.That(conn.GetTableNames(), Has.None.EqualTo("Valkyrie_0_1"));
             }
-            svManager.RegisterChangePlan(new Frey_VersionChangePlan_Version_1());
+            svManager.RegisterChangePlan(new Frey_VersionChangePlan_Version_1(VersioningMode.ByAlterTable));
             svManager.UpgradeToTargetVersion();
 
             using (var conn = new SQLiteConnection($"Data Source={_filePath}"))
@@ -162,12 +160,91 @@ namespace Homura.Test.UnitTest
         }
 
         [Test]
+        public void ByTick_then_ByAlterTable()
+        {
+            var svManager = new DataVersionManager();
+            svManager.CurrentConnection = ConnectionManager.DefaultConnection;
+            svManager.RegisterChangePlan(new Roki_VersionChangePlan_VersionOrigin(VersioningMode.ByTick));
+            svManager.SetDefault();
+
+            svManager.UpgradeToTargetVersion();
+
+            var dao = new RokiDao(typeof(VersionOrigin));
+            dao.CurrentConnection = ConnectionManager.DefaultConnection;
+
+            dao.Insert(new Roki()
+            {
+                Id = Guid.Empty,
+                Item1 = "org_item1",
+                Item2 = "org_item2",
+            });
+
+            Assert.That(dao.CountAll(), Is.EqualTo(1));
+
+            using (var conn = new SQLiteConnection($"Data Source={_filePath}"))
+            {
+                conn.Open();
+
+                Assert.That(conn.GetTableNames(), Has.One.EqualTo("Roki"));
+                var items = dao.FindAll();
+                Assert.That(items.Count(), Is.EqualTo(1)); //default version:Version_1
+                Assert.That(items.First().Id, Is.EqualTo(Guid.Empty));
+                Assert.That(items.First().Item1, Is.EqualTo("org_item1"));
+                Assert.That(items.First().Item2, Is.EqualTo("org_item2"));
+                Assert.That(items.First().Item3, Is.Null);
+            }
+            svManager.RegisterChangePlan(new Roki_VersionChangePlan_Version_1(VersioningMode.ByTick | VersioningMode.DropTableCastedOff));
+            svManager.UpgradeToTargetVersion();
+
+            using (var conn = new SQLiteConnection($"Data Source={_filePath}"))
+            {
+                conn.Open();
+
+                Assert.That(conn.GetTableNames(), Has.None.EqualTo("Roki"));
+                Assert.That(conn.GetTableNames(), Has.One.EqualTo("Roki_1"));
+                {
+                    dao = new RokiDao(typeof(Version_1));
+                    dao.CurrentConnection = ConnectionManager.DefaultConnection;
+                    var items = dao.FindAll();
+                    Assert.That(items.Count(), Is.EqualTo(1)); //default version:Version_1
+                    Assert.That(items.First().Id, Is.EqualTo(Guid.Empty));
+                    Assert.That(items.First().Item1, Is.EqualTo("org_item1"));
+                    Assert.That(items.First().Item2, Is.EqualTo("org_item2"));
+                    Assert.That(items.First().Item3, Is.Null);
+                }
+
+                Assert.That(conn.GetTableNames(), Has.None.EqualTo("Roki"));
+                Assert.That(conn.GetTableNames(), Has.One.EqualTo("Roki_1"));
+            }
+
+            svManager.RegisterChangePlan(new Roki_VersionChangePlan_Version_2(VersioningMode.ByAlterTable));
+            svManager.UpgradeToTargetVersion();
+
+            using (var conn = new SQLiteConnection($"Data Source={_filePath}"))
+            {
+                conn.Open();
+
+                Assert.That(conn.GetTableNames(), Has.None.EqualTo("Roki"));
+                Assert.That(conn.GetTableNames(), Has.One.EqualTo("Roki_1"));
+                {
+                    dao = new RokiDao(DataVersionManager.DefaultSchemaVersion);
+                    dao.CurrentConnection = ConnectionManager.DefaultConnection;
+                    var items = dao.FindAll();
+                    Assert.That(items.Count(), Is.EqualTo(1)); //default version:Version_1
+                    Assert.That(items.First().Id, Is.EqualTo(Guid.Empty));
+                    Assert.That(items.First().Item1, Is.EqualTo("org_item1"));
+                    Assert.That(items.First().Item2, Is.EqualTo("org_item2"));
+                    Assert.That(items.First().Item3, Is.Null);
+                }
+            }
+        }
+
+        [Test]
         public void ByAlterTable_DropTableCastedOff()
         {
             var svManager = new DataVersionManager();
             svManager.CurrentConnection = ConnectionManager.DefaultConnection;
-            svManager.Mode = VersioningMode.ByAlterTable | VersioningMode.DropTableCastedOff;
-            svManager.RegisterChangePlan(new Frey_VersionChangePlan_VersionOrigin());
+            svManager.RegisterChangePlan(new Frey_VersionChangePlan_VersionOrigin(VersioningMode.ByAlterTable | VersioningMode.DropTableCastedOff));
             svManager.SetDefault();
 
             svManager.UpgradeToTargetVersion();
@@ -198,7 +275,7 @@ namespace Homura.Test.UnitTest
 
                 Assert.That(conn.GetTableNames(), Has.None.EqualTo("Valkyrie_0_1"));
             }
-            svManager.RegisterChangePlan(new Frey_VersionChangePlan_Version_1());
+            svManager.RegisterChangePlan(new Frey_VersionChangePlan_Version_1(VersioningMode.ByAlterTable));
             svManager.UpgradeToTargetVersion();
 
             using (var conn = new SQLiteConnection($"Data Source={_filePath}"))
@@ -226,8 +303,7 @@ namespace Homura.Test.UnitTest
         {
             var svManager = new DataVersionManager();
             svManager.CurrentConnection = ConnectionManager.DefaultConnection;
-            svManager.Mode = VersioningMode.ByAlterTable | VersioningMode.DeleteAllRecordInTableCastedOff;
-            svManager.RegisterChangePlan(new Frey_VersionChangePlan_VersionOrigin());
+            svManager.RegisterChangePlan(new Frey_VersionChangePlan_VersionOrigin(VersioningMode.ByAlterTable | VersioningMode.DeleteAllRecordInTableCastedOff));
             svManager.SetDefault();
 
             svManager.UpgradeToTargetVersion();
@@ -258,7 +334,7 @@ namespace Homura.Test.UnitTest
 
                 Assert.That(conn.GetTableNames(), Has.None.EqualTo("Valkyrie_0_1"));
             }
-            svManager.RegisterChangePlan(new Frey_VersionChangePlan_Version_1());
+            svManager.RegisterChangePlan(new Frey_VersionChangePlan_Version_1(VersioningMode.ByAlterTable | VersioningMode.DeleteAllRecordInTableCastedOff));
             svManager.UpgradeToTargetVersion();
 
             using (var conn = new SQLiteConnection($"Data Source={_filePath}"))
@@ -286,8 +362,7 @@ namespace Homura.Test.UnitTest
         {
             var svManager = new DataVersionManager();
             svManager.CurrentConnection = ConnectionManager.DefaultConnection;
-            svManager.Mode = VersioningMode.ByTick | VersioningMode.DropTableCastedOff;
-            svManager.RegisterChangePlan(new Valkyrie_0_VersionChangePlan_VersionOrigin());
+            svManager.RegisterChangePlan(new Valkyrie_0_VersionChangePlan_VersionOrigin(VersioningMode.ByTick | VersioningMode.DropTableCastedOff));
             svManager.SetDefault();
 
             svManager.UpgradeToTargetVersion();
@@ -312,7 +387,7 @@ namespace Homura.Test.UnitTest
                 Assert.That(conn.GetTableNames(), Has.None.EqualTo("Valkyrie_0_1"));
             }
 
-            svManager.RegisterChangePlan(new Valkyrie_1_VersionChangePlan_Version_1());
+            svManager.RegisterChangePlan(new Valkyrie_1_VersionChangePlan_Version_1(VersioningMode.ByTick | VersioningMode.DropTableCastedOff));
 
             svManager.UpgradeToTargetVersion();
 
@@ -333,7 +408,7 @@ namespace Homura.Test.UnitTest
                 Assert.That(items.First().Item3, Is.Null);
             }
 
-            svManager.RegisterChangePlan(new Valkyrie_1_VersionChangePlan_Version_2());
+            svManager.RegisterChangePlan(new Valkyrie_1_VersionChangePlan_Version_2(VersioningMode.ByTick | VersioningMode.DropTableCastedOff));
 
             svManager.UpgradeToTargetVersion();
 
@@ -361,8 +436,7 @@ namespace Homura.Test.UnitTest
         {
             var svManager = new DataVersionManager();
             svManager.CurrentConnection = ConnectionManager.DefaultConnection;
-            svManager.Mode = VersioningMode.ByTick | VersioningMode.DeleteAllRecordInTableCastedOff;
-            svManager.RegisterChangePlan(new Valkyrie_0_VersionChangePlan_VersionOrigin());
+            svManager.RegisterChangePlan(new Valkyrie_0_VersionChangePlan_VersionOrigin(VersioningMode.ByTick | VersioningMode.DeleteAllRecordInTableCastedOff));
             svManager.SetDefault();
 
             svManager.UpgradeToTargetVersion();
@@ -394,7 +468,7 @@ namespace Homura.Test.UnitTest
                 Assert.That(conn.GetTableNames(), Has.None.EqualTo("Valkyrie_0_1"));
             }
 
-            svManager.RegisterChangePlan(new Valkyrie_1_VersionChangePlan_Version_1());
+            svManager.RegisterChangePlan(new Valkyrie_1_VersionChangePlan_Version_1(VersioningMode.ByTick | VersioningMode.DeleteAllRecordInTableCastedOff));
             svManager.UpgradeToTargetVersion();
 
             var dao1 = new Valkyrie_1_Dao(typeof(VersionOrigin));
@@ -433,7 +507,7 @@ namespace Homura.Test.UnitTest
                 Assert.That(conn.GetTableNames(), Has.None.EqualTo("Valkyrie_1_1"));
             }
 
-            svManager.RegisterChangePlan(new Valkyrie_1_VersionChangePlan_Version_2());
+            svManager.RegisterChangePlan(new Valkyrie_1_VersionChangePlan_Version_2(VersioningMode.ByTick | VersioningMode.DeleteAllRecordInTableCastedOff));
             svManager.UpgradeToTargetVersion();
 
             using (var conn = new SQLiteConnection($"Data Source={_filePath}"))

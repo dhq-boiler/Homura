@@ -12,8 +12,10 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Data.OleDb;
+using System.Data.SqlClient;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 
 namespace Homura.ORM
 {
@@ -51,6 +53,12 @@ namespace Homura.ORM
         {
             OverridedColumns = new List<IColumn>();
             EntityVersionType = entityVersionType;
+        }
+
+        public Dao(DataVersionManager dataVersionManager) : base(VersionHelper.GetVersionTypeFromDataVersionManager<E>(dataVersionManager))
+        {
+            OverridedColumns = new List<IColumn>();
+            EntityVersionType = VersionHelper.GetVersionTypeFromDataVersionManager<E>(dataVersionManager);
         }
 
         public Type EntityVersionType { get; set; }
@@ -97,6 +105,18 @@ namespace Homura.ORM
             else
             {
                 return ConnectionManager.DefaultConnection.OpenConnection();
+            }
+        }
+
+        protected async Task<DbConnection> GetConnectionAsync()
+        {
+            if (CurrentConnection != null)
+            {
+                return await CurrentConnection.OpenConnectionAsync().ConfigureAwait(false);
+            }
+            else
+            {
+                return await ConnectionManager.DefaultConnection.OpenConnectionAsync().ConfigureAwait(false);
             }
         }
 
@@ -179,6 +199,22 @@ namespace Homura.ORM
             }, timeout);
         }
 
+        public async Task CreateTableIfNotExistsAsync(TimeSpan? timeout = null)
+        {
+            await KeepTryingUntilProcessSucceedAsync<Task>(new Func<Task>(async () =>
+            {
+                using (var conn = await GetConnectionAsync().ConfigureAwait(false))
+                {
+                    string sql = $"create table if not exists {TableName}";
+
+                    DefineColumns(ref sql, Columns);
+
+                    LogManager.GetCurrentClassLogger().Debug(sql);
+                    await conn.ExecuteAsync(sql).ConfigureAwait(false);
+                }
+            }), timeout);
+        }
+
         public void DropTable(TimeSpan? timeout = null)
         {
             KeepTryingUntilProcessSucceed(() =>
@@ -193,6 +229,20 @@ namespace Homura.ORM
             }, timeout);
         }
 
+        public async Task DropTableAsync(TimeSpan? timeout = null)
+        {
+            await KeepTryingUntilProcessSucceedAsync<Task>(new Func<Task>(async () =>
+            {
+                using (var conn = await GetConnectionAsync().ConfigureAwait(false))
+                {
+                    string sql = $"drop table {TableName}";
+
+                    LogManager.GetCurrentClassLogger().Debug(sql);
+                    await conn.ExecuteAsync(sql).ConfigureAwait(false);
+                }
+            }), timeout).ConfigureAwait(false);
+        }
+
         public int CreateIndexIfNotExists(TimeSpan? timeout = null)
         {
             int created = 0;
@@ -201,6 +251,17 @@ namespace Homura.ORM
                 created = CreateIndexClass(created);
                 created = CreateIndexProperties(created);
             }, timeout);
+            return created;
+        }
+
+        public async Task<int> CreateIndexIfNotExistsAsync(TimeSpan? timeout = null)
+        {
+            int created = 0;
+            await KeepTryingUntilProcessSucceedAsync<Task>(new Func<Task>(async () =>
+            {
+                created = await CreateIndexClassAsync(created);
+                created = await CreateIndexPropertiesAsync(created);
+            }), timeout).ConfigureAwait(false);
             return created;
         }
 
@@ -217,6 +278,28 @@ namespace Homura.ORM
 
                     LogManager.GetCurrentClassLogger().Debug(sql);
                     int result = conn.Execute(sql);
+                    if (result != -1)
+                    {
+                        created += 1;
+                    }
+                }
+            }
+
+            return created;
+        }
+        private async Task<int> CreateIndexPropertiesAsync(int created)
+        {
+            HashSet<string> indexPropertyNames = SearchIndexProperties();
+            foreach (var indexPropertyName in indexPropertyNames)
+            {
+                string indexName = $"index_{TableName}_{indexPropertyName}";
+
+                using (var conn = await GetConnectionAsync().ConfigureAwait(false))
+                {
+                    string sql = $"create index if not exists {indexName} on {TableName}({indexPropertyName})";
+
+                    LogManager.GetCurrentClassLogger().Debug(sql);
+                    int result = await conn.ExecuteAsync(sql).ConfigureAwait(false);
                     if (result != -1)
                     {
                         created += 1;
@@ -258,6 +341,47 @@ namespace Homura.ORM
 
                     LogManager.GetCurrentClassLogger().Debug(sql);
                     int result = conn.Execute(sql);
+                    if (result != -1)
+                    {
+                        created += 1;
+                    }
+                }
+            }
+
+            return created;
+        }
+
+        private async Task<int> CreateIndexClassAsync(int created)
+        {
+            HashSet<string> indexColumnNames = SearchIndexClass();
+            if (indexColumnNames.Count() > 0)
+            {
+                string indexName = $"index_{TableName}_";
+                var queue = new Queue<string>(indexColumnNames);
+                while (queue.Count() > 0)
+                {
+                    indexName += queue.Dequeue();
+                    if (queue.Count() > 0)
+                    {
+                        indexName += "_";
+                    }
+                }
+                using (var conn = await GetConnectionAsync().ConfigureAwait(false))
+                {
+                    string sql = $"create index if not exists {indexName} on {TableName}(";
+                    var queue2 = new Queue<string>(indexColumnNames);
+                    while (queue2.Count() > 0)
+                    {
+                        sql += queue2.Dequeue();
+                        if (queue2.Count() > 0)
+                        {
+                            sql += ", ";
+                        }
+                    }
+                    sql += ")";
+
+                    LogManager.GetCurrentClassLogger().Debug(sql);
+                    int result = await conn.ExecuteAsync(sql).ConfigureAwait(false);
                     if (result != -1)
                     {
                         created += 1;
@@ -330,6 +454,34 @@ namespace Homura.ORM
             }
         }
 
+        /// <summary>
+        /// _IsTransaction フラグによって局所的に DbConnection を使用するかどうか選択できるクエリ実行用内部メソッド
+        /// </summary>
+        /// <typeparam name="R"></typeparam>
+        /// <param name="body"></param>
+        /// <returns></returns>
+        protected async Task<R> ConnectionInternalAndReturnAsync<R>(Func<IDbConnection, R> body, IDbConnection conn = null)
+        {
+            bool isTransaction = conn != null;
+
+            try
+            {
+                if (!isTransaction)
+                {
+                    conn = await GetConnectionAsync().ConfigureAwait(false);
+                }
+
+                return body(conn);
+            }
+            finally
+            {
+                if (!isTransaction)
+                {
+                    conn.Dispose();
+                }
+            }
+        }
+
         protected IEnumerable<R> ConnectionInternalYield<R>(Func<IDbConnection, IEnumerable<R>> body, IDbConnection conn = null)
         {
             bool isTransaction = conn != null;
@@ -342,6 +494,28 @@ namespace Homura.ORM
                 }
 
                 return body.Invoke(conn);
+            }
+            finally
+            {
+                if (!isTransaction)
+                {
+                    conn.Dispose();
+                }
+            }
+        }
+
+        protected async IAsyncEnumerable<R> ConnectionInternalYieldAsync<R>(Func<IDbConnection, IAsyncEnumerable<R>> body, IDbConnection conn = null)
+        {
+            bool isTransaction = conn != null;
+
+            try
+            {
+                if (!isTransaction)
+                {
+                    conn = await GetConnectionAsync().ConfigureAwait(false);
+                }
+
+                yield return (R)body(conn);
             }
             finally
             {
@@ -378,6 +552,32 @@ namespace Homura.ORM
             }
         }
 
+        /// <summary>
+        /// _IsTransaction フラグによって局所的に DbConnection を使用するかどうか選択できるクエリ実行用内部メソッド
+        /// </summary>
+        /// <param name="body"></param>
+        protected async Task ConnectionInternalAsync(Action<IDbConnection> body, IDbConnection conn = null)
+        {
+            bool isTransaction = conn != null;
+
+            try
+            {
+                if (!isTransaction)
+                {
+                    conn = await GetConnectionAsync().ConfigureAwait(false);
+                }
+
+                body(conn);
+            }
+            finally
+            {
+                if (!isTransaction)
+                {
+                    conn.Dispose();
+                }
+            }
+        }
+
         public readonly TimeSpan Timeout = TimeSpan.FromMinutes(5);
 
         /// <summary>
@@ -398,8 +598,8 @@ namespace Homura.ORM
             {
                 try
                 {
-                    LogManager.GetCurrentClassLogger().Trace("try body.Invoke()");
-                    body.Invoke();
+                    LogManager.GetCurrentClassLogger().Trace("try body()");
+                    body();
                     return;
                 }
                 catch (Exception ex)
@@ -438,8 +638,86 @@ namespace Homura.ORM
             {
                 try
                 {
-                    LogManager.GetCurrentClassLogger().Trace("try body.Invoke()");
-                    return body.Invoke();
+                    LogManager.GetCurrentClassLogger().Trace("try body()");
+                    return body();
+                }
+                catch (Exception ex)
+                {
+                    if (ex.Message.Contains("database is lock"))
+                    {
+                        LogManager.GetCurrentClassLogger().Warn("database is lock");
+                        continue;
+                    }
+                    else
+                    {
+                        LogManager.GetCurrentClassLogger().Error(ex);
+                        throw;
+                    }
+                }
+            }
+
+            throw new TimeoutException();
+        }
+
+        /// <summary>
+        /// Funcを成功するかタイムアウトするまで試行し続けます。
+        /// </summary>
+        /// <param name="body">試行し続ける対象のFunc</param>
+        /// <param name="timeout">タイムアウト</param>
+        protected async Task KeepTryingUntilProcessSucceedAsync<T>(Func<Task> body, TimeSpan? timeout = null)
+        {
+            if (timeout == null)
+            {
+                timeout = TimeSpan.FromMinutes(5);
+            }
+
+            var beginTime = DateTime.Now;
+
+            while ((DateTime.Now - beginTime) <= timeout)
+            {
+                try
+                {
+                    LogManager.GetCurrentClassLogger().Trace("try body()");
+                    await body().ConfigureAwait(false);
+                }
+                catch (Exception ex)
+                {
+                    if (ex.Message.Contains("database is lock"))
+                    {
+                        LogManager.GetCurrentClassLogger().Warn("database is lock");
+                        continue;
+                    }
+                    else
+                    {
+                        LogManager.GetCurrentClassLogger().Error(ex);
+                        throw;
+                    }
+                }
+            }
+
+            throw new TimeoutException();
+        }
+
+        /// <summary>
+        /// Funcを成功するかタイムアウトするまで試行し続けます。
+        /// </summary>
+        /// <param name="body">試行し続ける対象のFunc</param>
+        /// <param name="timeout">タイムアウト</param>
+        protected async Task<T> KeepTryingUntilProcessSucceedAndReturnAsync<T>(Func<Task<T>> body, TimeSpan? timeout = null)
+        {
+            if (timeout == null)
+            {
+                timeout = TimeSpan.FromMinutes(5);
+            }
+
+            var beginTime = DateTime.Now;
+
+            while ((DateTime.Now - beginTime) <= timeout)
+            {
+                try
+                {
+                    LogManager.GetCurrentClassLogger().Trace("try body()");
+                    return await body().ConfigureAwait(false);
                 }
                 catch (Exception ex)
                 {
@@ -491,6 +769,38 @@ namespace Homura.ORM
             , timeout);
         }
 
+        public async Task<int> CountAllAsync(IDbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null)
+        {
+            return await KeepTryingUntilProcessSucceedAndReturnAsync<int>(async () =>
+                await await ConnectionInternalAndReturnAsync(new Func<IDbConnection, Task<int>>(async (connection) =>
+                {
+                    using (var command = (SqlCommand)connection.CreateCommand())
+                    {
+                        var table = (Homura.ORM.Table<E>)Table.Clone();
+                        if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName))
+                        {
+                            table.Schema = anotherDatabaseAliasName;
+                        }
+
+                        using (var query = new Select().Count("1").As("Count")
+                                                                        .From.Table(table))
+                        {
+                            string sql = query.ToSql();
+
+                            command.CommandText = sql;
+
+                            LogManager.GetCurrentClassLogger().Debug(sql);
+                            using (var reader = await command.ExecuteReaderAsync().ConfigureAwait(false))
+                            {
+                                await reader.ReadAsync().ConfigureAwait(false);
+                                return reader.GetInt32(reader.GetOrdinal("Count"));
+                            }
+                        }
+                    }
+                }), conn).ConfigureAwait(false)
+            , timeout).ConfigureAwait(false);
+        }
+
         public int CountBy(Dictionary<string, object> idDic, IDbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null)
         {
             return KeepTryingUntilProcessSucceed<int>(() =>
@@ -526,6 +836,41 @@ namespace Homura.ORM
             , timeout);
         }
 
+        public async Task<int> CountByAsync(Dictionary<string, object> idDic, IDbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null)
+        {
+            return await KeepTryingUntilProcessSucceedAndReturnAsync(async () =>
+                await await ConnectionInternalAndReturnAsync(new Func<IDbConnection, Task<int>>(async (connection) =>
+                {
+                    using (var command = (SqlCommand)connection.CreateCommand())
+                    {
+                        var table = (Table<E>)Table.Clone();
+                        if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName))
+                        {
+                            table.Schema = anotherDatabaseAliasName;
+                        }
+
+                        using (var query = new Select().Count("1").As("Count")
+                                                                        .From.Table(table)
+                                                                        .Where.KeyEqualToValue(idDic))
+                        {
+                            string sql = query.ToSql();
+
+                            command.CommandText = sql;
+                            command.CommandType = CommandType.Text;
+                            query.SetParameters(command);
+
+                            LogManager.GetCurrentClassLogger().Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
+                            using (var reader = await command.ExecuteReaderAsync().ConfigureAwait(false))
+                            {
+                                await reader.ReadAsync().ConfigureAwait(false);
+                                return reader.GetInt32(reader.GetOrdinal("Count"));
+                            }
+                        }
+                    }
+                }), conn).ConfigureAwait(false)
+            , timeout).ConfigureAwait(false);
+        }
+
         public void DeleteWhereIDIs(Guid id, IDbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null)
         {
             KeepTryingUntilProcessSucceed(() =>
@@ -555,6 +900,37 @@ namespace Homura.ORM
                 }), conn);
 
             }, timeout);
+        }
+
+        public async Task DeleteWhereIDIsAsync(Guid id, IDbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null)
+        {
+            await KeepTryingUntilProcessSucceedAsync<Task>(async() =>
+            {
+                await ConnectionInternalAsync(new Action<IDbConnection>(async (connection) =>
+                {
+                    using (var command = (SqlCommand)connection.CreateCommand())
+                    {
+                        var table = (Table<E>)Table.Clone();
+                        if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName))
+                        {
+                            table.Schema = anotherDatabaseAliasName;
+                        }
+
+                        using (var query = new Delete().From.Table(table)
+                                                                        .Where.Column("ID").EqualTo.Value(id))
+                        {
+                            string sql = query.ToSql();
+                            command.CommandText = sql;
+
+                            query.SetParameters(command);
+
+                            LogManager.GetCurrentClassLogger().Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
+                            await command.ExecuteNonQueryAsync().ConfigureAwait(false);
+                        }
+                    }
+                }), conn).ConfigureAwait(false);
+
+            }, timeout).ConfigureAwait(false);
         }
 
         public void DeleteAll(IDbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null)
@@ -587,6 +963,36 @@ namespace Homura.ORM
             }, timeout);
         }
 
+        public async Task DeleteAllAsync(IDbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null)
+        {
+            await KeepTryingUntilProcessSucceedAsync<Task>(async () =>
+            {
+                await ConnectionInternalAsync(new Action<IDbConnection>(async (connection) =>
+                {
+                    using (var command = (SqlCommand)connection.CreateCommand())
+                    {
+                        var table = (Table<E>)Table.Clone();
+                        if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName))
+                        {
+                            table.Schema = anotherDatabaseAliasName;
+                        }
+
+                        using (var query = new Delete().From.Table(table))
+                        {
+                            string sql = query.ToSql();
+                            command.CommandText = sql;
+                            command.CommandType = CommandType.Text;
+
+                            query.SetParameters(command);
+
+                            LogManager.GetCurrentClassLogger().Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
+                            int deleted = await command.ExecuteNonQueryAsync().ConfigureAwait(false);
+                        }
+                    }
+                }), conn).ConfigureAwait(false);
+            }, timeout).ConfigureAwait(false);
+        }
+
         public void Delete(Dictionary<string, object> idDic, IDbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null)
         {
             KeepTryingUntilProcessSucceed(() =>
@@ -616,6 +1022,37 @@ namespace Homura.ORM
                     }
                 }), conn);
             }, timeout);
+        }
+
+        public async Task DeleteAsync(Dictionary<string, object> idDic, IDbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null)
+        {
+            await KeepTryingUntilProcessSucceedAsync<Task>(async () =>
+            {
+                await ConnectionInternalAsync(new Action<IDbConnection>(async (connection) =>
+                {
+                    using (var command = (SqlCommand)connection.CreateCommand())
+                    {
+                        var table = (Table<E>)Table.Clone();
+                        if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName))
+                        {
+                            table.Schema = anotherDatabaseAliasName;
+                        }
+
+                        using (var query = new Delete().From.Table(table)
+                                                                        .Where.KeyEqualToValue(idDic))
+                        {
+                            string sql = query.ToSql();
+                            command.CommandText = sql;
+                            command.CommandType = CommandType.Text;
+
+                            query.SetParameters(command);
+
+                            LogManager.GetCurrentClassLogger().Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
+                            int deleted = await command.ExecuteNonQueryAsync().ConfigureAwait(false);
+                        }
+                    }
+                }), conn).ConfigureAwait(false);
+            }, timeout).ConfigureAwait(false);
         }
 
         public void Insert(E entity, IDbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null)
@@ -661,6 +1098,51 @@ namespace Homura.ORM
                     }
                 }), conn);
             }, timeout);
+        }
+
+        public async Task InsertAsync(E entity, IDbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null)
+        {
+            InitializeColumnDefinitions();
+            try
+            {
+                VerifyColumnDefinitions(conn);
+            }
+            catch (NotMatchColumnException e)
+            {
+                throw new DatabaseSchemaException($"Didn't insert because mismatch definition of table:{TableName}", e);
+            }
+
+            await KeepTryingUntilProcessSucceedAsync<Task>(async () =>
+            {
+                await ConnectionInternalAsync(new Action<IDbConnection>(async (connection) =>
+                {
+                    using (var command = (SqlCommand)connection.CreateCommand())
+                    {
+                        var overrideColumns = SwapIfOverrided(Columns);
+
+                        var table = (Table<E>)Table.Clone();
+                        if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName))
+                        {
+                            table.Schema = anotherDatabaseAliasName;
+                        }
+
+                        using (var query = new Insert().Into.Table(table).Columns(overrideColumns.Select(c => c.ColumnName))
+                                                                                          .Values.Value(overrideColumns.Select(c => c.PropInfo.GetValue(entity))))
+                        {
+                            string sql = query.ToSql();
+                            command.CommandText = sql;
+                            query.SetParameters(command);
+
+                            LogManager.GetCurrentClassLogger().Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
+                            int inserted = await command.ExecuteNonQueryAsync().ConfigureAwait(false);
+                            if (inserted == 0)
+                            {
+                                throw new NoEntityInsertedException($"Failed:{sql} {query.GetParameters().ToStringKeyIsValue()}");
+                            }
+                        }
+                    }
+                }), conn).ConfigureAwait(false);
+            }, timeout).ConfigureAwait(false);
         }
 
         protected IEnumerable<IColumn> SwapIfOverrided(IEnumerable<IColumn> columns)
@@ -758,6 +1240,86 @@ namespace Homura.ORM
             throw new TimeoutException();
         }
 
+        public async IAsyncEnumerable<E> FindAllAsync(IDbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null)
+        {
+            if (timeout == null)
+            {
+                timeout = TimeSpan.FromMinutes(5);
+            }
+
+            var beginTime = DateTime.Now;
+
+            List<E> ret = new List<E>();
+
+            while ((DateTime.Now - beginTime) <= timeout)
+            {
+                try
+                {
+                    bool isTransaction = conn != null;
+
+                    try
+                    {
+                        if (!isTransaction)
+                        {
+                            conn = await GetConnectionAsync().ConfigureAwait(false);
+                        }
+
+                        using (var command = (SqlCommand)conn.CreateCommand())
+                        {
+                            var table = (Table<E>)Table.Clone();
+                            if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName))
+                            {
+                                table.Schema = anotherDatabaseAliasName;
+                            }
+
+                            using (var query = new Select().Asterisk().From.Table(table))
+                            {
+                                string sql = query.ToSql();
+                                command.CommandText = sql;
+                                command.CommandType = CommandType.Text;
+
+                                LogManager.GetCurrentClassLogger().Debug(sql);
+                                using (var reader = await command.ExecuteReaderAsync().ConfigureAwait(false))
+                                {
+                                    while (await reader.ReadAsync().ConfigureAwait(false))
+                                    {
+                                        ret.Add(ToEntity(reader));
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    finally
+                    {
+                        if (!isTransaction)
+                        {
+                            conn.Dispose();
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    if (ex.Message.Contains("database is lock"))
+                    {
+                        LogManager.GetCurrentClassLogger().Warn("database is lock");
+                        continue;
+                    }
+                    else
+                    {
+                        LogManager.GetCurrentClassLogger().Error(ex);
+                        throw;
+                    }
+                }
+
+                foreach (var item in ret)
+                {
+                    yield return item;
+                }
+            }
+
+            throw new TimeoutException();
+        }
+
         public IEnumerable<E> FindBy(Dictionary<string, object> idDic, IDbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null)
         {
             if (timeout == null)
@@ -836,6 +1398,88 @@ namespace Homura.ORM
             throw new TimeoutException();
         }
 
+        public async IAsyncEnumerable<E> FindByAsync(Dictionary<string, object> idDic, IDbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null)
+        {
+            if (timeout == null)
+            {
+                timeout = TimeSpan.FromMinutes(5);
+            }
+
+            var beginTime = DateTime.Now;
+
+            List<E> ret = new List<E>();
+
+            while ((DateTime.Now - beginTime) <= timeout)
+            {
+                try
+                {
+                    bool isTransaction = conn != null;
+
+                    try
+                    {
+                        if (!isTransaction)
+                        {
+                            conn = await GetConnectionAsync().ConfigureAwait(false);
+                        }
+
+                        using (var command = (SqlCommand)conn.CreateCommand())
+                        {
+                            var table = (Table<E>)Table.Clone();
+                            if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName))
+                            {
+                                table.Schema = anotherDatabaseAliasName;
+                            }
+
+                            using (var query = new Select().Asterisk().From.Table(table)
+                                                                                       .Where.KeyEqualToValue(idDic))
+                            {
+                                string sql = query.ToSql();
+                                command.CommandText = sql;
+                                command.CommandType = CommandType.Text;
+                                query.SetParameters(command);
+
+                                LogManager.GetCurrentClassLogger().Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
+                                using (var reader = await command.ExecuteReaderAsync().ConfigureAwait(false))
+                                {
+                                    while (await reader.ReadAsync().ConfigureAwait(false))
+                                    {
+                                        ret.Add(ToEntity(reader));
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    finally
+                    {
+                        if (!isTransaction)
+                        {
+                            conn.Dispose();
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    if (ex.Message.Contains("database is lock"))
+                    {
+                        LogManager.GetCurrentClassLogger().Warn("database is lock");
+                        continue;
+                    }
+                    else
+                    {
+                        LogManager.GetCurrentClassLogger().Error(ex);
+                        throw;
+                    }
+                }
+
+                foreach (var item in ret)
+                {
+                    yield return item;
+                }
+            }
+
+            throw new TimeoutException();
+        }
+
         public void Update(E entity, IDbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null)
         {
             KeepTryingUntilProcessSucceed(() =>
@@ -863,6 +1507,35 @@ namespace Homura.ORM
                     }
                 }), conn);
             }, timeout);
+        }
+
+        public async Task UpdateAsync(E entity, IDbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null)
+        {
+            await KeepTryingUntilProcessSucceedAsync<Task>(async () =>
+            {
+                await ConnectionInternalAsync(new Action<IDbConnection>(async (connection) =>
+                {
+                    using (var command = (SqlCommand)connection.CreateCommand())
+                    {
+                        var table = (Table<E>)Table.Clone();
+                        if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName))
+                        {
+                            table.Schema = anotherDatabaseAliasName;
+                        }
+
+                        using (var query = new Update().Table(table).Set.KeyEqualToValue(table.ColumnsWithoutPrimaryKeys.ToDictionary(c => c.ColumnName, c => c.PropInfo.GetValue(entity)))
+                                                                                     .Where.KeyEqualToValue(table.PrimaryKeyColumns.ToDictionary(c => c.ColumnName, c => c.PropInfo.GetValue(entity))))
+                        {
+                            string sql = query.ToSql();
+                            command.CommandText = sql;
+                            query.SetParameters(command);
+
+                            LogManager.GetCurrentClassLogger().Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
+                            await command.ExecuteNonQueryAsync().ConfigureAwait(false);
+                        }
+                    }
+                }), conn).ConfigureAwait(false);
+            }, timeout).ConfigureAwait(false);
         }
 
         private static string sqlToDefineColumns(IColumn c)
@@ -974,6 +1647,55 @@ namespace Homura.ORM
             }, timeout);
         }
 
+        public async Task UpgradeTableAsync(VersionChangeUnit upgradePath, VersioningMode mode, IDbConnection conn = null, TimeSpan? timeout = null)
+        {
+            await KeepTryingUntilProcessSucceedAsync<Task>(async () =>
+            {
+                await ConnectionInternalAsync(new Action<IDbConnection>(async (connection) =>
+                {
+                    using (var command = (SqlCommand)connection.CreateCommand())
+                    {
+                        var newTable = new Table<E>(upgradePath.To);
+                        var oldTable = new Table<E>(upgradePath.From);
+
+                        using (var query = new Insert().Into.Table(newTable)
+                                                       .Columns(newTable.Columns.Select(c => c.ColumnName))
+                                                       .Select.Columns(oldTable.Columns.Select(c => c.ColumnName).Union(newTable.NewColumns(oldTable, newTable).Select(v => v.WrapOutput()))).From.Table(oldTable))
+                        {
+                            string sql = query.ToSql();
+                            command.CommandText = sql;
+
+                            LogManager.GetCurrentClassLogger().Debug($"{sql}");
+                            await command.ExecuteNonQueryAsync().ConfigureAwait(false);
+                        }
+                    }
+
+                    if ((mode & VersioningMode.DeleteAllRecordInTableCastedOff) == VersioningMode.DeleteAllRecordInTableCastedOff)
+                    {
+                        using (var command = (SqlCommand)connection.CreateCommand())
+                        {
+                            string sql = $"delete from {new Table<E>(upgradePath.From).Name}";
+                            command.CommandText = sql;
+                            LogManager.GetCurrentClassLogger().Debug($"{sql}");
+                            await command.ExecuteNonQueryAsync().ConfigureAwait(false);
+                        }
+                    }
+
+                    if ((mode & VersioningMode.DropTableCastedOff) == VersioningMode.DropTableCastedOff)
+                    {
+                        using (var command = (SqlCommand)connection.CreateCommand())
+                        {
+                            string sql = $"drop table {new Table<E>(upgradePath.From).Name}";
+                            command.CommandText = sql;
+                            LogManager.GetCurrentClassLogger().Debug($"{sql}");
+                            await command.ExecuteNonQueryAsync().ConfigureAwait(false);
+                        }
+                    }
+
+                }), conn).ConfigureAwait(false);
+            }, timeout).ConfigureAwait(false);
+        }
+
         public T CatchThrow<T>(Func<T> func)
         {
             try
@@ -1042,6 +1764,64 @@ namespace Homura.ORM
                     }
                 }), conn);
             }, timeout);
+        }
+
+        public async Task AdjustColumnsAsync(Type versionFrom, Type versionTo, IDbConnection conn = null, TimeSpan? timeout = null)
+        {
+            await KeepTryingUntilProcessSucceedAsync<Task>(async () =>
+            {
+                await ConnectionInternalAsync(new Action<IDbConnection>(async (connection) =>
+                {
+                    var newTable = new Table<E>(versionTo);
+                    var oldTable = new Table<E>(versionFrom);
+                    using (var command = (SqlCommand)connection.CreateCommand())
+                    {
+                        //Toテーブル作成
+                        string sql = $"create table {newTable.Name}_To(";
+                        foreach (var c in newTable.Columns)
+                        {
+                            sql += $"{c.ColumnName} {c.DBDataType}";
+                            if (!c.Equals(newTable.Columns.Last()))
+                                sql += ", ";
+                        }
+                        sql += ")";
+                        command.CommandText = sql;
+                        LogManager.GetCurrentClassLogger().Debug($"{sql}");
+                        await command.ExecuteNonQueryAsync().ConfigureAwait(false);
+                    }
+
+                    using (var command = (SqlCommand)connection.CreateCommand())
+                    {
+                        //fromテーブルからToテーブルへコピー
+                        using (var query = new Insert().Into.Table(new NeutralTable($"{newTable.Name}_To"))
+                                                        .Columns(newTable.Columns.Select(c => c.ColumnName))
+                                                        .Select.Columns(oldTable.Columns.Select(c => c.ColumnName).Union(newTable.NewColumns(oldTable, newTable).Select(v => v.WrapOutput()))).From.Table(oldTable))
+                        {
+                            command.CommandText = query.ToSql();
+                            LogManager.GetCurrentClassLogger().Debug($"{query.ToSql()}");
+                            await command.ExecuteNonQueryAsync().ConfigureAwait(false);
+                        }
+                    }
+
+                    using (var command = (SqlCommand)connection.CreateCommand())
+                    {
+                        //Drop fromテーブル
+                        var sql = $"drop table {oldTable.Name}";
+                        command.CommandText = sql;
+                        LogManager.GetCurrentClassLogger().Debug($"{sql}");
+                        await command.ExecuteNonQueryAsync().ConfigureAwait(false);
+                    }
+
+                    using (var command = (SqlCommand)connection.CreateCommand())
+                    {
+                        //ToテーブルをリネームしてFromテーブルに
+                        var sql = $"alter table {newTable.Name}_To rename to {oldTable.Name}";
+                        command.CommandText = sql;
+                        LogManager.GetCurrentClassLogger().Debug($"{sql}");
+                        await command.ExecuteNonQueryAsync().ConfigureAwait(false);
+                    }
+                }), conn).ConfigureAwait(false);
+            }, timeout).ConfigureAwait(false);
         }
     }
 }

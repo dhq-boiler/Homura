@@ -5,9 +5,9 @@ using System.Collections.Generic;
 
 namespace Homura.Test.TestFixture.Migration.Plan
 {
-    internal class Frey_VersionChangePlan_VersionOrigin : ChangePlan<VersionOrigin>
+    internal class Roki_VersionChangePlan_VersionOrigin : ChangePlan<VersionOrigin>
     {
-        public Frey_VersionChangePlan_VersionOrigin(VersioningMode mode) : base(mode)
+        public Roki_VersionChangePlan_VersionOrigin(VersioningMode mode) : base(mode)
         {
         }
 
@@ -15,7 +15,7 @@ namespace Homura.Test.TestFixture.Migration.Plan
         {
             get
             {
-                yield return new Frey_ChangePlan_VersionOrigin(Mode);
+                yield return new Roki_ChangePlan_VersionOrigin(Mode);
             }
         }
     }

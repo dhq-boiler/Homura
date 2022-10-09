@@ -42,8 +42,7 @@ namespace Sunctum.Infrastructure.Test.UnitTest.Data.Setup
         public void RegisterChangePlan_GetPlan_ByTick()
         {
             var defMng = DataVersionManager.DefaultSchemaVersion;
-            defMng.Mode = VersioningMode.ByTick;
-            defMng.RegisterChangePlan(new VersionChangePlan_VersionOrigin());
+            defMng.RegisterChangePlan(new VersionChangePlan_VersionOrigin(VersioningMode.ByTick));
 
             var plan = defMng.GetPlan(new VersionOrigin());
             Assert.That(plan, Is.TypeOf<VersionChangePlan_VersionOrigin>());
@@ -53,10 +52,9 @@ namespace Sunctum.Infrastructure.Test.UnitTest.Data.Setup
         public void GetPlan_NotRegistered_ByTick()
         {
             var defMng = DataVersionManager.DefaultSchemaVersion;
-            defMng.Mode = VersioningMode.ByTick;
             Assert.Throws<KeyNotFoundException>(() => defMng.GetPlan(new VersionOrigin()));
 
-            defMng.RegisterChangePlan(new VersionChangePlan_Version_1());
+            defMng.RegisterChangePlan(new VersionChangePlan_Version_1(VersioningMode.ByTick));
             Assert.Throws<KeyNotFoundException>(() => defMng.GetPlan(new VersionOrigin()));
         }
 
