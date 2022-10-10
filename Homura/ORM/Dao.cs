@@ -678,6 +678,7 @@ namespace Homura.ORM
                 {
                     LogManager.GetCurrentClassLogger().Trace("try body()");
                     await body().ConfigureAwait(false);
+                    return;
                 }
                 catch (Exception ex)
                 {

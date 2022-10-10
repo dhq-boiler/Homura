@@ -9,19 +9,19 @@ using NUnit.Framework;
 using System;
 using System.Data.SQLite;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace Homura.Test.UnitTest
 {
     [TestFixture]
-    public class SelectTest
+    public class InsertTest
     {
+        string _filePath;
         [OneTimeSetUp]
         public void OneTimeSetUp()
         {
-            var _filePath = Path.Combine(TestContext.CurrentContext.TestDirectory, "SelectTest.db");
-            ConnectionManager.SetDefaultConnection(Guid.Parse("D88B3E8E-B46C-41E3-AAEA-87FEA352C9F6"), $"Data Source={_filePath}", typeof(SQLiteConnection));
+            _filePath = Path.Combine(TestContext.CurrentContext.TestDirectory, "InsertTest.db");
+            ConnectionManager.SetDefaultConnection(Guid.Parse("1ADB0B4D-7757-47A7-9F9E-1B0A0B839382"), $"Data Source={_filePath}", typeof(SQLiteConnection));
 
             var svManager = new DataVersionManager();
             svManager.CurrentConnection = ConnectionManager.DefaultConnection;
@@ -49,16 +49,23 @@ namespace Homura.Test.UnitTest
         }
 
         [Test]
-        public async Task FindAllAsync()
+        public async Task InsertAsync()
         {
             var dao = new AlphaDao(typeof(Version_3));
-            var items = await dao.FindAllAsync().ToListAsync();
+            dao.Insert(new TestFixture.Entity.Alpha()
+            {
+                Id = Guid.Parse("1ADB0B4D-7757-47A7-9F9E-1B0A0B839382"),
+            });
         }
 
         [TearDown]
         public void TearDown()
         {
-            ConnectionManager.DisposeDebris(Guid.Parse("D88B3E8E-B46C-41E3-AAEA-87FEA352C9F6"));
+            ConnectionManager.DisposeDebris(Guid.Parse("1ADB0B4D-7757-47A7-9F9E-1B0A0B839382"));
+            if (File.Exists(_filePath))
+            {
+                File.Delete(_filePath);
+            }
         }
     }
 }
