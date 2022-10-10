@@ -1,19 +1,16 @@
-﻿using Homura.Test.TestFixture.Dao;
-using Homura.Test.TestFixture.Migration.Plan;
+﻿using Homura.ORM;
+using Homura.ORM.Mapping;
+using Homura.ORM.Migration;
+using Homura.ORM.Setup;
+using Homura.Test.TestFixture.Dao;
 using Homura.Test.TestFixture.Migration;
+using Homura.Test.TestFixture.Migration.Plan;
 using NUnit.Framework;
 using System;
-using System.Collections.Generic;
 using System.Data.SQLite;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using Homura.ORM;
-using Homura.ORM.Setup;
-using Homura.ORM.Migration;
-using Homura.ORM.Mapping;
-using System.Xml.Linq;
 
 namespace Homura.Test.UnitTest
 {
