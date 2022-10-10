@@ -4,7 +4,7 @@ using Homura.ORM.Migration;
 using Homura.ORM.Setup;
 using System;
 using System.Collections.Generic;
-using System.Data;
+using System.Data.Common;
 
 namespace Homura.ORM
 {
@@ -16,33 +16,33 @@ namespace Homura.ORM
 
         IConnection CurrentConnection { get; set; }
 
-        void VerifyTableDefinition(IDbConnection conn);
+        void VerifyTableDefinition(DbConnection conn);
 
         void CreateTableIfNotExists(TimeSpan? timeout = null);
 
-        int CountAll(IDbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null);
+        int CountAll(DbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null);
 
-        int CountBy(Dictionary<string, object> idDic, IDbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null);
+        int CountBy(Dictionary<string, object> idDic, DbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null);
 
-        void DeleteWhereIDIs(Guid id, IDbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null);
+        void DeleteWhereIDIs(Guid id, DbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null);
 
-        void UpgradeTable(VersionChangeUnit upgradePath, VersioningMode mode, IDbConnection conn = null, TimeSpan? timeout = null);
+        void UpgradeTable(VersionChangeUnit upgradePath, VersioningMode mode, DbConnection conn = null, TimeSpan? timeout = null);
 
-        void DeleteAll(IDbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null);
+        void DeleteAll(DbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null);
 
         void DropTable(TimeSpan? timeout = null);
     }
 
     public interface IDao<E> : IDao where E : EntityBaseObject
     {
-        void Insert(E entity, IDbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null);
+        void Insert(E entity, DbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null);
 
-        IEnumerable<E> FindAll(IDbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null);
+        IEnumerable<E> FindAll(DbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null);
 
-        IEnumerable<E> FindBy(Dictionary<string, object> idDic, IDbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null);
+        IEnumerable<E> FindBy(Dictionary<string, object> idDic, DbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null);
 
-        void Update(E entity, IDbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null);
+        void Update(E entity, DbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null);
         
-        void AdjustColumns(Type versionFrom, Type versionTo, IDbConnection conn = null, TimeSpan? timeout = null);
+        void AdjustColumns(Type versionFrom, Type versionTo, DbConnection conn = null, TimeSpan? timeout = null);
     }
 }

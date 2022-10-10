@@ -4,7 +4,6 @@ using NLog;
 using System;
 using System.Data;
 using System.Data.Common;
-using System.Data.SqlClient;
 using System.Threading.Tasks;
 
 namespace Homura.ORM
@@ -98,8 +97,8 @@ namespace Homura.ORM
         {
             try
             {
-                using (var conn = await OpenConnectionAsync().ConfigureAwait(false))
-                using (var command = (SqlCommand)conn.CreateCommand())
+                using (var connection = await OpenConnectionAsync().ConfigureAwait(false))
+                using (var command = connection.CreateCommand())
                 {
                     command.CommandText = "select count(*) from sqlite_master where type='table' and name=@tablename;";
                     command.CommandType = CommandType.Text;
