@@ -24,7 +24,7 @@ namespace Homura.Test.TestFixture.Dao
         public PageDao(Type entityVersionType) : base(entityVersionType)
         { }
 
-        protected override void VerifyColumnDefinitions(IDbConnection conn)
+        protected override void VerifyColumnDefinitions(DbConnection conn)
         {
             var columnDefinitions = GetColumnDefinitions(conn);
             foreach (var column in Columns)

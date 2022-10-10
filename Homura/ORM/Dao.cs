@@ -12,7 +12,6 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Data.OleDb;
-using System.Data.SqlClient;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -120,7 +119,7 @@ namespace Homura.ORM
             }
         }
 
-        public void VerifyTableDefinition(IDbConnection conn)
+        public void VerifyTableDefinition(DbConnection conn)
         {
             InitializeColumnDefinitions();
             try
@@ -133,10 +132,10 @@ namespace Homura.ORM
             }
         }
 
-        protected virtual void VerifyColumnDefinitions(IDbConnection conn)
+        protected virtual void VerifyColumnDefinitions(DbConnection conn)
         { }
 
-        protected IEnumerable<IColumn> GetColumnDefinitions(IDbConnection conn = null)
+        protected IEnumerable<IColumn> GetColumnDefinitions(DbConnection conn = null)
         {
             bool isTransaction = conn != null;
 
@@ -432,7 +431,7 @@ namespace Homura.ORM
         /// <typeparam name="R"></typeparam>
         /// <param name="body"></param>
         /// <returns></returns>
-        protected R ConnectionInternal<R>(Func<IDbConnection, R> body, IDbConnection conn = null)
+        protected R ConnectionInternal<R>(Func<DbConnection, R> body, DbConnection conn = null)
         {
             bool isTransaction = conn != null;
 
@@ -460,7 +459,7 @@ namespace Homura.ORM
         /// <typeparam name="R"></typeparam>
         /// <param name="body"></param>
         /// <returns></returns>
-        protected async Task<R> ConnectionInternalAndReturnAsync<R>(Func<IDbConnection, R> body, IDbConnection conn = null)
+        protected async Task<R> ConnectionInternalAndReturnAsync<R>(Func<DbConnection, R> body, DbConnection conn = null)
         {
             bool isTransaction = conn != null;
 
@@ -482,7 +481,7 @@ namespace Homura.ORM
             }
         }
 
-        protected IEnumerable<R> ConnectionInternalYield<R>(Func<IDbConnection, IEnumerable<R>> body, IDbConnection conn = null)
+        protected IEnumerable<R> ConnectionInternalYield<R>(Func<DbConnection, IEnumerable<R>> body, DbConnection conn = null)
         {
             bool isTransaction = conn != null;
 
@@ -504,7 +503,7 @@ namespace Homura.ORM
             }
         }
 
-        protected async IAsyncEnumerable<R> ConnectionInternalYieldAsync<R>(Func<IDbConnection, IAsyncEnumerable<R>> body, IDbConnection conn = null)
+        protected async IAsyncEnumerable<R> ConnectionInternalYieldAsync<R>(Func<DbConnection, IAsyncEnumerable<R>> body, DbConnection conn = null)
         {
             bool isTransaction = conn != null;
 
@@ -530,7 +529,7 @@ namespace Homura.ORM
         /// _IsTransaction フラグによって局所的に DbConnection を使用するかどうか選択できるクエリ実行用内部メソッド
         /// </summary>
         /// <param name="body"></param>
-        protected void ConnectionInternal(Action<IDbConnection> body, IDbConnection conn = null)
+        protected void ConnectionInternal(Action<DbConnection> body, DbConnection conn = null)
         {
             bool isTransaction = conn != null;
 
@@ -556,7 +555,7 @@ namespace Homura.ORM
         /// _IsTransaction フラグによって局所的に DbConnection を使用するかどうか選択できるクエリ実行用内部メソッド
         /// </summary>
         /// <param name="body"></param>
-        protected async Task ConnectionInternalAsync(Action<IDbConnection> body, IDbConnection conn = null)
+        protected async Task ConnectionInternalAsync(Action<DbConnection> body, DbConnection conn = null)
         {
             bool isTransaction = conn != null;
 
@@ -737,10 +736,10 @@ namespace Homura.ORM
             throw new TimeoutException();
         }
 
-        public int CountAll(IDbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null)
+        public int CountAll(DbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null)
         {
             return KeepTryingUntilProcessSucceed<int>(() =>
-                ConnectionInternal(new Func<IDbConnection, int>((connection) =>
+                ConnectionInternal(new Func<DbConnection, int>((connection) =>
                 {
                     using (var command = connection.CreateCommand())
                     {
@@ -769,12 +768,12 @@ namespace Homura.ORM
             , timeout);
         }
 
-        public async Task<int> CountAllAsync(IDbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null)
+        public async Task<int> CountAllAsync(DbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null)
         {
             return await KeepTryingUntilProcessSucceedAndReturnAsync<int>(async () =>
-                await await ConnectionInternalAndReturnAsync(new Func<IDbConnection, Task<int>>(async (connection) =>
+                await await ConnectionInternalAndReturnAsync(new Func<DbConnection, Task<int>>(async (connection) =>
                 {
-                    using (var command = (SqlCommand)connection.CreateCommand())
+                    using (var command = connection.CreateCommand())
                     {
                         var table = (Homura.ORM.Table<E>)Table.Clone();
                         if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName))
@@ -801,10 +800,10 @@ namespace Homura.ORM
             , timeout).ConfigureAwait(false);
         }
 
-        public int CountBy(Dictionary<string, object> idDic, IDbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null)
+        public int CountBy(Dictionary<string, object> idDic, DbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null)
         {
             return KeepTryingUntilProcessSucceed<int>(() =>
-                ConnectionInternal(new Func<IDbConnection, int>((connection) =>
+                ConnectionInternal(new Func<DbConnection, int>((connection) =>
                 {
                     using (var command = connection.CreateCommand())
                     {
@@ -836,12 +835,12 @@ namespace Homura.ORM
             , timeout);
         }
 
-        public async Task<int> CountByAsync(Dictionary<string, object> idDic, IDbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null)
+        public async Task<int> CountByAsync(Dictionary<string, object> idDic, DbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null)
         {
             return await KeepTryingUntilProcessSucceedAndReturnAsync(async () =>
-                await await ConnectionInternalAndReturnAsync(new Func<IDbConnection, Task<int>>(async (connection) =>
+                await await ConnectionInternalAndReturnAsync(new Func<DbConnection, Task<int>>(async (connection) =>
                 {
-                    using (var command = (SqlCommand)connection.CreateCommand())
+                    using (var command = connection.CreateCommand())
                     {
                         var table = (Table<E>)Table.Clone();
                         if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName))
@@ -871,11 +870,11 @@ namespace Homura.ORM
             , timeout).ConfigureAwait(false);
         }
 
-        public void DeleteWhereIDIs(Guid id, IDbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null)
+        public void DeleteWhereIDIs(Guid id, DbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null)
         {
             KeepTryingUntilProcessSucceed(() =>
             {
-                ConnectionInternal(new Action<IDbConnection>((connection) =>
+                ConnectionInternal(new Action<DbConnection>((connection) =>
                 {
                     using (var command = connection.CreateCommand())
                     {
@@ -902,13 +901,13 @@ namespace Homura.ORM
             }, timeout);
         }
 
-        public async Task DeleteWhereIDIsAsync(Guid id, IDbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null)
+        public async Task DeleteWhereIDIsAsync(Guid id, DbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null)
         {
             await KeepTryingUntilProcessSucceedAsync<Task>(async() =>
             {
-                await ConnectionInternalAsync(new Action<IDbConnection>(async (connection) =>
+                await ConnectionInternalAsync(new Action<DbConnection>(async (connection) =>
                 {
-                    using (var command = (SqlCommand)connection.CreateCommand())
+                    using (var command = connection.CreateCommand())
                     {
                         var table = (Table<E>)Table.Clone();
                         if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName))
@@ -933,11 +932,11 @@ namespace Homura.ORM
             }, timeout).ConfigureAwait(false);
         }
 
-        public void DeleteAll(IDbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null)
+        public void DeleteAll(DbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null)
         {
             KeepTryingUntilProcessSucceed(() =>
             {
-                ConnectionInternal(new Action<IDbConnection>((connection) =>
+                ConnectionInternal(new Action<DbConnection>((connection) =>
                 {
                     using (var command = connection.CreateCommand())
                     {
@@ -963,13 +962,13 @@ namespace Homura.ORM
             }, timeout);
         }
 
-        public async Task DeleteAllAsync(IDbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null)
+        public async Task DeleteAllAsync(DbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null)
         {
             await KeepTryingUntilProcessSucceedAsync<Task>(async () =>
             {
-                await ConnectionInternalAsync(new Action<IDbConnection>(async (connection) =>
+                await ConnectionInternalAsync(new Action<DbConnection>(async (connection) =>
                 {
-                    using (var command = (SqlCommand)connection.CreateCommand())
+                    using (var command = connection.CreateCommand())
                     {
                         var table = (Table<E>)Table.Clone();
                         if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName))
@@ -993,11 +992,11 @@ namespace Homura.ORM
             }, timeout).ConfigureAwait(false);
         }
 
-        public void Delete(Dictionary<string, object> idDic, IDbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null)
+        public void Delete(Dictionary<string, object> idDic, DbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null)
         {
             KeepTryingUntilProcessSucceed(() =>
             {
-                ConnectionInternal(new Action<IDbConnection>((connection) =>
+                ConnectionInternal(new Action<DbConnection>((connection) =>
                 {
                     using (var command = connection.CreateCommand())
                     {
@@ -1024,13 +1023,13 @@ namespace Homura.ORM
             }, timeout);
         }
 
-        public async Task DeleteAsync(Dictionary<string, object> idDic, IDbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null)
+        public async Task DeleteAsync(Dictionary<string, object> idDic, DbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null)
         {
             await KeepTryingUntilProcessSucceedAsync<Task>(async () =>
             {
-                await ConnectionInternalAsync(new Action<IDbConnection>(async (connection) =>
+                await ConnectionInternalAsync(new Action<DbConnection>(async (connection) =>
                 {
-                    using (var command = (SqlCommand)connection.CreateCommand())
+                    using (var command = connection.CreateCommand())
                     {
                         var table = (Table<E>)Table.Clone();
                         if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName))
@@ -1055,7 +1054,7 @@ namespace Homura.ORM
             }, timeout).ConfigureAwait(false);
         }
 
-        public void Insert(E entity, IDbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null)
+        public void Insert(E entity, DbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null)
         {
             InitializeColumnDefinitions();
             try
@@ -1069,7 +1068,7 @@ namespace Homura.ORM
 
             KeepTryingUntilProcessSucceed(() =>
             {
-                ConnectionInternal(new Action<IDbConnection>((connection) =>
+                ConnectionInternal(new Action<DbConnection>((connection) =>
                 {
                     using (var command = connection.CreateCommand())
                     {
@@ -1100,7 +1099,7 @@ namespace Homura.ORM
             }, timeout);
         }
 
-        public async Task InsertAsync(E entity, IDbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null)
+        public async Task InsertAsync(E entity, DbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null)
         {
             InitializeColumnDefinitions();
             try
@@ -1114,9 +1113,9 @@ namespace Homura.ORM
 
             await KeepTryingUntilProcessSucceedAsync<Task>(async () =>
             {
-                await ConnectionInternalAsync(new Action<IDbConnection>(async (connection) =>
+                await ConnectionInternalAsync(new Action<DbConnection>(async (connection) =>
                 {
-                    using (var command = (SqlCommand)connection.CreateCommand())
+                    using (var command = connection.CreateCommand())
                     {
                         var overrideColumns = SwapIfOverrided(Columns);
 
@@ -1164,7 +1163,7 @@ namespace Homura.ORM
             return ret.OrderBy(c => c.Order);
         }
 
-        public IEnumerable<E> FindAll(IDbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null)
+        public IEnumerable<E> FindAll(DbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null)
         {
             if (timeout == null)
             {
@@ -1240,7 +1239,7 @@ namespace Homura.ORM
             throw new TimeoutException();
         }
 
-        public async IAsyncEnumerable<E> FindAllAsync(IDbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null)
+        public async IAsyncEnumerable<E> FindAllAsync(DbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null)
         {
             if (timeout == null)
             {
@@ -1264,7 +1263,7 @@ namespace Homura.ORM
                             conn = await GetConnectionAsync().ConfigureAwait(false);
                         }
 
-                        using (var command = (SqlCommand)conn.CreateCommand())
+                        using (var command = conn.CreateCommand())
                         {
                             var table = (Table<E>)Table.Clone();
                             if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName))
@@ -1320,7 +1319,7 @@ namespace Homura.ORM
             throw new TimeoutException();
         }
 
-        public IEnumerable<E> FindBy(Dictionary<string, object> idDic, IDbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null)
+        public IEnumerable<E> FindBy(Dictionary<string, object> idDic, DbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null)
         {
             if (timeout == null)
             {
@@ -1398,7 +1397,7 @@ namespace Homura.ORM
             throw new TimeoutException();
         }
 
-        public async IAsyncEnumerable<E> FindByAsync(Dictionary<string, object> idDic, IDbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null)
+        public async IAsyncEnumerable<E> FindByAsync(Dictionary<string, object> idDic, DbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null)
         {
             if (timeout == null)
             {
@@ -1422,7 +1421,7 @@ namespace Homura.ORM
                             conn = await GetConnectionAsync().ConfigureAwait(false);
                         }
 
-                        using (var command = (SqlCommand)conn.CreateCommand())
+                        using (var command = conn.CreateCommand())
                         {
                             var table = (Table<E>)Table.Clone();
                             if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName))
@@ -1480,11 +1479,11 @@ namespace Homura.ORM
             throw new TimeoutException();
         }
 
-        public void Update(E entity, IDbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null)
+        public void Update(E entity, DbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null)
         {
             KeepTryingUntilProcessSucceed(() =>
             {
-                ConnectionInternal(new Action<IDbConnection>((connection) =>
+                ConnectionInternal(new Action<DbConnection>((connection) =>
                 {
                     using (var command = connection.CreateCommand())
                     {
@@ -1509,13 +1508,13 @@ namespace Homura.ORM
             }, timeout);
         }
 
-        public async Task UpdateAsync(E entity, IDbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null)
+        public async Task UpdateAsync(E entity, DbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null)
         {
             await KeepTryingUntilProcessSucceedAsync<Task>(async () =>
             {
-                await ConnectionInternalAsync(new Action<IDbConnection>(async (connection) =>
+                await ConnectionInternalAsync(new Action<DbConnection>(async (connection) =>
                 {
-                    using (var command = (SqlCommand)connection.CreateCommand())
+                    using (var command = connection.CreateCommand())
                     {
                         var table = (Table<E>)Table.Clone();
                         if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName))
@@ -1598,11 +1597,11 @@ namespace Homura.ORM
             }
         }
 
-        public void UpgradeTable(VersionChangeUnit upgradePath, VersioningMode mode, IDbConnection conn = null, TimeSpan? timeout = null)
+        public void UpgradeTable(VersionChangeUnit upgradePath, VersioningMode mode, DbConnection conn = null, TimeSpan? timeout = null)
         {
             KeepTryingUntilProcessSucceed(() =>
             {
-                ConnectionInternal(new Action<IDbConnection>((connection) =>
+                ConnectionInternal(new Action<DbConnection>((connection) =>
                 {
                     using (var command = connection.CreateCommand())
                     {
@@ -1647,13 +1646,13 @@ namespace Homura.ORM
             }, timeout);
         }
 
-        public async Task UpgradeTableAsync(VersionChangeUnit upgradePath, VersioningMode mode, IDbConnection conn = null, TimeSpan? timeout = null)
+        public async Task UpgradeTableAsync(VersionChangeUnit upgradePath, VersioningMode mode, DbConnection conn = null, TimeSpan? timeout = null)
         {
             await KeepTryingUntilProcessSucceedAsync<Task>(async () =>
             {
-                await ConnectionInternalAsync(new Action<IDbConnection>(async (connection) =>
+                await ConnectionInternalAsync(new Action<DbConnection>(async (connection) =>
                 {
-                    using (var command = (SqlCommand)connection.CreateCommand())
+                    using (var command = connection.CreateCommand())
                     {
                         var newTable = new Table<E>(upgradePath.To);
                         var oldTable = new Table<E>(upgradePath.From);
@@ -1672,7 +1671,7 @@ namespace Homura.ORM
 
                     if ((mode & VersioningMode.DeleteAllRecordInTableCastedOff) == VersioningMode.DeleteAllRecordInTableCastedOff)
                     {
-                        using (var command = (SqlCommand)connection.CreateCommand())
+                        using (var command = connection.CreateCommand())
                         {
                             string sql = $"delete from {new Table<E>(upgradePath.From).Name}";
                             command.CommandText = sql;
@@ -1683,7 +1682,7 @@ namespace Homura.ORM
 
                     if ((mode & VersioningMode.DropTableCastedOff) == VersioningMode.DropTableCastedOff)
                     {
-                        using (var command = (SqlCommand)connection.CreateCommand())
+                        using (var command = connection.CreateCommand())
                         {
                             string sql = $"drop table {new Table<E>(upgradePath.From).Name}";
                             command.CommandText = sql;
@@ -1708,11 +1707,11 @@ namespace Homura.ORM
             }
         }
 
-        public void AdjustColumns(Type versionFrom, Type versionTo, IDbConnection conn = null, TimeSpan? timeout = null)
+        public void AdjustColumns(Type versionFrom, Type versionTo, DbConnection conn = null, TimeSpan? timeout = null)
         {
             KeepTryingUntilProcessSucceed(() =>
             {
-                ConnectionInternal(new Action<IDbConnection>((connection) =>
+                ConnectionInternal(new Action<DbConnection>((connection) =>
                 {
                     var newTable = new Table<E>(versionTo);
                     var oldTable = new Table<E>(versionFrom);
@@ -1766,15 +1765,15 @@ namespace Homura.ORM
             }, timeout);
         }
 
-        public async Task AdjustColumnsAsync(Type versionFrom, Type versionTo, IDbConnection conn = null, TimeSpan? timeout = null)
+        public async Task AdjustColumnsAsync(Type versionFrom, Type versionTo, DbConnection conn = null, TimeSpan? timeout = null)
         {
             await KeepTryingUntilProcessSucceedAsync<Task>(async () =>
             {
-                await ConnectionInternalAsync(new Action<IDbConnection>(async (connection) =>
+                await ConnectionInternalAsync(new Action<DbConnection>(async (connection) =>
                 {
                     var newTable = new Table<E>(versionTo);
                     var oldTable = new Table<E>(versionFrom);
-                    using (var command = (SqlCommand)connection.CreateCommand())
+                    using (var command = connection.CreateCommand())
                     {
                         //Toテーブル作成
                         string sql = $"create table {newTable.Name}_To(";
@@ -1790,7 +1789,7 @@ namespace Homura.ORM
                         await command.ExecuteNonQueryAsync().ConfigureAwait(false);
                     }
 
-                    using (var command = (SqlCommand)connection.CreateCommand())
+                    using (var command = connection.CreateCommand())
                     {
                         //fromテーブルからToテーブルへコピー
                         using (var query = new Insert().Into.Table(new NeutralTable($"{newTable.Name}_To"))
@@ -1803,7 +1802,7 @@ namespace Homura.ORM
                         }
                     }
 
-                    using (var command = (SqlCommand)connection.CreateCommand())
+                    using (var command = connection.CreateCommand())
                     {
                         //Drop fromテーブル
                         var sql = $"drop table {oldTable.Name}";
@@ -1812,7 +1811,7 @@ namespace Homura.ORM
                         await command.ExecuteNonQueryAsync().ConfigureAwait(false);
                     }
 
-                    using (var command = (SqlCommand)connection.CreateCommand())
+                    using (var command = connection.CreateCommand())
                     {
                         //ToテーブルをリネームしてFromテーブルに
                         var sql = $"alter table {newTable.Name}_To rename to {oldTable.Name}";
