@@ -1314,6 +1314,8 @@ namespace Homura.ORM
                 {
                     yield return item;
                 }
+
+                yield break;
             }
 
             throw new TimeoutException();
@@ -1474,6 +1476,8 @@ namespace Homura.ORM
                 {
                     yield return item;
                 }
+
+                yield break;
             }
 
             throw new TimeoutException();
