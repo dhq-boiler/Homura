@@ -4,6 +4,7 @@ using Homura.Core;
 using Homura.ORM.Mapping;
 using Homura.ORM.Setup;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using static Homura.Core.Delegate;
 
 namespace Homura.ORM.Migration
@@ -20,9 +21,9 @@ namespace Homura.ORM.Migration
 
         void RemoveVersionChangePlan(IEntityVersionChangePlan plan);
 
-        void UpgradeToTargetVersion(IConnection connection);
+        Task UpgradeToTargetVersion(IConnection connection);
 
-        void DowngradeToTargetVersion(IConnection connection);
+        Task DowngradeToTargetVersion(IConnection connection);
 
         event BeginToUpgradeToEventHandler BeginToUpgradeTo;
         event FinishedToUpgradeToEventHandler FinishedToUpgradeTo;

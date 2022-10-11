@@ -5,6 +5,7 @@ using Homura.ORM.Migration;
 using Homura.ORM.Setup;
 using Homura.Test.TestFixture.Dao;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Homura.Test.TestFixture.Migration.Plan
 {
@@ -14,19 +15,19 @@ namespace Homura.Test.TestFixture.Migration.Plan
         {
         }
 
-        public override void UpgradeToTargetVersion(IConnection connection)
+        public override async Task UpgradeToTargetVersion(IConnection connection)
         {
             var dao = new DetailDao(TargetVersion.GetType());
             dao.CurrentConnection = connection;
 
-            dao.CreateTableIfNotExists();
+            await dao.CreateTableIfNotExistsAsync();
 
-            if (dao.CountAll() > 0)
+            if (await dao.CountAllAsync() > 0)
             {
-                dao.Delete(new Dictionary<string, object>());
+                await dao.DeleteAsync(new Dictionary<string, object>());
             }
 
-            dao.UpgradeTable(new VersionChangeUnit(typeof(Version_1), TargetVersion.GetType()), Mode);
+            await dao.UpgradeTableAsync(new VersionChangeUnit(typeof(Version_1), TargetVersion.GetType()), Mode);
         }
     }
 }

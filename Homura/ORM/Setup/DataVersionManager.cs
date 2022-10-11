@@ -6,6 +6,8 @@ using Homura.ORM.Migration;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using static Homura.Core.Delegate;
 
 namespace Homura.ORM.Setup
@@ -98,11 +100,11 @@ namespace Homura.ORM.Setup
             return a.GetPlan(entityType, targetVersion);
         }
 
-        public void UpgradeToTargetVersion()
+        public async Task UpgradeToTargetVersion()
         {
             foreach (var strategy in Strategies.Where(x => x.State == VersionStrategyState.Ready))
             {
-                strategy.UpgradeToTargetVersion(CurrentConnection);
+                await strategy.UpgradeToTargetVersion(CurrentConnection);
                 strategy.State = VersionStrategyState.Processed;
             }
 

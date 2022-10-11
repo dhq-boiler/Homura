@@ -4,6 +4,7 @@ using Homura.Core;
 using Homura.ORM.Mapping;
 using Homura.ORM.Setup;
 using System;
+using System.Threading.Tasks;
 
 namespace Homura.ORM.Migration
 {
@@ -13,14 +14,14 @@ namespace Homura.ORM.Migration
 
         VersioningMode Mode { get; set; }
 
-        void UpgradeToTargetVersion(IConnection connection);
+        Task UpgradeToTargetVersion(IConnection connection);
 
-        void DowngradeToTargetVersion(IConnection connection);
+        Task DowngradeToTargetVersion(IConnection connection);
 
         Type TargetEntityType { get; set; }
 
-        void CreateTable(IConnection connection);
+        Task CreateTable(IConnection connection);
 
-        void DropTable(IConnection connection);
+        Task DropTable(IConnection connection);
     }
 }

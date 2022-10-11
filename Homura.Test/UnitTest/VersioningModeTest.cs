@@ -11,6 +11,8 @@ using System;
 using System.Data.SQLite;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 
 namespace Homura.Test.UnitTest
 {
@@ -31,30 +33,30 @@ namespace Homura.Test.UnitTest
         }
 
         [Test]
-        public void ByTick()
+        public async Task ByTick()
         {
             var svManager = new DataVersionManager();
             svManager.CurrentConnection = ConnectionManager.DefaultConnection;
             svManager.RegisterChangePlan(new Valkyrie_0_VersionChangePlan_VersionOrigin(VersioningMode.ByTick));
             svManager.SetDefault();
 
-            svManager.UpgradeToTargetVersion();
+            await svManager.UpgradeToTargetVersion();
 
             var dao = new Valkyrie_0_Dao();
             dao.CurrentConnection = ConnectionManager.DefaultConnection;
 
-            dao.Insert(new Valkyrie_0()
+            await dao.InsertAsync(new Valkyrie_0()
             {
                 Id = Guid.Empty,
                 Item1 = "org_item1",
                 Item2 = "org_item2",
             });
 
-            Assert.That(dao.CountAll(), Is.EqualTo(1));
+            Assert.That(await dao.CountAllAsync(), Is.EqualTo(1));
 
             using (var conn = new SQLiteConnection($"Data Source={_filePath}"))
             {
-                conn.Open();
+                await conn.OpenAsync();
 
                 Assert.That(conn.GetTableNames(), Has.One.EqualTo("Valkyrie_0"));
                 Assert.That(conn.GetTableNames(), Has.None.EqualTo("Valkyrie_0_1"));
@@ -62,16 +64,16 @@ namespace Homura.Test.UnitTest
 
             svManager.RegisterChangePlan(new Valkyrie_1_VersionChangePlan_Version_1(VersioningMode.ByTick));
 
-            svManager.UpgradeToTargetVersion();
+            await svManager.UpgradeToTargetVersion();
 
             using (var conn = new SQLiteConnection($"Data Source={_filePath}"))
             {
-                conn.Open();
+                await conn.OpenAsync();
 
                 Assert.That(conn.GetTableNames(), Has.One.EqualTo("Valkyrie_1"));
                 Assert.That(conn.GetTableNames(), Has.None.EqualTo("Valkyrie_1_1"));
 
-                var items = dao.FindAll();
+                var items = await dao.FindAllAsync().ToListAsync();
                 Assert.That(items.Count(), Is.EqualTo(1)); //default version:Version_1
                 Assert.That(items.First().Id, Is.EqualTo(Guid.Empty));
                 Assert.That(items.First().Item1, Is.EqualTo("org_item1"));
@@ -81,17 +83,17 @@ namespace Homura.Test.UnitTest
 
             svManager.RegisterChangePlan(new Valkyrie_1_VersionChangePlan_Version_2(VersioningMode.ByTick));
 
-            svManager.UpgradeToTargetVersion();
+            await svManager.UpgradeToTargetVersion();
 
             using (var conn = new SQLiteConnection($"Data Source={_filePath}"))
             {
-                conn.Open();
+                await conn.OpenAsync();
 
                 Assert.That(conn.GetTableNames(), Has.One.EqualTo("Valkyrie_1"));
                 Assert.That(conn.GetTableNames(), Has.One.EqualTo("Valkyrie_1_1"));
                 Assert.That(conn.GetTableNames(), Has.None.EqualTo("Valkyrie_1_2"));
 
-                var items = dao.FindAll();
+                var items = await dao.FindAllAsync().ToListAsync();
                 Assert.That(items.Count(), Is.EqualTo(1)); //default version:Version_2
                 Assert.That(items.First().Id, Is.EqualTo(Guid.Empty));
                 Assert.That(items.First().Item1, Is.EqualTo("org_item1"));
@@ -101,33 +103,33 @@ namespace Homura.Test.UnitTest
         }
 
         [Test]
-        public void ByAlterTable()
+        public async Task ByAlterTable()
         {
             var svManager = new DataVersionManager();
             svManager.CurrentConnection = ConnectionManager.DefaultConnection;
             svManager.RegisterChangePlan(new Frey_VersionChangePlan_VersionOrigin(VersioningMode.ByAlterTable));
             svManager.SetDefault();
 
-            svManager.UpgradeToTargetVersion();
+            await svManager.UpgradeToTargetVersion();
 
             var dao = new FreyDao();
             dao.CurrentConnection = ConnectionManager.DefaultConnection;
 
-            dao.Insert(new Frey()
+            await dao.InsertAsync(new Frey()
             {
                 Id = Guid.Empty,
                 Item1 = "org_item1",
                 Item2 = "org_item2",
             });
 
-            Assert.That(dao.CountAll(), Is.EqualTo(1));
+            Assert.That(await dao.CountAllAsync(), Is.EqualTo(1));
 
             using (var conn = new SQLiteConnection($"Data Source={_filePath}"))
             {
-                conn.Open();
+                await conn.OpenAsync();
 
                 Assert.That(conn.GetTableNames(), Has.One.EqualTo("Frey"));
-                var items = dao.FindAll();
+                var items = await dao.FindAllAsync().ToListAsync();
                 Assert.That(items.Count(), Is.EqualTo(1)); //default version:Version_1
                 Assert.That(items.First().Id, Is.EqualTo(Guid.Empty));
                 Assert.That(items.First().Item1, Is.EqualTo("org_item1"));
@@ -137,15 +139,15 @@ namespace Homura.Test.UnitTest
                 Assert.That(conn.GetTableNames(), Has.None.EqualTo("Valkyrie_0_1"));
             }
             svManager.RegisterChangePlan(new Frey_VersionChangePlan_Version_1(VersioningMode.ByAlterTable));
-            svManager.UpgradeToTargetVersion();
+            await svManager.UpgradeToTargetVersion();
 
             using (var conn = new SQLiteConnection($"Data Source={_filePath}"))
             {
-                conn.Open();
+                await conn.OpenAsync();
 
                 Assert.That(conn.GetTableNames(), Has.One.EqualTo("Frey"));
                 {
-                    var items = dao.FindAll();
+                    var items = await dao.FindAllAsync().ToListAsync();
                     Assert.That(items.Count(), Is.EqualTo(1)); //default version:Version_1
                     Assert.That(items.First().Id, Is.EqualTo(Guid.Empty));
                     Assert.That(items.First().Item1, Is.EqualTo("org_item1"));
@@ -160,33 +162,33 @@ namespace Homura.Test.UnitTest
         }
 
         [Test]
-        public void ByTick_then_ByAlterTable()
+        public async Task ByTick_then_ByAlterTable()
         {
             var svManager = new DataVersionManager();
             svManager.CurrentConnection = ConnectionManager.DefaultConnection;
             svManager.RegisterChangePlan(new Roki_VersionChangePlan_VersionOrigin(VersioningMode.ByTick));
             svManager.SetDefault();
 
-            svManager.UpgradeToTargetVersion();
+            await svManager.UpgradeToTargetVersion();
 
             var dao = new RokiDao(typeof(VersionOrigin));
             dao.CurrentConnection = ConnectionManager.DefaultConnection;
 
-            dao.Insert(new Roki()
+            await dao.InsertAsync(new Roki()
             {
                 Id = Guid.Empty,
                 Item1 = "org_item1",
                 Item2 = "org_item2",
             });
 
-            Assert.That(dao.CountAll(), Is.EqualTo(1));
+            Assert.That(await dao.CountAllAsync(), Is.EqualTo(1));
 
             using (var conn = new SQLiteConnection($"Data Source={_filePath}"))
             {
-                conn.Open();
+                await conn.OpenAsync();
 
                 Assert.That(conn.GetTableNames(), Has.One.EqualTo("Roki"));
-                var items = dao.FindAll();
+                var items = await dao.FindAllAsync().ToListAsync();
                 Assert.That(items.Count(), Is.EqualTo(1)); //default version:Version_1
                 Assert.That(items.First().Id, Is.EqualTo(Guid.Empty));
                 Assert.That(items.First().Item1, Is.EqualTo("org_item1"));
@@ -194,18 +196,18 @@ namespace Homura.Test.UnitTest
                 Assert.That(items.First().Item3, Is.Null);
             }
             svManager.RegisterChangePlan(new Roki_VersionChangePlan_Version_1(VersioningMode.ByTick | VersioningMode.DropTableCastedOff));
-            svManager.UpgradeToTargetVersion();
+            await svManager.UpgradeToTargetVersion();
 
             using (var conn = new SQLiteConnection($"Data Source={_filePath}"))
             {
-                conn.Open();
+                await conn.OpenAsync();
 
                 Assert.That(conn.GetTableNames(), Has.None.EqualTo("Roki"));
                 Assert.That(conn.GetTableNames(), Has.One.EqualTo("Roki_1"));
                 {
                     dao = new RokiDao(typeof(Version_1));
                     dao.CurrentConnection = ConnectionManager.DefaultConnection;
-                    var items = dao.FindAll();
+                    var items = await dao.FindAllAsync().ToListAsync();
                     Assert.That(items.Count(), Is.EqualTo(1)); //default version:Version_1
                     Assert.That(items.First().Id, Is.EqualTo(Guid.Empty));
                     Assert.That(items.First().Item1, Is.EqualTo("org_item1"));
@@ -218,18 +220,18 @@ namespace Homura.Test.UnitTest
             }
 
             svManager.RegisterChangePlan(new Roki_VersionChangePlan_Version_2(VersioningMode.ByAlterTable));
-            svManager.UpgradeToTargetVersion();
+            await svManager.UpgradeToTargetVersion();
 
             using (var conn = new SQLiteConnection($"Data Source={_filePath}"))
             {
-                conn.Open();
+                await conn.OpenAsync();
 
                 Assert.That(conn.GetTableNames(), Has.None.EqualTo("Roki"));
                 Assert.That(conn.GetTableNames(), Has.One.EqualTo("Roki_1"));
                 {
                     dao = new RokiDao(DataVersionManager.DefaultSchemaVersion);
                     dao.CurrentConnection = ConnectionManager.DefaultConnection;
-                    var items = dao.FindAll();
+                    var items = await dao.FindAllAsync().ToListAsync();
                     Assert.That(items.Count(), Is.EqualTo(1)); //default version:Version_1
                     Assert.That(items.First().Id, Is.EqualTo(Guid.Empty));
                     Assert.That(items.First().Item1, Is.EqualTo("org_item1"));
@@ -240,33 +242,33 @@ namespace Homura.Test.UnitTest
         }
 
         [Test]
-        public void ByAlterTable_DropTableCastedOff()
+        public async Task ByAlterTable_DropTableCastedOff()
         {
             var svManager = new DataVersionManager();
             svManager.CurrentConnection = ConnectionManager.DefaultConnection;
             svManager.RegisterChangePlan(new Frey_VersionChangePlan_VersionOrigin(VersioningMode.ByAlterTable | VersioningMode.DropTableCastedOff));
             svManager.SetDefault();
 
-            svManager.UpgradeToTargetVersion();
+            await svManager.UpgradeToTargetVersion();
 
             var dao = new FreyDao();
             dao.CurrentConnection = ConnectionManager.DefaultConnection;
 
-            dao.Insert(new Frey()
+            await dao.InsertAsync(new Frey()
             {
                 Id = Guid.Empty,
                 Item1 = "org_item1",
                 Item2 = "org_item2",
             });
 
-            Assert.That(dao.CountAll(), Is.EqualTo(1));
+            Assert.That(await dao.CountAllAsync(), Is.EqualTo(1));
 
             using (var conn = new SQLiteConnection($"Data Source={_filePath}"))
             {
-                conn.Open();
+                await conn.OpenAsync();
 
                 Assert.That(conn.GetTableNames(), Has.One.EqualTo("Frey"));
-                var items = dao.FindAll();
+                var items = await dao.FindAllAsync().ToListAsync();
                 Assert.That(items.Count(), Is.EqualTo(1)); //default version:Version_1
                 Assert.That(items.First().Id, Is.EqualTo(Guid.Empty));
                 Assert.That(items.First().Item1, Is.EqualTo("org_item1"));
@@ -276,15 +278,15 @@ namespace Homura.Test.UnitTest
                 Assert.That(conn.GetTableNames(), Has.None.EqualTo("Valkyrie_0_1"));
             }
             svManager.RegisterChangePlan(new Frey_VersionChangePlan_Version_1(VersioningMode.ByAlterTable));
-            svManager.UpgradeToTargetVersion();
+            await svManager.UpgradeToTargetVersion();
 
             using (var conn = new SQLiteConnection($"Data Source={_filePath}"))
             {
-                conn.Open();
+                await conn.OpenAsync();
 
                 Assert.That(conn.GetTableNames(), Has.One.EqualTo("Frey"));
                 {
-                    var items = dao.FindAll();
+                    var items = await dao.FindAllAsync().ToListAsync();
                     Assert.That(items.Count(), Is.EqualTo(1)); //default version:Version_1
                     Assert.That(items.First().Id, Is.EqualTo(Guid.Empty));
                     Assert.That(items.First().Item1, Is.EqualTo("org_item1"));
@@ -299,33 +301,33 @@ namespace Homura.Test.UnitTest
         }
 
         [Test]
-        public void ByAlterTable_DeleteAllRecordInTableCastedOff()
+        public async Task ByAlterTable_DeleteAllRecordInTableCastedOff()
         {
             var svManager = new DataVersionManager();
             svManager.CurrentConnection = ConnectionManager.DefaultConnection;
             svManager.RegisterChangePlan(new Frey_VersionChangePlan_VersionOrigin(VersioningMode.ByAlterTable | VersioningMode.DeleteAllRecordInTableCastedOff));
             svManager.SetDefault();
 
-            svManager.UpgradeToTargetVersion();
+            await svManager.UpgradeToTargetVersion();
 
             var dao = new FreyDao();
             dao.CurrentConnection = ConnectionManager.DefaultConnection;
 
-            dao.Insert(new Frey()
+            await dao.InsertAsync(new Frey()
             {
                 Id = Guid.Empty,
                 Item1 = "org_item1",
                 Item2 = "org_item2",
             });
 
-            Assert.That(dao.CountAll(), Is.EqualTo(1));
+            Assert.That(await dao.CountAllAsync(), Is.EqualTo(1));
 
             using (var conn = new SQLiteConnection($"Data Source={_filePath}"))
             {
-                conn.Open();
+                await conn.OpenAsync();
 
                 Assert.That(conn.GetTableNames(), Has.One.EqualTo("Frey"));
-                var items = dao.FindAll();
+                var items = await dao.FindAllAsync().ToListAsync();
                 Assert.That(items.Count(), Is.EqualTo(1)); //default version:Version_1
                 Assert.That(items.First().Id, Is.EqualTo(Guid.Empty));
                 Assert.That(items.First().Item1, Is.EqualTo("org_item1"));
@@ -335,15 +337,15 @@ namespace Homura.Test.UnitTest
                 Assert.That(conn.GetTableNames(), Has.None.EqualTo("Valkyrie_0_1"));
             }
             svManager.RegisterChangePlan(new Frey_VersionChangePlan_Version_1(VersioningMode.ByAlterTable | VersioningMode.DeleteAllRecordInTableCastedOff));
-            svManager.UpgradeToTargetVersion();
+            await svManager.UpgradeToTargetVersion();
 
             using (var conn = new SQLiteConnection($"Data Source={_filePath}"))
             {
-                conn.Open();
+                await conn.OpenAsync();
 
                 Assert.That(conn.GetTableNames(), Has.One.EqualTo("Frey"));
                 {
-                    var items = dao.FindAll();
+                    var items = await dao.FindAllAsync().ToListAsync();
                     Assert.That(items.Count(), Is.EqualTo(1)); //default version:Version_1
                     Assert.That(items.First().Id, Is.EqualTo(Guid.Empty));
                     Assert.That(items.First().Item1, Is.EqualTo("org_item1"));
@@ -358,30 +360,30 @@ namespace Homura.Test.UnitTest
         }
 
         [Test]
-        public void DropTableCastedOff()
+        public async Task DropTableCastedOff()
         {
             var svManager = new DataVersionManager();
             svManager.CurrentConnection = ConnectionManager.DefaultConnection;
             svManager.RegisterChangePlan(new Valkyrie_0_VersionChangePlan_VersionOrigin(VersioningMode.ByTick | VersioningMode.DropTableCastedOff));
             svManager.SetDefault();
 
-            svManager.UpgradeToTargetVersion();
+            await svManager.UpgradeToTargetVersion();
 
             var dao = new Valkyrie_0_Dao();
             dao.CurrentConnection = ConnectionManager.DefaultConnection;
 
-            dao.Insert(new Valkyrie_0()
+            await dao.InsertAsync(new Valkyrie_0()
             {
                 Id = Guid.Empty,
                 Item1 = "org_item1",
                 Item2 = "org_item2",
             });
 
-            Assert.That(dao.CountAll(), Is.EqualTo(1));
+            Assert.That(await dao.CountAllAsync(), Is.EqualTo(1));
 
             using (var conn = new SQLiteConnection($"Data Source={_filePath}"))
             {
-                conn.Open();
+                await conn.OpenAsync();
 
                 Assert.That(conn.GetTableNames(), Has.One.EqualTo("Valkyrie_0"));
                 Assert.That(conn.GetTableNames(), Has.None.EqualTo("Valkyrie_0_1"));
@@ -389,18 +391,18 @@ namespace Homura.Test.UnitTest
 
             svManager.RegisterChangePlan(new Valkyrie_1_VersionChangePlan_Version_1(VersioningMode.ByTick | VersioningMode.DropTableCastedOff));
 
-            svManager.UpgradeToTargetVersion();
+            await svManager.UpgradeToTargetVersion();
 
             using (var conn = new SQLiteConnection($"Data Source={_filePath}"))
             {
-                conn.Open();
+                await conn.OpenAsync();
 
                 Assert.That(conn.GetTableNames(), Has.One.EqualTo("Valkyrie_0"));
                 Assert.That(conn.GetTableNames(), Has.None.EqualTo("Valkyrie_0_1"));
                 Assert.That(conn.GetTableNames(), Has.One.EqualTo("Valkyrie_1"));
                 Assert.That(conn.GetTableNames(), Has.None.EqualTo("Valkyrie_1_1"));
 
-                var items = dao.FindAll();
+                var items = await dao.FindAllAsync().ToListAsync();
                 Assert.That(items.Count(), Is.EqualTo(1)); //default version:Version_1
                 Assert.That(items.First().Id, Is.EqualTo(Guid.Empty));
                 Assert.That(items.First().Item1, Is.EqualTo("org_item1"));
@@ -410,11 +412,11 @@ namespace Homura.Test.UnitTest
 
             svManager.RegisterChangePlan(new Valkyrie_1_VersionChangePlan_Version_2(VersioningMode.ByTick | VersioningMode.DropTableCastedOff));
 
-            svManager.UpgradeToTargetVersion();
+            await svManager.UpgradeToTargetVersion();
 
             using (var conn = new SQLiteConnection($"Data Source={_filePath}"))
             {
-                conn.Open();
+                await conn.OpenAsync();
 
                 Assert.That(conn.GetTableNames(), Has.One.EqualTo("Valkyrie_0"));
                 Assert.That(conn.GetTableNames(), Has.None.EqualTo("Valkyrie_0_1"));
@@ -422,7 +424,7 @@ namespace Homura.Test.UnitTest
                 Assert.That(conn.GetTableNames(), Has.One.EqualTo("Valkyrie_1_1"));
                 Assert.That(conn.GetTableNames(), Has.None.EqualTo("Valkyrie_1_2"));
 
-                var items = dao.FindAll();
+                var items = await dao.FindAllAsync().ToListAsync();
                 Assert.That(items.Count(), Is.EqualTo(1)); //default version:Version_2
                 Assert.That(items.First().Id, Is.EqualTo(Guid.Empty));
                 Assert.That(items.First().Item1, Is.EqualTo("org_item1"));
@@ -432,33 +434,33 @@ namespace Homura.Test.UnitTest
         }
 
         [Test]
-        public void DeleteAllRecordInTableCastedOff()
+        public async Task DeleteAllRecordInTableCastedOff()
         {
             var svManager = new DataVersionManager();
             svManager.CurrentConnection = ConnectionManager.DefaultConnection;
             svManager.RegisterChangePlan(new Valkyrie_0_VersionChangePlan_VersionOrigin(VersioningMode.ByTick | VersioningMode.DeleteAllRecordInTableCastedOff));
             svManager.SetDefault();
 
-            svManager.UpgradeToTargetVersion();
+            await svManager.UpgradeToTargetVersion();
 
             var dao = new Valkyrie_0_Dao(typeof(VersionOrigin));
             dao.CurrentConnection = ConnectionManager.DefaultConnection;
 
-            dao.Insert(new Valkyrie_0()
+            await dao.InsertAsync(new Valkyrie_0()
             {
                 Id = Guid.Empty,
                 Item1 = "org_item1",
                 Item2 = "org_item2",
             });
 
-            Assert.That(dao.CountAll(), Is.EqualTo(1));
+            Assert.That(await dao.CountAllAsync(), Is.EqualTo(1));
 
             using (var conn = new SQLiteConnection($"Data Source={_filePath}"))
             {
-                conn.Open();
+                await conn.OpenAsync();
 
                 Assert.That(conn.GetTableNames(), Has.One.EqualTo("Valkyrie_0"));
-                var items = dao.FindAll();
+                var items = await dao.FindAllAsync().ToListAsync();
                 Assert.That(items.Count(), Is.EqualTo(1)); //default version:Version_1
                 Assert.That(items.First().Id, Is.EqualTo(Guid.Empty));
                 Assert.That(items.First().Item1, Is.EqualTo("org_item1"));
@@ -469,11 +471,11 @@ namespace Homura.Test.UnitTest
             }
 
             svManager.RegisterChangePlan(new Valkyrie_1_VersionChangePlan_Version_1(VersioningMode.ByTick | VersioningMode.DeleteAllRecordInTableCastedOff));
-            svManager.UpgradeToTargetVersion();
+            await svManager.UpgradeToTargetVersion();
 
             var dao1 = new Valkyrie_1_Dao(typeof(VersionOrigin));
             dao1.CurrentConnection = ConnectionManager.DefaultConnection;
-            dao1.Insert(new Valkyrie_1()
+            await dao1.InsertAsync(new Valkyrie_1()
             {
                 Id = Guid.Empty,
                 Item1 = "org_item1",
@@ -482,11 +484,11 @@ namespace Homura.Test.UnitTest
 
             using (var conn = new SQLiteConnection($"Data Source={_filePath}"))
             {
-                conn.Open();
+                await conn.OpenAsync();
 
                 Assert.That(conn.GetTableNames(), Has.One.EqualTo("Valkyrie_0"));
                 dao = new Valkyrie_0_Dao();
-                var items = dao.FindAll();
+                var items = await dao.FindAllAsync().ToListAsync();
                 Assert.That(items.Count(), Is.EqualTo(1)); //default version:Version_1
                 Assert.That(items.First().Id, Is.EqualTo(Guid.Empty));
                 Assert.That(items.First().Item1, Is.EqualTo("org_item1"));
@@ -496,8 +498,8 @@ namespace Homura.Test.UnitTest
                 Assert.That(conn.GetTableNames(), Has.None.EqualTo("Valkyrie_0_1"));
 
                 Assert.That(conn.GetTableNames(), Has.One.EqualTo("Valkyrie_1"));
-                dao1 = new Valkyrie_1_Dao(typeof(VersionOrigin));
-                var items1 = dao1.FindAll();
+                dao1 = new Valkyrie_1_Dao(typeof(VersionOrigin)); 
+                var items1 = await dao1.FindAllAsync().ToListAsync();
                 Assert.That(items1.Count(), Is.EqualTo(1)); //default version:Version_1
                 Assert.That(items1.First().Id, Is.EqualTo(Guid.Empty));
                 Assert.That(items1.First().Item1, Is.EqualTo("org_item1"));
@@ -508,15 +510,15 @@ namespace Homura.Test.UnitTest
             }
 
             svManager.RegisterChangePlan(new Valkyrie_1_VersionChangePlan_Version_2(VersioningMode.ByTick | VersioningMode.DeleteAllRecordInTableCastedOff));
-            svManager.UpgradeToTargetVersion();
+            await svManager.UpgradeToTargetVersion();
 
             using (var conn = new SQLiteConnection($"Data Source={_filePath}"))
             {
-                conn.Open();
+                await conn.OpenAsync();
 
                 Assert.That(conn.GetTableNames(), Has.One.EqualTo("Valkyrie_0"));
                 var dao0 = new Valkyrie_0_Dao();
-                var items0 = dao0.FindAll();
+                var items0 = await dao.FindAllAsync().ToListAsync();
                 Assert.That(items0.Count(), Is.EqualTo(1)); //default version:Version_1
                 Assert.That(items0.First().Id, Is.EqualTo(Guid.Empty));
                 Assert.That(items0.First().Item1, Is.EqualTo("org_item1"));
@@ -527,12 +529,12 @@ namespace Homura.Test.UnitTest
 
                 Assert.That(conn.GetTableNames(), Has.One.EqualTo("Valkyrie_1"));
                 dao1 = new Valkyrie_1_Dao(typeof(VersionOrigin));
-                var items1 = dao1.FindAll();
+                var items1 = await dao1.FindAllAsync().ToListAsync();
                 Assert.That(items1.Count(), Is.EqualTo(0)); //default version:Version_2
 
                 Assert.That(conn.GetTableNames(), Has.One.EqualTo("Valkyrie_1_1"));
                 var dao2 = new Valkyrie_1_Dao(typeof(Version_1));
-                var items2 = dao2.FindAll();
+                var items2 = await dao2.FindAllAsync().ToListAsync();
                 Assert.That(items2.Count(), Is.EqualTo(1)); //default version:Version_2
                 Assert.That(items2.First().Id, Is.EqualTo(Guid.Empty));
                 Assert.That(items2.First().Item1, Is.EqualTo("org_item1"));

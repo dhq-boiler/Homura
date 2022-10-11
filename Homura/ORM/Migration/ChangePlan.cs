@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading.Tasks;
 using static Homura.Core.Delegate;
 
 namespace Homura.ORM.Migration
@@ -109,22 +110,22 @@ namespace Homura.ORM.Migration
 
         public int ModifiedCount {[DebuggerStepThrough] get; set; }
 
-        public virtual void CreateTable(IConnection connection)
+        public virtual async Task CreateTable(IConnection connection)
         {
             throw new NotImplementedException();
         }
 
-        public virtual void DropTable(IConnection connection)
+        public virtual async Task DropTable(IConnection connection)
         {
             throw new NotImplementedException();
         }
 
-        public virtual void UpgradeToTargetVersion(IConnection connection)
+        public virtual async Task UpgradeToTargetVersion(IConnection connection)
         {
             throw new NotImplementedException();
         }
 
-        public virtual void DowngradeToTargetVersion(IConnection connection)
+        public virtual async Task DowngradeToTargetVersion(IConnection connection)
         {
             throw new NotImplementedException();
         }
@@ -232,7 +233,7 @@ namespace Homura.ORM.Migration
             VersionChangePlanList = list;
         }
 
-        public void DowngradeToTargetVersion(IConnection connection)
+        public async Task DowngradeToTargetVersion(IConnection connection)
         {
             OnBeginToDowngradeTo(new VersionChangeEventArgs(TargetVersion));
 
@@ -241,7 +242,7 @@ namespace Homura.ORM.Migration
             foreach (var vcp in VersionChangePlanList)
             {
                 vcp.Mode = Mode;
-                vcp.DowngradeToTargetVersion(connection);
+                await vcp.DowngradeToTargetVersion(connection);
                 ModifiedCount += vcp.ModifiedCount;
             }
 
@@ -250,7 +251,7 @@ namespace Homura.ORM.Migration
             OnFinishedToDowngradeTo(new VersionChangeEventArgs(TargetVersion));
         }
 
-        public void UpgradeToTargetVersion(IConnection connection)
+        public async Task UpgradeToTargetVersion(IConnection connection)
         {
             OnBeginToUpgradeTo(new VersionChangeEventArgs(TargetVersion));
 
@@ -259,7 +260,7 @@ namespace Homura.ORM.Migration
             foreach (var vcp in VersionChangePlanList)
             {
                 vcp.Mode = Mode;
-                vcp.UpgradeToTargetVersion(connection);
+                await vcp.UpgradeToTargetVersion(connection);
                 ModifiedCount += vcp.ModifiedCount;
             }
 

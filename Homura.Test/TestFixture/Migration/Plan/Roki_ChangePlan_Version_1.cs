@@ -5,6 +5,7 @@ using Homura.ORM.Setup;
 using Homura.Test.TestFixture.Dao;
 using Homura.Test.TestFixture.Entity;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Homura.Test.TestFixture.Migration.Plan
 {
@@ -14,33 +15,33 @@ namespace Homura.Test.TestFixture.Migration.Plan
         {
         }
 
-        public override void CreateTable(IConnection connection)
+        public override async Task CreateTable(IConnection connection)
         {
             var dao = new RokiDao(TargetVersion.GetType());
             dao.CurrentConnection = connection;
-            dao.CreateTableIfNotExists();
+            await dao.CreateTableIfNotExistsAsync();
             ++ModifiedCount;
         }
 
-        public override void DropTable(IConnection connection)
+        public override async Task DropTable(IConnection connection)
         {
             var dao = new RokiDao(TargetVersion.GetType());
             dao.CurrentConnection = connection;
-            dao.DropTable();
+            await dao.DropTableAsync();
             ++ModifiedCount;
         }
 
-        public override void UpgradeToTargetVersion(IConnection connection)
+        public override async Task UpgradeToTargetVersion(IConnection connection)
         {
-            CreateTable(connection);
+            await CreateTable(connection);
 
             var dao = new RokiDao(TargetVersion.GetType());
-            if (dao.CountAll() > 0)
+            if (await dao.CountAllAsync() > 0)
             {
-                dao.Delete(new Dictionary<string, object>());
+                await dao.DeleteAsync(new Dictionary<string, object>());
             }
 
-            dao.UpgradeTable(new VersionChangeUnit(typeof(VersionOrigin), TargetVersion.GetType()), Mode);
+            await dao.UpgradeTableAsync(new VersionChangeUnit(typeof(VersionOrigin), TargetVersion.GetType()), Mode);
         }
     }
 }
