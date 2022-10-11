@@ -1,6 +1,7 @@
 ﻿
 using Homura.ORM;
 using Homura.ORM.Setup;
+using System.Threading.Tasks;
 
 namespace Homura.Test.TestFixture.Migration.Plan
 {
@@ -10,9 +11,9 @@ namespace Homura.Test.TestFixture.Migration.Plan
         {
         }
 
-        public override void UpgradeToTargetVersion(IConnection connection)
+        public override async Task UpgradeToTargetVersion(IConnection connection)
         {
-            CreateTable(connection);
+            await CreateTable(connection);
         }
     }
 }

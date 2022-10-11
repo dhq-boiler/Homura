@@ -29,7 +29,7 @@ namespace Homura.Test.UnitTest
         }
 
         [Test]
-        public void Update_DataOpUnit_is_null()
+        public async Task Update_DataOpUnit_is_null()
         {
 
             var svManager = new DataVersionManager();
@@ -39,15 +39,15 @@ namespace Homura.Test.UnitTest
             registeringPlan.AddVersionChangePlan(new PageChangePlan_VersionOrigin(VersioningMode.ByTick));
             svManager.RegisterChangePlan(registeringPlan);
             svManager.SetDefault();
-            svManager.UpgradeToTargetVersion();
+            await svManager.UpgradeToTargetVersion();
 
             using (var conn = new SQLiteConnection($"Data Source={_filePath}"))
             {
-                conn.Open();
+                await conn.OpenAsync();
 
                 var dao = new PageDao(typeof(VersionOrigin));
 
-                dao.Insert(new Page()
+                await dao.InsertAsync(new Page()
                 {
                     ID = Guid.Parse("89B5FA63-7D91-4622-8DB1-61F7BE80B416"),
                     BookID = Guid.Parse("75813CCD-CC48-4894-ACC6-3CE8C5333422"),
@@ -56,7 +56,7 @@ namespace Homura.Test.UnitTest
                     Title = "E9C012E2-938A-484F-8F01-04169B920781",
                 });
 
-                var record = dao.FindBy(new Dictionary<string, object>() { { "ID", Guid.Parse("89B5FA63-7D91-4622-8DB1-61F7BE80B416") } }).SingleOrDefault();
+                var record = (await dao.FindByAsync(new Dictionary<string, object>() { { "ID", Guid.Parse("89B5FA63-7D91-4622-8DB1-61F7BE80B416") } }).ToListAsync()).SingleOrDefault();
                 Assert.That(record, Is.Not.Null);
                 Assert.That(record, Has.Property("BookID").EqualTo(Guid.Parse("75813CCD-CC48-4894-ACC6-3CE8C5333422")));
                 Assert.That(record, Has.Property("ImageID").EqualTo(Guid.Parse("655CAD5B-423D-4531-B474-68983FFFE385")));
@@ -67,9 +67,9 @@ namespace Homura.Test.UnitTest
 
                 DataOperationUnit dataOpUnit = null;
 
-                dao.Update(record, dataOpUnit?.CurrentConnection);
+                await dao.UpdateAsync(record, dataOpUnit?.CurrentConnection);
                 
-                record = dao.FindBy(new Dictionary<string, object>() { { "ID", Guid.Parse("89B5FA63-7D91-4622-8DB1-61F7BE80B416") } }).SingleOrDefault();
+                record = (await dao.FindByAsync(new Dictionary<string, object>() { { "ID", Guid.Parse("89B5FA63-7D91-4622-8DB1-61F7BE80B416") } }).ToListAsync()).SingleOrDefault();
                 Assert.That(record, Is.Not.Null);
                 Assert.That(record, Has.Property("BookID").EqualTo(Guid.Parse("75813CCD-CC48-4894-ACC6-3CE8C5333422")));
                 Assert.That(record, Has.Property("ImageID").EqualTo(Guid.Parse("655CAD5B-423D-4531-B474-68983FFFE385")));

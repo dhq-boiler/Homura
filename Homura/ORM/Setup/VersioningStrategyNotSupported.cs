@@ -4,6 +4,7 @@ using Homura.ORM.Mapping;
 using Homura.ORM.Migration;
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Homura.ORM.Setup
 {
@@ -56,7 +57,7 @@ namespace Homura.ORM.Setup
             throw new NotSupportedException();
         }
 
-        internal override void UpgradeToTargetVersion(IConnection connection)
+        internal override async Task UpgradeToTargetVersion(IConnection connection)
         {
             throw new NotSupportedException();
         }

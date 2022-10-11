@@ -6,6 +6,7 @@ using Homura.Test.TestFixture.Dao;
 using Homura.Test.TestFixture.Entity;
 using Homura.Test.TestFixture.Migration;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Sunctum.Domain.Data.Dao.Migration.Plan
 {
@@ -15,35 +16,35 @@ namespace Sunctum.Domain.Data.Dao.Migration.Plan
         {
         }
 
-        public override void CreateTable(IConnection connection)
+        public override async Task CreateTable(IConnection connection)
         {
             var dao = new Valkyrie_1_Dao(typeof(Version_1));
             dao.CurrentConnection = connection;
-            dao.CreateTableIfNotExists();
+            await dao.CreateTableIfNotExistsAsync();
             ++ModifiedCount;
-            dao.CreateIndexIfNotExists();
+            await dao.CreateIndexIfNotExistsAsync();
             ++ModifiedCount;
         }
 
-        public override void DropTable(IConnection connection)
+        public override async Task DropTable(IConnection connection)
         {
             var dao = new Valkyrie_1_Dao(typeof(Version_1));
             dao.CurrentConnection = connection;
-            dao.DropTable();
+            await dao.DropTableAsync();
             ++ModifiedCount;
         }
 
-        public override void UpgradeToTargetVersion(IConnection connection)
+        public override async Task UpgradeToTargetVersion(IConnection connection)
         {
-            CreateTable(connection);
+            await CreateTable(connection);
 
             var dao = new Valkyrie_1_Dao(TargetVersion.GetType());
-            if (dao.CountAll() > 0)
+            if (await dao.CountAllAsync() > 0)
             {
-                dao.Delete(new Dictionary<string, object>());
+                await dao.DeleteAsync(new Dictionary<string, object>());
             }
 
-            dao.UpgradeTable(new VersionChangeUnit(typeof(VersionOrigin), TargetVersion.GetType()), Mode);
+            await dao.UpgradeTableAsync(new VersionChangeUnit(typeof(VersionOrigin), TargetVersion.GetType()), Mode);
         }
     }
 }

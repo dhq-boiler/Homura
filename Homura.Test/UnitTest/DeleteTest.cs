@@ -10,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.Data.SQLite;
 using System.IO;
+using System.Threading.Tasks;
 
 namespace Homura.Test.UnitTest
 {
@@ -17,7 +18,7 @@ namespace Homura.Test.UnitTest
     public class DeleteTest
     {
         [OneTimeSetUp]
-        public void OneTimeSetUp()
+        public async Task OneTimeSetUp()
         {
             var _filePath = Path.Combine(TestContext.CurrentContext.TestDirectory, "DeleteTest.db");
             ConnectionManager.SetDefaultConnection(Guid.Parse("B9464890-845E-4295-B3BA-20BC50C7136F"), $"Data Source={_filePath}", typeof(SQLiteConnection));
@@ -45,14 +46,14 @@ namespace Homura.Test.UnitTest
             var registeringPlan4 = new ChangePlan<Version_4>(VersioningMode.ByTick);
             registeringPlan4.AddVersionChangePlan(new AlphaChangePlan_Version_3(VersioningMode.ByTick));
             svManager.RegisterChangePlan(registeringPlan4);
-            svManager.UpgradeToTargetVersion();
+            await svManager.UpgradeToTargetVersion();
         }
 
         [Test]
-        public void Image_3テーブルを全削除()
+        public async Task Image_3テーブルを全削除()
         {
             var dao = new AlphaDao(typeof(Version_3));
-            dao.Delete(new Dictionary<string, object>());
+            await dao.DeleteAsync(new Dictionary<string, object>());
         }
 
         [TearDown]

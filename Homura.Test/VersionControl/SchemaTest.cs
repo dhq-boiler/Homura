@@ -10,6 +10,7 @@ using System;
 using System.Data.SQLite;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Homura.Test.VersionControl
 {
@@ -28,7 +29,7 @@ namespace Homura.Test.VersionControl
         }
 
         [Test]
-        public void CreateTable_Specified_VersionOrigin()
+        public async Task CreateTable_Specified_VersionOrigin()
         {
             var svManager = new DataVersionManager();
             svManager.SetDefault();
@@ -36,11 +37,11 @@ namespace Homura.Test.VersionControl
             //Create VersionOrigin
             var dao = new OriginDao(typeof(VersionOrigin));
             dao.CurrentConnection = ConnectionManager.DefaultConnection;
-            dao.CreateTableIfNotExists();
+            await dao.CreateTableIfNotExistsAsync();
 
             using (var conn = new SQLiteConnection($"Data Source={_filePath}"))
             {
-                conn.Open();
+                await conn.OpenAsync();
 
                 Assert.That(conn.GetTableNames(), Has.Exactly(1).EqualTo(dao.TableName));
 
@@ -53,7 +54,7 @@ namespace Homura.Test.VersionControl
         }
 
         [Test]
-        public void CreateTable_DaoUseDefaultConstructor_VersionOrigin()
+        public async Task CreateTable_DaoUseDefaultConstructor_VersionOrigin()
         {
             var svManager = new DataVersionManager();
             svManager.SetDefault();
@@ -61,11 +62,11 @@ namespace Homura.Test.VersionControl
             //Create VersionOrigin
             var dao = new OriginDao();
             dao.CurrentConnection = ConnectionManager.DefaultConnection;
-            dao.CreateTableIfNotExists();
+            await dao.CreateTableIfNotExistsAsync();
 
             using (var conn = new SQLiteConnection($"Data Source={_filePath}"))
             {
-                conn.Open();
+                await conn.OpenAsync();
 
                 Assert.That(conn.GetTableNames(), Has.Exactly(1).EqualTo(dao.TableName));
 
@@ -78,7 +79,7 @@ namespace Homura.Test.VersionControl
         }
 
         [Test]
-        public void CreateTable_Specified_Version_1()
+        public async Task CreateTable_Specified_Version_1()
         {
             var svManager = new DataVersionManager();
             svManager.SetDefault();
@@ -86,11 +87,11 @@ namespace Homura.Test.VersionControl
             //Create Version_1
             var dao = new OriginDao(typeof(Version_1));
             dao.CurrentConnection = ConnectionManager.DefaultConnection;
-            dao.CreateTableIfNotExists();
+            await dao.CreateTableIfNotExistsAsync();
 
             using (var conn = new SQLiteConnection($"Data Source={_filePath}"))
             {
-                conn.Open();
+                await conn.OpenAsync();
 
                 Assert.That(conn.GetTableNames(), Has.Exactly(1).EqualTo(dao.TableName));
 
@@ -104,7 +105,7 @@ namespace Homura.Test.VersionControl
         }
 
         [Test]
-        public void CreateTable_Specified_VersionOrigin_Version_1()
+        public async Task CreateTable_Specified_VersionOrigin_Version_1()
         {
             var svManager = new DataVersionManager();
             svManager.SetDefault();
@@ -112,12 +113,12 @@ namespace Homura.Test.VersionControl
             //1. Create VersionOrigin
             var dao = new OriginDao(typeof(VersionOrigin));
             dao.CurrentConnection = ConnectionManager.DefaultConnection;
-            dao.CreateTableIfNotExists();
+            await dao.CreateTableIfNotExistsAsync();
 
             //check Header(VersionOrigin)
             using (var conn = new SQLiteConnection($"Data Source={_filePath}"))
             {
-                conn.Open();
+                await conn.OpenAsync();
 
                 Assert.That(conn.GetTableNames(), Has.Exactly(1).EqualTo(dao.TableName));
 
@@ -131,14 +132,14 @@ namespace Homura.Test.VersionControl
             //Create Version_1
             dao = new OriginDao(typeof(Version_1));
             dao.CurrentConnection = ConnectionManager.DefaultConnection;
-            dao.CreateTableIfNotExists();
+            await dao.CreateTableIfNotExistsAsync();
 
             //check Header(VersionOrigin)
             dao = new OriginDao(typeof(VersionOrigin));
             dao.CurrentConnection = ConnectionManager.DefaultConnection;
             using (var conn = new SQLiteConnection($"Data Source={_filePath}"))
             {
-                conn.Open();
+                await conn.OpenAsync();
 
                 Assert.That(conn.GetTableNames(), Has.Exactly(1).EqualTo(dao.TableName));
 
@@ -154,7 +155,7 @@ namespace Homura.Test.VersionControl
             dao.CurrentConnection = ConnectionManager.DefaultConnection;
             using (var conn = new SQLiteConnection($"Data Source={_filePath}"))
             {
-                conn.Open();
+                await conn.OpenAsync();
 
                 Assert.That(conn.GetTableNames(), Has.Exactly(1).EqualTo(dao.TableName));
 

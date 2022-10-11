@@ -15,7 +15,7 @@ using System.Collections.Generic;
 using System.Data.SQLite;
 using System.IO;
 using System.Linq;
-using System.Xml.Linq;
+using System.Threading.Tasks;
 
 namespace Sunctum.Infrastructure.Test.IntegrationTest.Data.Rdbms.VersionControl
 {
@@ -38,7 +38,7 @@ namespace Sunctum.Infrastructure.Test.IntegrationTest.Data.Rdbms.VersionControl
         }
 
         [Test]
-        public void ByTick_Origin_VersinOrigin_To_Version_1()
+        public async Task ByTick_Origin_VersinOrigin_To_Version_1()
         {
             var svManager = new DataVersionManager();
             svManager.CurrentConnection = ConnectionManager.DefaultConnection;
@@ -48,23 +48,23 @@ namespace Sunctum.Infrastructure.Test.IntegrationTest.Data.Rdbms.VersionControl
             svManager.RegisterChangePlan(registeringPlan);
             svManager.SetDefault();
 
-            svManager.UpgradeToTargetVersion();
+            await svManager.UpgradeToTargetVersion();
 
             var dao = new OriginDao();
             dao.CurrentConnection = ConnectionManager.DefaultConnection;
 
-            dao.Insert(new Origin()
+            await dao.InsertAsync(new Origin()
             {
                 Id = Guid.Empty,
                 Item1 = "org_item1",
                 Item2 = "org_item2",
             });
 
-            Assert.That(dao.CountAll(), Is.EqualTo(1));
+            Assert.That(await dao.CountAllAsync(), Is.EqualTo(1));
 
             using (var conn = new SQLiteConnection($"Data Source={_filePath}"))
             {
-                conn.Open();
+                await conn.OpenAsync();
 
                 Assert.That(conn.GetTableNames(), Has.One.EqualTo("Origin"));
                 Assert.That(conn.GetTableNames(), Has.None.EqualTo("Origin_1"));
@@ -74,16 +74,16 @@ namespace Sunctum.Infrastructure.Test.IntegrationTest.Data.Rdbms.VersionControl
             registeringPlan1.AddVersionChangePlan(new OriginChangePlan_Version_1(VersioningMode.ByTick));
             svManager.RegisterChangePlan(registeringPlan1);
 
-            svManager.UpgradeToTargetVersion();
+            await svManager.UpgradeToTargetVersion();
 
             using (var conn = new SQLiteConnection($"Data Source={_filePath}"))
             {
-                conn.Open();
+                await conn.OpenAsync();
 
                 Assert.That(conn.GetTableNames(), Has.One.EqualTo("Origin"));
                 Assert.That(conn.GetTableNames(), Has.One.EqualTo("Origin_1"));
 
-                var items = dao.FindAll();
+                var items = await dao.FindAllAsync().ToListAsync();
                 Assert.That(items.Count(), Is.EqualTo(1)); //default version:Version_1
                 Assert.That(items.First().Id, Is.EqualTo(Guid.Empty));
                 Assert.That(items.First().Item1, Is.EqualTo("org_item1"));
@@ -93,7 +93,7 @@ namespace Sunctum.Infrastructure.Test.IntegrationTest.Data.Rdbms.VersionControl
         }
 
         [Test]
-        public void ByVersion_Alpha_Beta_Gamma_ComplexCase()
+        public async Task ByVersion_Alpha_Beta_Gamma_ComplexCase()
         {
             var svManager = new DataVersionManager();
             svManager.CurrentConnection = ConnectionManager.DefaultConnection;
@@ -104,11 +104,11 @@ namespace Sunctum.Infrastructure.Test.IntegrationTest.Data.Rdbms.VersionControl
             registeringPlan.AddVersionChangePlan(new GammaChangePlan_VersionOrigin(VersioningMode.ByTick));
             svManager.RegisterChangePlan(registeringPlan);
             svManager.SetDefault();
-            svManager.UpgradeToTargetVersion();
+            await svManager.UpgradeToTargetVersion();
 
             using (var conn = new SQLiteConnection($"Data Source={_filePath}"))
             {
-                conn.Open();
+                await conn.OpenAsync();
 
                 var tablenames = conn.GetTableNames();
 
@@ -128,11 +128,11 @@ namespace Sunctum.Infrastructure.Test.IntegrationTest.Data.Rdbms.VersionControl
             var registeringPlan1 = new ChangePlan<Version_1>(VersioningMode.ByTick);
             registeringPlan1.AddVersionChangePlan(new AlphaChangePlan_Version_1(VersioningMode.ByTick));
             svManager.RegisterChangePlan(registeringPlan1);
-            svManager.UpgradeToTargetVersion();
+            await svManager.UpgradeToTargetVersion();
 
             using (var conn = new SQLiteConnection($"Data Source={_filePath}"))
             {
-                conn.Open();
+                await conn.OpenAsync();
 
                 var tablenames = conn.GetTableNames();
 
@@ -153,11 +153,11 @@ namespace Sunctum.Infrastructure.Test.IntegrationTest.Data.Rdbms.VersionControl
             registeringPlan2.AddVersionChangePlan(new AlphaChangePlan_Version_2(VersioningMode.ByTick));
             registeringPlan2.AddVersionChangePlan(new BetaChangePlan_Version_1(VersioningMode.ByTick));
             svManager.RegisterChangePlan(registeringPlan2);
-            svManager.UpgradeToTargetVersion();
+            await svManager.UpgradeToTargetVersion();
 
             using (var conn = new SQLiteConnection($"Data Source={_filePath}"))
             {
-                conn.Open();
+                await conn.OpenAsync();
 
                 var tablenames = conn.GetTableNames();
 
@@ -178,11 +178,11 @@ namespace Sunctum.Infrastructure.Test.IntegrationTest.Data.Rdbms.VersionControl
             registeringPlan3.AddVersionChangePlan(new BetaChangePlan_Version_2(VersioningMode.ByTick));
             registeringPlan3.AddVersionChangePlan(new GammaChangePlan_Version_1(VersioningMode.ByTick));
             svManager.RegisterChangePlan(registeringPlan3);
-            svManager.UpgradeToTargetVersion();
+            await svManager.UpgradeToTargetVersion();
 
             using (var conn = new SQLiteConnection($"Data Source={_filePath}"))
             {
-                conn.Open();
+                await conn.OpenAsync();
 
                 var tablenames = conn.GetTableNames();
 
@@ -206,7 +206,7 @@ namespace Sunctum.Infrastructure.Test.IntegrationTest.Data.Rdbms.VersionControl
             var dao = new AlphaDao(typeof(Version_2));
             dao.CurrentConnection = ConnectionManager.DefaultConnection;
 
-            dao.Insert(new Alpha()
+            await dao.InsertAsync(new Alpha()
             {
                 Id = Guid.Parse("26D55FA7-1662-4E74-9143-290940A8E8D4"),
                 Item1 = "org_item1",
@@ -220,11 +220,11 @@ namespace Sunctum.Infrastructure.Test.IntegrationTest.Data.Rdbms.VersionControl
                 Item9 = true,
             });
 
-            svManager.UpgradeToTargetVersion();
+            await svManager.UpgradeToTargetVersion();
 
             using (var conn = new SQLiteConnection($"Data Source={_filePath}"))
             {
-                conn.Open();
+                await conn.OpenAsync();
 
                 var tablenames = conn.GetTableNames();
 
@@ -235,7 +235,7 @@ namespace Sunctum.Infrastructure.Test.IntegrationTest.Data.Rdbms.VersionControl
                 dao = new AlphaDao(typeof(Version_2));
                 dao.CurrentConnection = ConnectionManager.DefaultConnection;
 
-                var all = dao.FindAll();
+                var all = await dao.FindAllAsync().ToListAsync();
                 var arecord = all.Take(1).Single();
                 Assert.That(arecord, Has.Property("Id").EqualTo(Guid.Parse("26D55FA7-1662-4E74-9143-290940A8E8D4")));
                 Assert.That(arecord, Has.Property("Item1").EqualTo("org_item1"));
@@ -253,7 +253,7 @@ namespace Sunctum.Infrastructure.Test.IntegrationTest.Data.Rdbms.VersionControl
                 dao =  new AlphaDao(typeof(Version_3));
                 dao.CurrentConnection = ConnectionManager.DefaultConnection;
 
-                dao.Insert(new Alpha()
+                await dao.InsertAsync(new Alpha()
                 {
                     Id = Guid.Parse("8069BD2D-2BC9-4C89-966D-8E966FB87546"),
                     Item1 = "org_item1",
@@ -267,7 +267,7 @@ namespace Sunctum.Infrastructure.Test.IntegrationTest.Data.Rdbms.VersionControl
                     Item9 = true,
                 });
                 
-                all = dao.FindAll();
+                all = await dao.FindAllAsync().ToListAsync();
                 arecord = all.Skip(1).Take(1).Single();
                 Assert.That(arecord, Has.Property("Id").EqualTo(Guid.Parse("8069BD2D-2BC9-4C89-966D-8E966FB87546")));
                 Assert.That(arecord, Has.Property("Item1").EqualTo("org_item1"));
@@ -291,7 +291,7 @@ namespace Sunctum.Infrastructure.Test.IntegrationTest.Data.Rdbms.VersionControl
         }
 
         [Test]
-        public void ByVersion_Book_ComplexCase()
+        public async Task ByVersion_Book_ComplexCase()
         {
             var svManager = new DataVersionManager();
             svManager.CurrentConnection = ConnectionManager.DefaultConnection;
@@ -300,14 +300,14 @@ namespace Sunctum.Infrastructure.Test.IntegrationTest.Data.Rdbms.VersionControl
             registeringPlan.AddVersionChangePlan(new BookChangePlan_VersionOrigin(VersioningMode.ByTick));
             svManager.RegisterChangePlan(registeringPlan);
             svManager.SetDefault();
-            svManager.UpgradeToTargetVersion();
+            await svManager.UpgradeToTargetVersion();
 
             using (var conn = new SQLiteConnection($"Data Source={_filePath}"))
             {
-                conn.Open();
+                await conn.OpenAsync();
 
                 var dao = new BookDao(typeof(VersionOrigin));
-                dao.Insert(new Book()
+                await dao.InsertAsync(new Book()
                 {
                     ID = Guid.Parse("8069BD2D-2BC9-4C89-966D-8E966FB87546"),
                     Title = "kintama",
@@ -321,15 +321,15 @@ namespace Sunctum.Infrastructure.Test.IntegrationTest.Data.Rdbms.VersionControl
             var registeringPlan1 = new ChangePlan<Version_1>(VersioningMode.ByTick);
             registeringPlan1.AddVersionChangePlan(new BookChangePlan_Version_1(VersioningMode.ByTick));
             svManager.RegisterChangePlan(registeringPlan1);
-            svManager.UpgradeToTargetVersion();
+            await svManager.UpgradeToTargetVersion();
 
             using (var conn = new SQLiteConnection($"Data Source={_filePath}"))
             {
-                conn.Open();
+                await conn.OpenAsync();
 
                 var dao = new BookDao(typeof(Version_1));
 
-                var records = dao.FindAll().ToList();
+                var records = await dao.FindAllAsync().ToListAsync();
                 Assert.That(records.Count(), Is.EqualTo(1));
                 Assert.That(records[0], Has.Property("Title").EqualTo("kintama"));
                 Assert.That(records[0], Has.Property("AuthorID").EqualTo(Guid.Parse("3320FF3E-B7F0-42CC-A994-C6DF57B2067D")));
@@ -340,7 +340,7 @@ namespace Sunctum.Infrastructure.Test.IntegrationTest.Data.Rdbms.VersionControl
         }
 
         [Test]
-        public void ByVersion_Page_SimpleCase()
+        public async Task ByVersion_Page_SimpleCase()
         {
             var svManager = new DataVersionManager();
             svManager.CurrentConnection = ConnectionManager.DefaultConnection;
@@ -349,15 +349,15 @@ namespace Sunctum.Infrastructure.Test.IntegrationTest.Data.Rdbms.VersionControl
             registeringPlan.AddVersionChangePlan(new PageChangePlan_VersionOrigin(VersioningMode.ByTick));
             svManager.RegisterChangePlan(registeringPlan);
             svManager.SetDefault();
-            svManager.UpgradeToTargetVersion();
+            await svManager.UpgradeToTargetVersion();
 
             using (var conn = new SQLiteConnection($"Data Source={_filePath}"))
             {
-                conn.Open();
+                await conn.OpenAsync();
 
                 var dao = new PageDao(typeof(VersionOrigin));
 
-                dao.Insert(new Page()
+                await dao.InsertAsync(new Page()
                 {
                     ID = Guid.Parse("89B5FA63-7D91-4622-8DB1-61F7BE80B416"),
                     BookID = Guid.Parse("75813CCD-CC48-4894-ACC6-3CE8C5333422"),
@@ -366,7 +366,7 @@ namespace Sunctum.Infrastructure.Test.IntegrationTest.Data.Rdbms.VersionControl
                     Title = "E9C012E2-938A-484F-8F01-04169B920781",
                 });
 
-                var record = dao.FindBy(new Dictionary<string, object>() { { "ID", Guid.Parse("89B5FA63-7D91-4622-8DB1-61F7BE80B416") } }).SingleOrDefault();
+                var record = (await dao.FindByAsync(new Dictionary<string, object>() { { "ID", Guid.Parse("89B5FA63-7D91-4622-8DB1-61F7BE80B416") } }).ToListAsync()).SingleOrDefault();
                 Assert.That(record, Is.Not.Null);
                 Assert.That(record, Has.Property("BookID").EqualTo(Guid.Parse("75813CCD-CC48-4894-ACC6-3CE8C5333422")));
                 Assert.That(record, Has.Property("ImageID").EqualTo(Guid.Parse("655CAD5B-423D-4531-B474-68983FFFE385")));

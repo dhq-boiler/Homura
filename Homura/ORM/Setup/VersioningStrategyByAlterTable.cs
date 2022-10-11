@@ -5,6 +5,7 @@ using Homura.ORM.Migration;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Homura.ORM.Setup
 {
@@ -65,7 +66,7 @@ namespace Homura.ORM.Setup
             throw new NotSupportedException();
         }
 
-        internal override void UpgradeToTargetVersion(IConnection connection)
+        internal override async Task UpgradeToTargetVersion(IConnection connection)
         {
             //DBに存在するテーブル名を取得
             IEnumerable<string> existingTableNames = DbInfoRetriever.GetTableNames(connection);
@@ -78,7 +79,7 @@ namespace Homura.ORM.Setup
 
             foreach (var plan in plans)
             {
-                plan.UpgradeToTargetVersion(connection);
+                await plan.UpgradeToTargetVersion(connection);
                 ModifiedCount += plan.ModifiedCount;
             }
         }

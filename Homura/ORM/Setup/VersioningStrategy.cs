@@ -6,6 +6,7 @@ using Homura.ORM.Migration;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Threading.Tasks;
 
 namespace Homura.ORM.Setup
 {
@@ -37,7 +38,7 @@ namespace Homura.ORM.Setup
 
         internal abstract void Reset();
 
-        internal abstract void UpgradeToTargetVersion(IConnection connection);
+        internal abstract Task UpgradeToTargetVersion(IConnection connection);
 
         internal abstract bool ExistsPlan(VersionOrigin targetVersion);
 

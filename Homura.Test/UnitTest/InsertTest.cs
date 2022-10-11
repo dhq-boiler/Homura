@@ -18,7 +18,7 @@ namespace Homura.Test.UnitTest
     {
         string _filePath;
         [OneTimeSetUp]
-        public void OneTimeSetUp()
+        public async Task OneTimeSetUp()
         {
             _filePath = Path.Combine(TestContext.CurrentContext.TestDirectory, "InsertTest.db");
             ConnectionManager.SetDefaultConnection(Guid.Parse("1ADB0B4D-7757-47A7-9F9E-1B0A0B839382"), $"Data Source={_filePath}", typeof(SQLiteConnection));
@@ -45,14 +45,14 @@ namespace Homura.Test.UnitTest
             var registeringPlan4 = new ChangePlan<Version_4>(VersioningMode.ByTick);
             registeringPlan4.AddVersionChangePlan(new AlphaChangePlan_Version_3(VersioningMode.ByTick));
             svManager.RegisterChangePlan(registeringPlan4);
-            svManager.UpgradeToTargetVersion();
+            await svManager.UpgradeToTargetVersion();
         }
 
         [Test]
         public async Task InsertAsync()
         {
             var dao = new AlphaDao(typeof(Version_3));
-            dao.Insert(new TestFixture.Entity.Alpha()
+            await dao.InsertAsync(new TestFixture.Entity.Alpha()
             {
                 Id = Guid.Parse("1ADB0B4D-7757-47A7-9F9E-1B0A0B839382"),
             });

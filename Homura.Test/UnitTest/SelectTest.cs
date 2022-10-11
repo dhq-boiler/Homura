@@ -18,7 +18,7 @@ namespace Homura.Test.UnitTest
     public class SelectTest
     {
         [OneTimeSetUp]
-        public void OneTimeSetUp()
+        public async Task OneTimeSetUp()
         {
             var _filePath = Path.Combine(TestContext.CurrentContext.TestDirectory, "SelectTest.db");
             ConnectionManager.SetDefaultConnection(Guid.Parse("D88B3E8E-B46C-41E3-AAEA-87FEA352C9F6"), $"Data Source={_filePath}", typeof(SQLiteConnection));
@@ -45,7 +45,7 @@ namespace Homura.Test.UnitTest
             var registeringPlan4 = new ChangePlan<Version_4>(VersioningMode.ByTick);
             registeringPlan4.AddVersionChangePlan(new AlphaChangePlan_Version_3(VersioningMode.ByTick));
             svManager.RegisterChangePlan(registeringPlan4);
-            svManager.UpgradeToTargetVersion();
+            await svManager.UpgradeToTargetVersion();
         }
 
         [Test]

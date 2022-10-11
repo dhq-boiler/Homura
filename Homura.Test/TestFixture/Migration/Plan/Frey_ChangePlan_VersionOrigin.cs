@@ -4,6 +4,7 @@ using Homura.ORM.Migration;
 using Homura.ORM.Setup;
 using Homura.Test.TestFixture.Dao;
 using Homura.Test.TestFixture.Entity;
+using System.Threading.Tasks;
 
 namespace Homura.Test.TestFixture.Migration.Plan
 {
@@ -13,25 +14,25 @@ namespace Homura.Test.TestFixture.Migration.Plan
         {
         }
 
-        public override void CreateTable(IConnection connection)
+        public override async Task CreateTable(IConnection connection)
         {
             var dao = new FreyDao(TargetVersion.GetType());
             dao.CurrentConnection = connection;
-            dao.CreateTableIfNotExists();
+            await dao.CreateTableIfNotExistsAsync();
             ++ModifiedCount;
         }
 
-        public override void DropTable(IConnection connection)
+        public override async Task DropTable(IConnection connection)
         {
             var dao = new FreyDao(TargetVersion.GetType());
             dao.CurrentConnection = connection;
-            dao.DropTable();
+            await dao.DropTableAsync();
             ++ModifiedCount;
         }
 
-        public override void UpgradeToTargetVersion(IConnection connection)
+        public override async Task UpgradeToTargetVersion(IConnection connection)
         {
-            CreateTable(connection);
+            await CreateTable(connection);
         }
     }
 }
