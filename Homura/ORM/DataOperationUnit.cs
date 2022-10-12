@@ -4,10 +4,11 @@ using NLog;
 using System;
 using System.Data;
 using System.Data.Common;
+using System.Threading.Tasks;
 
 namespace Homura.ORM
 {
-    public class DataOperationUnit : IDisposable
+    public class DataOperationUnit : IDisposable, IAsyncDisposable
     {
         private static readonly Logger s_logger = LogManager.GetCurrentClassLogger();
         public DbConnection CurrentConnection { get; private set; }
@@ -31,6 +32,11 @@ namespace Homura.ORM
             CurrentConnection = connection.OpenConnection();
         }
 
+        public async Task OpenAsync(IConnection connection)
+        {
+            CurrentConnection = await connection.OpenConnectionAsync();
+        }
+
         public void BeginTransaction(IsolationLevel isolationLevel = IsolationLevel.ReadCommitted)
         {
             if (CurrentConnection == null)
@@ -43,6 +49,18 @@ namespace Homura.ORM
             ConnectionManager.PutAttendance(Guid.NewGuid(), new ConnectionManager.Attendance(InstanceId, CurrentTransaction, Environment.StackTrace));
         }
 
+        public async Task BeginTransactionAsync(IsolationLevel isolationLevel = IsolationLevel.ReadCommitted)
+        {
+            if (CurrentConnection == null)
+            {
+                throw new InvalidOperationException("Connection is not opened");
+            }
+            CurrentTransactionId = Guid.NewGuid();
+            s_logger.Debug($"BeginTransaction Id={CurrentTransactionId} \n{Environment.StackTrace}");
+            CurrentTransaction = await CurrentConnection.BeginTransactionAsync(isolationLevel);
+            ConnectionManager.PutAttendance(Guid.NewGuid(), new ConnectionManager.Attendance(InstanceId, CurrentTransaction, Environment.StackTrace));
+        }
+
         public void Commit()
         {
             CurrentTransaction.Commit();
@@ -52,9 +70,27 @@ namespace Homura.ORM
             CurrentTransaction = null;
         }
 
+        public async Task CommitAsync()
+        {
+            await CurrentTransaction.CommitAsync();
+            s_logger.Debug($"Commit Id={CurrentTransactionId}");
+            ConnectionManager.RemoveAttendance(CurrentTransaction);
+            CurrentTransaction.Dispose();
+            CurrentTransaction = null;
+        }
+
         public void Rollback()
         {
             CurrentTransaction.Rollback();
+            s_logger.Debug($"Rollback Id={CurrentTransactionId}");
+            ConnectionManager.RemoveAttendance(CurrentTransaction);
+            CurrentTransaction.Dispose();
+            CurrentTransaction = null;
+        }
+
+        public async Task RollbackAsync()
+        {
+            await CurrentTransaction.RollbackAsync();
             s_logger.Debug($"Rollback Id={CurrentTransactionId}");
             ConnectionManager.RemoveAttendance(CurrentTransaction);
             CurrentTransaction.Dispose();
@@ -86,6 +122,28 @@ namespace Homura.ORM
                 _disposedValue = true;
             }
         }
+        protected virtual async Task DisposeAsync(bool disposing)
+        {
+            if (!_disposedValue)
+            {
+                if (disposing)
+                {
+                    if (CurrentTransaction != null)
+                    {
+                        await CurrentTransaction.DisposeAsync();
+                    }
+                    if (CurrentConnection != null)
+                    {
+                        await CurrentConnection.DisposeAsync();
+                    }
+                }
+
+                // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
+                // TODO: set large fields to null.
+
+                _disposedValue = true;
+            }
+        }
 
         // TODO: override a finalizer only if Dispose(bool disposing) above has code to free unmanaged resources.
         ~DataOperationUnit()
@@ -102,6 +160,13 @@ namespace Homura.ORM
             // TODO: uncomment the following line if the finalizer is overridden above.
             GC.SuppressFinalize(this);
         }
+
+        public async ValueTask DisposeAsync()
+        {
+            await DisposeAsync(true);
+            GC.SuppressFinalize(this);
+        }
+
         #endregion
     }
 }
