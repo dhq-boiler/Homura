@@ -34,7 +34,7 @@ namespace Homura.ORM
 
         public async Task OpenAsync(IConnection connection)
         {
-            CurrentConnection = await connection.OpenConnectionAsync();
+            CurrentConnection = await connection.OpenConnectionAsync().ConfigureAwait(false);
         }
 
         public void BeginTransaction(IsolationLevel isolationLevel = IsolationLevel.ReadCommitted)
@@ -57,7 +57,7 @@ namespace Homura.ORM
             }
             CurrentTransactionId = Guid.NewGuid();
             s_logger.Debug($"BeginTransaction Id={CurrentTransactionId} \n{Environment.StackTrace}");
-            CurrentTransaction = await CurrentConnection.BeginTransactionAsync(isolationLevel);
+            CurrentTransaction = await CurrentConnection.BeginTransactionAsync(isolationLevel).ConfigureAwait(false);
             ConnectionManager.PutAttendance(Guid.NewGuid(), new ConnectionManager.Attendance(InstanceId, CurrentTransaction, Environment.StackTrace));
         }
 
@@ -72,7 +72,7 @@ namespace Homura.ORM
 
         public async Task CommitAsync()
         {
-            await CurrentTransaction.CommitAsync();
+            await CurrentTransaction.CommitAsync().ConfigureAwait(false);
             s_logger.Debug($"Commit Id={CurrentTransactionId}");
             ConnectionManager.RemoveAttendance(CurrentTransaction);
             CurrentTransaction.Dispose();
@@ -90,7 +90,7 @@ namespace Homura.ORM
 
         public async Task RollbackAsync()
         {
-            await CurrentTransaction.RollbackAsync();
+            await CurrentTransaction.RollbackAsync().ConfigureAwait(false);
             s_logger.Debug($"Rollback Id={CurrentTransactionId}");
             ConnectionManager.RemoveAttendance(CurrentTransaction);
             CurrentTransaction.Dispose();
@@ -130,11 +130,11 @@ namespace Homura.ORM
                 {
                     if (CurrentTransaction != null)
                     {
-                        await CurrentTransaction.DisposeAsync();
+                        await CurrentTransaction.DisposeAsync().ConfigureAwait(false);
                     }
                     if (CurrentConnection != null)
                     {
-                        await CurrentConnection.DisposeAsync();
+                        await CurrentConnection.DisposeAsync().ConfigureAwait(false);
                     }
                 }
 
@@ -163,7 +163,7 @@ namespace Homura.ORM
 
         public async ValueTask DisposeAsync()
         {
-            await DisposeAsync(true);
+            await DisposeAsync(true).ConfigureAwait(false);
             GC.SuppressFinalize(this);
         }
 
