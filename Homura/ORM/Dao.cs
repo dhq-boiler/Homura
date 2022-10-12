@@ -476,7 +476,7 @@ namespace Homura.ORM
             {
                 if (!isTransaction)
                 {
-                    conn.Dispose();
+                    await conn.DisposeAsync().ConfigureAwait(false);
                 }
             }
         }
@@ -520,7 +520,7 @@ namespace Homura.ORM
             {
                 if (!isTransaction)
                 {
-                    conn.Dispose();
+                    await conn.DisposeAsync().ConfigureAwait(false);
                 }
             }
         }
@@ -572,7 +572,7 @@ namespace Homura.ORM
             {
                 if (!isTransaction)
                 {
-                    conn.Dispose();
+                    await conn.DisposeAsync().ConfigureAwait(false);
                 }
             }
         }
@@ -1293,7 +1293,7 @@ namespace Homura.ORM
                     {
                         if (!isTransaction)
                         {
-                            conn.Dispose();
+                            await conn.DisposeAsync().ConfigureAwait(false);
                         }
                     }
                 }
@@ -1455,7 +1455,7 @@ namespace Homura.ORM
                     {
                         if (!isTransaction)
                         {
-                            conn.Dispose();
+                            await conn.DisposeAsync().ConfigureAwait(false);
                         }
                     }
                 }
