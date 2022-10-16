@@ -47,6 +47,7 @@ namespace Homura.ORM.Migration
 
     public enum PostMigrationVerification
     {
+        DoNothing,
         TableExists,
         TableNotExists,
     }
