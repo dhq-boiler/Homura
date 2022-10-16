@@ -5,6 +5,7 @@ using Homura.ORM.Setup;
 using System;
 using System.Collections.Generic;
 using System.Data.Common;
+using System.Threading.Tasks;
 
 namespace Homura.ORM
 {
@@ -15,6 +16,10 @@ namespace Homura.ORM
         ITable Table { get; }
 
         IConnection CurrentConnection { get; set; }
+
+        DbConnection GetConnection();
+
+        Task<DbConnection> GetConnectionAsync();
 
         void VerifyTableDefinition(DbConnection conn);
 
