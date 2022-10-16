@@ -428,7 +428,7 @@ namespace Homura.ORM
         public int CountAll(DbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null)
         {
             return QueryHelper.KeepTryingUntilProcessSucceed<int>(() =>
-                QueryHelper.ForDao.ConnectionInternal(this, new Func<DbConnection, int>((connection) =>
+                QueryHelper.ForDao.ConnectionInternalAndReturn(this, new Func<DbConnection, int>((connection) =>
                 {
                     using (var command = connection.CreateCommand())
                     {
@@ -492,7 +492,7 @@ namespace Homura.ORM
         public int CountBy(Dictionary<string, object> idDic, DbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null)
         {
             return QueryHelper.KeepTryingUntilProcessSucceed<int>(() =>
-                QueryHelper.ForDao.ConnectionInternal(this, new Func<DbConnection, int>((connection) =>
+                QueryHelper.ForDao.ConnectionInternalAndReturn(this, new Func<DbConnection, int>((connection) =>
                 {
                     using (var command = connection.CreateCommand())
                     {

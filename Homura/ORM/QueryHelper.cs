@@ -215,34 +215,6 @@ namespace Homura.ORM
             /// <typeparam name="R"></typeparam>
             /// <param name="body"></param>
             /// <returns></returns>
-            public static R ConnectionInternal<R>(IDao dao, Func<DbConnection, R> body, DbConnection conn = null)
-            {
-                bool isTransaction = conn != null;
-
-                try
-                {
-                    if (!isTransaction)
-                    {
-                        conn = dao.GetConnection();
-                    }
-
-                    return body.Invoke(conn);
-                }
-                finally
-                {
-                    if (!isTransaction)
-                    {
-                        conn.Dispose();
-                    }
-                }
-            }
-
-            /// <summary>
-            /// _IsTransaction フラグによって局所的に DbConnection を使用するかどうか選択できるクエリ実行用内部メソッド
-            /// </summary>
-            /// <typeparam name="R"></typeparam>
-            /// <param name="body"></param>
-            /// <returns></returns>
             public static R ConnectionInternalAndReturn<R>(IDao dao, Func<DbConnection, R> body, DbConnection conn = null)
             {
                 bool isTransaction = conn != null;
@@ -282,7 +254,7 @@ namespace Homura.ORM
                         conn = await dao.GetConnectionAsync().ConfigureAwait(false);
                     }
 
-                    return body(conn);
+                    return await Task.Run(() => body(conn));
                 }
                 finally
                 {
@@ -304,7 +276,7 @@ namespace Homura.ORM
                         conn = dao.GetConnection();
                     }
 
-                    return body.Invoke(conn);
+                    return body(conn);
                 }
                 finally
                 {
@@ -352,7 +324,7 @@ namespace Homura.ORM
                         conn = dao.GetConnection();
                     }
 
-                    body.Invoke(conn);
+                    body(conn);
                 }
                 finally
                 {
@@ -378,7 +350,7 @@ namespace Homura.ORM
                         conn = await dao.GetConnectionAsync().ConfigureAwait(false);
                     }
 
-                    body(conn);
+                    await Task.Run(() => body(conn));
                 }
                 finally
                 {
