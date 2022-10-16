@@ -261,5 +261,36 @@ namespace Homura.QueryBuilder.Test.Iso.Dml
                 }
             }
         }
+
+        [Category("Homura.QueryBuilder QueryBuilder")]
+        public class FunctionTest
+        {
+            [Test]
+            public void Update_Table_Set_Column1_EqualTo_Replace()
+            {
+                using (var query = new Update().Table("Table").Set.Column("Column1").EqualTo.Replace("ABCDEFG", "CDE", "X"))
+                {
+                    Assert.That(query.ToSql(), Is.EqualTo("UPDATE Table SET Column1 = REPLACE('ABCDEFG', 'CDE', 'X')"));
+                }
+            }
+
+            [Test]
+            public void Update_Table_Set_Column1_EqualTo_ReplaceColumn()
+            {
+                using (var query = new Update().Table("Table").Set.Column("Column1").EqualTo.ReplaceColumn("Column1", "CDE", "X"))
+                {
+                    Assert.That(query.ToSql(), Is.EqualTo("UPDATE Table SET Column1 = REPLACE(Column1, 'CDE', 'X')"));
+                }
+            }
+
+            [Test]
+            public void Update_Table_Set_Column1_EqualTo_ReplaceColumn_with_tablealias()
+            {
+                using (var query = new Update().Table("Table", "t").Set.Column("Column1").EqualTo.ReplaceColumn("t", "Column1", "CDE", "X"))
+                {
+                    Assert.That(query.ToSql(), Is.EqualTo("UPDATE Table t SET Column1 = REPLACE(t.Column1, 'CDE', 'X')"));
+                }
+            }
+        }
     }
 }

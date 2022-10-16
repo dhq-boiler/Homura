@@ -4,6 +4,7 @@ using Homura.QueryBuilder.Core;
 using Homura.QueryBuilder.Iso.Dml.Transitions;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Homura.QueryBuilder.Iso.Dml.Syntaxes
 {
@@ -73,6 +74,21 @@ namespace Homura.QueryBuilder.Iso.Dml.Syntaxes
             return ret;
         }
 
+        public IInsertColumnSyntax Replace(string expression, string pattern, string replacement)
+        {
+            throw new NotImplementedException();
+        }
+
+        public IInsertColumnSyntax ReplaceColumn(string columnName, string pattern, string replacement)
+        {
+            throw new NotImplementedException();
+        }
+
+        public IInsertColumnSyntax ReplaceColumn(string tableAlias, string columnName, string pattern, string replacement)
+        {
+            throw new NotImplementedException();
+        }
+
         public override string Represent()
         {
             return $"{Delimiter.ToString()}{_tableAlias}{(!string.IsNullOrEmpty(_tableAlias) ? "." : "")}{_name}";
@@ -80,7 +96,7 @@ namespace Homura.QueryBuilder.Iso.Dml.Syntaxes
 
         IInsertColumnSyntax IColumnTransition<IInsertColumnSyntax>.Columns(IEnumerable<string> names)
         {
-            throw new NotImplementedException();
+            return (IInsertColumnSyntax)Columns(names.ToArray());
         }
     }
 }

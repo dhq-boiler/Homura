@@ -5,6 +5,7 @@ using Homura.QueryBuilder.Iso.Dml.Transitions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using static Homura.QueryBuilder.Iso.Dml.Syntaxes.ReplaceSyntax;
 
 namespace Homura.QueryBuilder.Iso.Dml
 {
@@ -100,6 +101,21 @@ namespace Homura.QueryBuilder.Iso.Dml
         public IColumnSyntax Asterisk(string tableAlias)
         {
             return new AsteriskSyntax(_syntax, tableAlias);
+        }
+
+        public IColumnSyntax Replace(string expression, string pattern, string replacement)
+        {
+            return new ReplaceSyntax(_syntax, EExpression.Expression, expression, pattern, replacement);
+        }
+
+        public IColumnSyntax ReplaceColumn(string columnName, string pattern, string replacement)
+        {
+            return new ReplaceSyntax(_syntax, EExpression.Column, columnName, pattern, replacement);
+        }
+
+        public IColumnSyntax ReplaceColumn(string tableAlias, string columnName, string pattern, string replacement)
+        {
+            return new ReplaceSyntax(_syntax, EExpression.Column, tableAlias, columnName, pattern, replacement);
         }
 
         #region IDisposable Support
