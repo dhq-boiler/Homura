@@ -11,5 +11,11 @@ namespace Homura.QueryBuilder.Iso.Dml.Transitions
         Return Columns(IEnumerable<string> names);
 
         Return Columns(params string[] names);
+
+        Return Replace(string expression, string pattern, string replacement);
+
+        Return ReplaceColumn(string columnName, string pattern, string replacement);
+
+        Return ReplaceColumn(string tableAlias, string columnName, string pattern, string replacement);
     }
 }

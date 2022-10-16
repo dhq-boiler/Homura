@@ -985,6 +985,33 @@ namespace Homura.QueryBuilder.Test.Iso.Dml
                     Assert.That(query.ToSql(), Is.EqualTo("SELECT COUNT(1) AS 'Count' FROM Table"));
                 }
             }
+
+            [Test]
+            public void Select_Replace_From_Table()
+            {
+                using (var query = new Select().Replace("ABCDEFG", "CDE", "X").From.Table("Table"))
+                {
+                    Assert.That(query.ToSql(), Is.EqualTo("SELECT REPLACE('ABCDEFG', 'CDE', 'X') FROM Table"));
+                }
+            }
+
+            [Test]
+            public void Select_ReplaceColumn_From_Table()
+            {
+                using (var query = new Select().ReplaceColumn("Column1", "CDE", "X").From.Table("Table"))
+                {
+                    Assert.That(query.ToSql(), Is.EqualTo("SELECT REPLACE(Column1, 'CDE', 'X') FROM Table"));
+                }
+            }
+
+            [Test]
+            public void Select_ReplaceColumn_with_tablealias_From_Table()
+            {
+                using (var query = new Select().ReplaceColumn("t", "Column1", "CDE", "X").From.Table("Table", "t"))
+                {
+                    Assert.That(query.ToSql(), Is.EqualTo("SELECT REPLACE(t.Column1, 'CDE', 'X') FROM Table t"));
+                }
+            }
         }
 
         [Category("Homura.QueryBuilder QueryBuilder")]

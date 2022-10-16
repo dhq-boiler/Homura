@@ -2,6 +2,8 @@
 using Homura.QueryBuilder.Iso.Dml.Transitions;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
+using static Homura.QueryBuilder.Iso.Dml.Syntaxes.ReplaceSyntax;
 
 namespace Homura.QueryBuilder.Iso.Dml.Syntaxes
 {
@@ -234,6 +236,36 @@ namespace Homura.QueryBuilder.Iso.Dml.Syntaxes
                 }
             }
             return ret;
+        }
+
+        public ICorrespondingColumnSyntax Replace(string expression, string pattern, string replacement)
+        {
+            return new ReplaceSyntax(this, EExpression.Expression, expression, pattern, replacement);
+        }
+
+        public ICorrespondingColumnSyntax ReplaceColumn(string columnName, string pattern, string replacement)
+        {
+            return new ReplaceSyntax(this, EExpression.Column, columnName, pattern, replacement);
+        }
+
+        public ICorrespondingColumnSyntax ReplaceColumn(string tableAlias, string columnName, string pattern, string replacement)
+        {
+            return new ReplaceSyntax(this, EExpression.Column, tableAlias, columnName, pattern, replacement);
+        }
+
+        IColumnSyntax IColumnTransition<IColumnSyntax>.Replace(string expression, string pattern, string replacement)
+        {
+            return new ReplaceSyntax(this, EExpression.Expression, expression, pattern, replacement);
+        }
+
+        IColumnSyntax IColumnTransition<IColumnSyntax>.ReplaceColumn(string columnName, string pattern, string replacement)
+        {
+            return new ReplaceSyntax(this, EExpression.Column, columnName, pattern, replacement);
+        }
+
+        IColumnSyntax IColumnTransition<IColumnSyntax>.ReplaceColumn(string tableAlias, string columnName, string pattern, string replacement)
+        {
+            return new ReplaceSyntax(this, EExpression.Column, tableAlias, columnName, pattern, replacement);
         }
     }
 }

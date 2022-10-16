@@ -1,6 +1,7 @@
 ﻿using Homura.QueryBuilder.Core;
 using System;
 using System.Collections.Generic;
+using static Homura.QueryBuilder.Iso.Dml.Syntaxes.ReplaceSyntax;
 
 namespace Homura.QueryBuilder.Iso.Dml.Syntaxes
 {
@@ -53,6 +54,21 @@ namespace Homura.QueryBuilder.Iso.Dml.Syntaxes
                 }
             }
             return ret;
+        }
+
+        public ISetClauseSyntax Replace(string expression, string pattern, string replacement)
+        {
+            return new ReplaceSyntax(this, EExpression.Expression, expression, pattern, replacement);
+        }
+
+        public ISetClauseSyntax ReplaceColumn(string columnName, string pattern, string replacement)
+        {
+            return new ReplaceSyntax(this, EExpression.Column, columnName, pattern, replacement);
+        }
+
+        public ISetClauseSyntax ReplaceColumn(string tableAlias, string columnName, string pattern, string replacement)
+        {
+            return new ReplaceSyntax(this, EExpression.Column, tableAlias, columnName, pattern, replacement);
         }
 
         public override string Represent()

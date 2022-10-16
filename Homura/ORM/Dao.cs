@@ -95,7 +95,7 @@ namespace Homura.ORM
             }
         }
 
-        protected DbConnection GetConnection()
+        public DbConnection GetConnection()
         {
             if (CurrentConnection != null)
             {
@@ -107,7 +107,7 @@ namespace Homura.ORM
             }
         }
 
-        protected async Task<DbConnection> GetConnectionAsync()
+        public async Task<DbConnection> GetConnectionAsync()
         {
             if (CurrentConnection != null)
             {
@@ -184,7 +184,7 @@ namespace Homura.ORM
 
         public void CreateTableIfNotExists(TimeSpan? timeout = null)
         {
-            KeepTryingUntilProcessSucceed(() =>
+            QueryHelper.KeepTryingUntilProcessSucceed(() =>
             {
                 using (var conn = GetConnection())
                 {
@@ -200,7 +200,7 @@ namespace Homura.ORM
 
         public async Task CreateTableIfNotExistsAsync(TimeSpan? timeout = null)
         {
-            await KeepTryingUntilProcessSucceedAsync<Task>(new Func<Task>(async () =>
+            await QueryHelper.KeepTryingUntilProcessSucceedAsync<Task>(new Func<Task>(async () =>
             {
                 using (var conn = await GetConnectionAsync().ConfigureAwait(false))
                 {
@@ -216,7 +216,7 @@ namespace Homura.ORM
 
         public void DropTable(TimeSpan? timeout = null)
         {
-            KeepTryingUntilProcessSucceed(() =>
+            QueryHelper.KeepTryingUntilProcessSucceed(() =>
             {
                 using (var conn = GetConnection())
                 {
@@ -230,7 +230,7 @@ namespace Homura.ORM
 
         public async Task DropTableAsync(TimeSpan? timeout = null)
         {
-            await KeepTryingUntilProcessSucceedAsync<Task>(new Func<Task>(async () =>
+            await QueryHelper.KeepTryingUntilProcessSucceedAsync<Task>(new Func<Task>(async () =>
             {
                 using (var conn = await GetConnectionAsync().ConfigureAwait(false))
                 {
@@ -245,7 +245,7 @@ namespace Homura.ORM
         public int CreateIndexIfNotExists(TimeSpan? timeout = null)
         {
             int created = 0;
-            KeepTryingUntilProcessSucceed(() =>
+            QueryHelper.KeepTryingUntilProcessSucceed(() =>
             {
                 created = CreateIndexClass(created);
                 created = CreateIndexProperties(created);
@@ -256,7 +256,7 @@ namespace Homura.ORM
         public async Task<int> CreateIndexIfNotExistsAsync(TimeSpan? timeout = null)
         {
             int created = 0;
-            await KeepTryingUntilProcessSucceedAsync<Task>(new Func<Task>(async () =>
+            await QueryHelper.KeepTryingUntilProcessSucceedAsync<Task>(new Func<Task>(async () =>
             {
                 created = await CreateIndexClassAsync(created);
                 created = await CreateIndexPropertiesAsync(created);
@@ -425,322 +425,10 @@ namespace Homura.ORM
             return indexColumnNames;
         }
 
-        /// <summary>
-        /// _IsTransaction フラグによって局所的に DbConnection を使用するかどうか選択できるクエリ実行用内部メソッド
-        /// </summary>
-        /// <typeparam name="R"></typeparam>
-        /// <param name="body"></param>
-        /// <returns></returns>
-        protected R ConnectionInternal<R>(Func<DbConnection, R> body, DbConnection conn = null)
-        {
-            bool isTransaction = conn != null;
-
-            try
-            {
-                if (!isTransaction)
-                {
-                    conn = GetConnection();
-                }
-
-                return body.Invoke(conn);
-            }
-            finally
-            {
-                if (!isTransaction)
-                {
-                    conn.Dispose();
-                }
-            }
-        }
-
-        /// <summary>
-        /// _IsTransaction フラグによって局所的に DbConnection を使用するかどうか選択できるクエリ実行用内部メソッド
-        /// </summary>
-        /// <typeparam name="R"></typeparam>
-        /// <param name="body"></param>
-        /// <returns></returns>
-        protected async Task<R> ConnectionInternalAndReturnAsync<R>(Func<DbConnection, R> body, DbConnection conn = null)
-        {
-            bool isTransaction = conn != null;
-
-            try
-            {
-                if (!isTransaction)
-                {
-                    conn = await GetConnectionAsync().ConfigureAwait(false);
-                }
-
-                return body(conn);
-            }
-            finally
-            {
-                if (!isTransaction)
-                {
-                    await conn.DisposeAsync().ConfigureAwait(false);
-                }
-            }
-        }
-
-        protected IEnumerable<R> ConnectionInternalYield<R>(Func<DbConnection, IEnumerable<R>> body, DbConnection conn = null)
-        {
-            bool isTransaction = conn != null;
-
-            try
-            {
-                if (!isTransaction)
-                {
-                    conn = GetConnection();
-                }
-
-                return body.Invoke(conn);
-            }
-            finally
-            {
-                if (!isTransaction)
-                {
-                    conn.Dispose();
-                }
-            }
-        }
-
-        protected async IAsyncEnumerable<R> ConnectionInternalYieldAsync<R>(Func<DbConnection, IAsyncEnumerable<R>> body, DbConnection conn = null)
-        {
-            bool isTransaction = conn != null;
-
-            try
-            {
-                if (!isTransaction)
-                {
-                    conn = await GetConnectionAsync().ConfigureAwait(false);
-                }
-
-                yield return (R)body(conn);
-            }
-            finally
-            {
-                if (!isTransaction)
-                {
-                    await conn.DisposeAsync().ConfigureAwait(false);
-                }
-            }
-        }
-
-        /// <summary>
-        /// _IsTransaction フラグによって局所的に DbConnection を使用するかどうか選択できるクエリ実行用内部メソッド
-        /// </summary>
-        /// <param name="body"></param>
-        protected void ConnectionInternal(Action<DbConnection> body, DbConnection conn = null)
-        {
-            bool isTransaction = conn != null;
-
-            try
-            {
-                if (!isTransaction)
-                {
-                    conn = GetConnection();
-                }
-
-                body.Invoke(conn);
-            }
-            finally
-            {
-                if (!isTransaction)
-                {
-                    conn.Dispose();
-                }
-            }
-        }
-
-        /// <summary>
-        /// _IsTransaction フラグによって局所的に DbConnection を使用するかどうか選択できるクエリ実行用内部メソッド
-        /// </summary>
-        /// <param name="body"></param>
-        protected async Task ConnectionInternalAsync(Action<DbConnection> body, DbConnection conn = null)
-        {
-            bool isTransaction = conn != null;
-
-            try
-            {
-                if (!isTransaction)
-                {
-                    conn = await GetConnectionAsync().ConfigureAwait(false);
-                }
-
-                body(conn);
-            }
-            finally
-            {
-                if (!isTransaction)
-                {
-                    await conn.DisposeAsync().ConfigureAwait(false);
-                }
-            }
-        }
-
-        public readonly TimeSpan Timeout = TimeSpan.FromMinutes(5);
-
-        /// <summary>
-        /// Actionを成功するかタイムアウトするまで試行し続けます。
-        /// </summary>
-        /// <param name="body">試行し続ける対象のAction</param>
-        /// <param name="timeout">タイムアウト</param>
-        protected void KeepTryingUntilProcessSucceed(Action body, TimeSpan? timeout = null)
-        {
-            if (timeout == null)
-            {
-                timeout = TimeSpan.FromMinutes(5);
-            }
-
-            var beginTime = DateTime.Now;
-
-            while ((DateTime.Now - beginTime) <= timeout)
-            {
-                try
-                {
-                    LogManager.GetCurrentClassLogger().Trace("try body()");
-                    body();
-                    return;
-                }
-                catch (Exception ex)
-                {
-                    if (ex.Message.Contains("database is lock"))
-                    {
-                        LogManager.GetCurrentClassLogger().Warn("database is lock");
-                        continue;
-                    }
-                    else
-                    {
-                        LogManager.GetCurrentClassLogger().Error(ex);
-                        throw;
-                    }
-                }
-            }
-
-            throw new TimeoutException();
-        }
-
-        /// <summary>
-        /// Funcを成功するかタイムアウトするまで試行し続けます。
-        /// </summary>
-        /// <param name="body">試行し続ける対象のFunc</param>
-        /// <param name="timeout">タイムアウト</param>
-        protected T KeepTryingUntilProcessSucceed<T>(Func<T> body, TimeSpan? timeout = null)
-        {
-            if (timeout == null)
-            {
-                timeout = TimeSpan.FromMinutes(5);
-            }
-
-            var beginTime = DateTime.Now;
-
-            while ((DateTime.Now - beginTime) <= timeout)
-            {
-                try
-                {
-                    LogManager.GetCurrentClassLogger().Trace("try body()");
-                    return body();
-                }
-                catch (Exception ex)
-                {
-                    if (ex.Message.Contains("database is lock"))
-                    {
-                        LogManager.GetCurrentClassLogger().Warn("database is lock");
-                        continue;
-                    }
-                    else
-                    {
-                        LogManager.GetCurrentClassLogger().Error(ex);
-                        throw;
-                    }
-                }
-            }
-
-            throw new TimeoutException();
-        }
-
-        /// <summary>
-        /// Funcを成功するかタイムアウトするまで試行し続けます。
-        /// </summary>
-        /// <param name="body">試行し続ける対象のFunc</param>
-        /// <param name="timeout">タイムアウト</param>
-        protected async Task KeepTryingUntilProcessSucceedAsync<T>(Func<Task> body, TimeSpan? timeout = null)
-        {
-            if (timeout == null)
-            {
-                timeout = TimeSpan.FromMinutes(5);
-            }
-
-            var beginTime = DateTime.Now;
-
-            while ((DateTime.Now - beginTime) <= timeout)
-            {
-                try
-                {
-                    LogManager.GetCurrentClassLogger().Trace("try body()");
-                    await body().ConfigureAwait(false);
-                    return;
-                }
-                catch (Exception ex)
-                {
-                    if (ex.Message.Contains("database is lock"))
-                    {
-                        LogManager.GetCurrentClassLogger().Warn("database is lock");
-                        continue;
-                    }
-                    else
-                    {
-                        LogManager.GetCurrentClassLogger().Error(ex);
-                        throw;
-                    }
-                }
-            }
-
-            throw new TimeoutException();
-        }
-
-        /// <summary>
-        /// Funcを成功するかタイムアウトするまで試行し続けます。
-        /// </summary>
-        /// <param name="body">試行し続ける対象のFunc</param>
-        /// <param name="timeout">タイムアウト</param>
-        protected async Task<T> KeepTryingUntilProcessSucceedAndReturnAsync<T>(Func<Task<T>> body, TimeSpan? timeout = null)
-        {
-            if (timeout == null)
-            {
-                timeout = TimeSpan.FromMinutes(5);
-            }
-
-            var beginTime = DateTime.Now;
-
-            while ((DateTime.Now - beginTime) <= timeout)
-            {
-                try
-                {
-                    LogManager.GetCurrentClassLogger().Trace("try body()");
-                    return await body().ConfigureAwait(false);
-                }
-                catch (Exception ex)
-                {
-                    if (ex.Message.Contains("database is lock"))
-                    {
-                        LogManager.GetCurrentClassLogger().Warn("database is lock");
-                        continue;
-                    }
-                    else
-                    {
-                        LogManager.GetCurrentClassLogger().Error(ex);
-                        throw;
-                    }
-                }
-            }
-
-            throw new TimeoutException();
-        }
-
         public int CountAll(DbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null)
         {
-            return KeepTryingUntilProcessSucceed<int>(() =>
-                ConnectionInternal(new Func<DbConnection, int>((connection) =>
+            return QueryHelper.KeepTryingUntilProcessSucceed<int>(() =>
+                QueryHelper.ForDao.ConnectionInternal(this, new Func<DbConnection, int>((connection) =>
                 {
                     using (var command = connection.CreateCommand())
                     {
@@ -771,8 +459,8 @@ namespace Homura.ORM
 
         public async Task<int> CountAllAsync(DbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null)
         {
-            return await KeepTryingUntilProcessSucceedAndReturnAsync<int>(async () =>
-                await await ConnectionInternalAndReturnAsync(new Func<DbConnection, Task<int>>(async (connection) =>
+            return await QueryHelper.KeepTryingUntilProcessSucceedAndReturnAsync<int>(async () =>
+                await await QueryHelper.ForDao.ConnectionInternalAndReturnAsync(this, new Func<DbConnection, Task<int>>(async (connection) =>
                 {
                     using (var command = connection.CreateCommand())
                     {
@@ -803,8 +491,8 @@ namespace Homura.ORM
 
         public int CountBy(Dictionary<string, object> idDic, DbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null)
         {
-            return KeepTryingUntilProcessSucceed<int>(() =>
-                ConnectionInternal(new Func<DbConnection, int>((connection) =>
+            return QueryHelper.KeepTryingUntilProcessSucceed<int>(() =>
+                QueryHelper.ForDao.ConnectionInternal(this, new Func<DbConnection, int>((connection) =>
                 {
                     using (var command = connection.CreateCommand())
                     {
@@ -838,8 +526,8 @@ namespace Homura.ORM
 
         public async Task<int> CountByAsync(Dictionary<string, object> idDic, DbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null)
         {
-            return await KeepTryingUntilProcessSucceedAndReturnAsync(async () =>
-                await await ConnectionInternalAndReturnAsync(new Func<DbConnection, Task<int>>(async (connection) =>
+            return await QueryHelper.KeepTryingUntilProcessSucceedAndReturnAsync(async () =>
+                await await QueryHelper.ForDao.ConnectionInternalAndReturnAsync(this, new Func<DbConnection, Task<int>>(async (connection) =>
                 {
                     using (var command = connection.CreateCommand())
                     {
@@ -873,9 +561,9 @@ namespace Homura.ORM
 
         public void DeleteWhereIDIs(Guid id, DbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null)
         {
-            KeepTryingUntilProcessSucceed(() =>
+            QueryHelper.KeepTryingUntilProcessSucceed(() =>
             {
-                ConnectionInternal(new Action<DbConnection>((connection) =>
+                QueryHelper.ForDao.ConnectionInternal(this, new Action<DbConnection>((connection) =>
                 {
                     using (var command = connection.CreateCommand())
                     {
@@ -904,9 +592,9 @@ namespace Homura.ORM
 
         public async Task DeleteWhereIDIsAsync(Guid id, DbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null)
         {
-            await KeepTryingUntilProcessSucceedAsync<Task>(async() =>
+            await QueryHelper.KeepTryingUntilProcessSucceedAsync<Task>(async() =>
             {
-                await ConnectionInternalAsync(new Action<DbConnection>(async (connection) =>
+                await QueryHelper.ForDao.ConnectionInternalAsync(this, new Action<DbConnection>(async (connection) =>
                 {
                     using (var command = connection.CreateCommand())
                     {
@@ -935,9 +623,9 @@ namespace Homura.ORM
 
         public void DeleteAll(DbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null)
         {
-            KeepTryingUntilProcessSucceed(() =>
+            QueryHelper.KeepTryingUntilProcessSucceed(() =>
             {
-                ConnectionInternal(new Action<DbConnection>((connection) =>
+                QueryHelper.ForDao.ConnectionInternal(this, new Action<DbConnection>((connection) =>
                 {
                     using (var command = connection.CreateCommand())
                     {
@@ -965,9 +653,9 @@ namespace Homura.ORM
 
         public async Task DeleteAllAsync(DbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null)
         {
-            await KeepTryingUntilProcessSucceedAsync<Task>(async () =>
+            await QueryHelper.KeepTryingUntilProcessSucceedAsync<Task>(async () =>
             {
-                await ConnectionInternalAsync(new Action<DbConnection>(async (connection) =>
+                await QueryHelper.ForDao.ConnectionInternalAsync(this, new Action<DbConnection>(async (connection) =>
                 {
                     using (var command = connection.CreateCommand())
                     {
@@ -995,9 +683,9 @@ namespace Homura.ORM
 
         public void Delete(Dictionary<string, object> idDic, DbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null)
         {
-            KeepTryingUntilProcessSucceed(() =>
+            QueryHelper.KeepTryingUntilProcessSucceed(() =>
             {
-                ConnectionInternal(new Action<DbConnection>((connection) =>
+                QueryHelper.ForDao.ConnectionInternal(this, new Action<DbConnection>((connection) =>
                 {
                     using (var command = connection.CreateCommand())
                     {
@@ -1026,9 +714,9 @@ namespace Homura.ORM
 
         public async Task DeleteAsync(Dictionary<string, object> idDic, DbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null)
         {
-            await KeepTryingUntilProcessSucceedAsync<Task>(async () =>
+            await QueryHelper.KeepTryingUntilProcessSucceedAsync<Task>(async () =>
             {
-                await ConnectionInternalAsync(new Action<DbConnection>(async (connection) =>
+                await QueryHelper.ForDao.ConnectionInternalAsync(this, new Action<DbConnection>(async (connection) =>
                 {
                     using (var command = connection.CreateCommand())
                     {
@@ -1067,9 +755,9 @@ namespace Homura.ORM
                 throw new DatabaseSchemaException($"Didn't insert because mismatch definition of table:{TableName}", e);
             }
 
-            KeepTryingUntilProcessSucceed(() =>
+            QueryHelper.KeepTryingUntilProcessSucceed(() =>
             {
-                ConnectionInternal(new Action<DbConnection>((connection) =>
+                QueryHelper.ForDao.ConnectionInternal(this, new Action<DbConnection>((connection) =>
                 {
                     using (var command = connection.CreateCommand())
                     {
@@ -1112,9 +800,9 @@ namespace Homura.ORM
                 throw new DatabaseSchemaException($"Didn't insert because mismatch definition of table:{TableName}", e);
             }
 
-            await KeepTryingUntilProcessSucceedAsync<Task>(async () =>
+            await QueryHelper.KeepTryingUntilProcessSucceedAsync<Task>(async () =>
             {
-                await ConnectionInternalAsync(new Action<DbConnection>(async (connection) =>
+                await QueryHelper.ForDao.ConnectionInternalAsync(this, new Action<DbConnection>(async (connection) =>
                 {
                     using (var command = connection.CreateCommand())
                     {
@@ -1486,9 +1174,9 @@ namespace Homura.ORM
 
         public void Update(E entity, DbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null)
         {
-            KeepTryingUntilProcessSucceed(() =>
+            QueryHelper.KeepTryingUntilProcessSucceed(() =>
             {
-                ConnectionInternal(new Action<DbConnection>((connection) =>
+                QueryHelper.ForDao.ConnectionInternal(this, new Action<DbConnection>((connection) =>
                 {
                     using (var command = connection.CreateCommand())
                     {
@@ -1515,9 +1203,9 @@ namespace Homura.ORM
 
         public async Task UpdateAsync(E entity, DbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null)
         {
-            await KeepTryingUntilProcessSucceedAsync<Task>(async () =>
+            await QueryHelper.KeepTryingUntilProcessSucceedAsync<Task>(async () =>
             {
-                await ConnectionInternalAsync(new Action<DbConnection>(async (connection) =>
+                await QueryHelper.ForDao.ConnectionInternalAsync(this, new Action<DbConnection>(async (connection) =>
                 {
                     using (var command = connection.CreateCommand())
                     {
@@ -1604,9 +1292,9 @@ namespace Homura.ORM
 
         public void UpgradeTable(VersionChangeUnit upgradePath, VersioningMode mode, DbConnection conn = null, TimeSpan? timeout = null)
         {
-            KeepTryingUntilProcessSucceed(() =>
+            QueryHelper.KeepTryingUntilProcessSucceed(() =>
             {
-                ConnectionInternal(new Action<DbConnection>((connection) =>
+                QueryHelper.ForDao.ConnectionInternal(this, new Action<DbConnection>((connection) =>
                 {
                     using (var command = connection.CreateCommand())
                     {
@@ -1653,9 +1341,9 @@ namespace Homura.ORM
 
         public async Task UpgradeTableAsync(VersionChangeUnit upgradePath, VersioningMode mode, DbConnection conn = null, TimeSpan? timeout = null)
         {
-            await KeepTryingUntilProcessSucceedAsync<Task>(async () =>
+            await QueryHelper.KeepTryingUntilProcessSucceedAsync<Task>(async () =>
             {
-                await ConnectionInternalAsync(new Action<DbConnection>(async (connection) =>
+                await QueryHelper.ForDao.ConnectionInternalAsync(this, new Action<DbConnection>(async (connection) =>
                 {
                     using (var command = connection.CreateCommand())
                     {
@@ -1714,9 +1402,9 @@ namespace Homura.ORM
 
         public void AdjustColumns(Type versionFrom, Type versionTo, DbConnection conn = null, TimeSpan? timeout = null)
         {
-            KeepTryingUntilProcessSucceed(() =>
+            QueryHelper.KeepTryingUntilProcessSucceed(() =>
             {
-                ConnectionInternal(new Action<DbConnection>((connection) =>
+                QueryHelper.ForDao.ConnectionInternal(this, new Action<DbConnection>((connection) =>
                 {
                     var newTable = new Table<E>(versionTo);
                     var oldTable = new Table<E>(versionFrom);
@@ -1772,9 +1460,9 @@ namespace Homura.ORM
 
         public async Task AdjustColumnsAsync(Type versionFrom, Type versionTo, DbConnection conn = null, TimeSpan? timeout = null)
         {
-            await KeepTryingUntilProcessSucceedAsync<Task>(async () =>
+            await QueryHelper.KeepTryingUntilProcessSucceedAsync<Task>(async () =>
             {
-                await ConnectionInternalAsync(new Action<DbConnection>(async (connection) =>
+                await QueryHelper.ForDao.ConnectionInternalAsync(this, new Action<DbConnection>(async (connection) =>
                 {
                     var newTable = new Table<E>(versionTo);
                     var oldTable = new Table<E>(versionFrom);

@@ -2,6 +2,7 @@
 using Homura.QueryBuilder.Iso.Dml.Transitions;
 using System.Collections.Generic;
 using System.Linq;
+using static Homura.QueryBuilder.Iso.Dml.Syntaxes.ReplaceSyntax;
 
 namespace Homura.QueryBuilder.Iso.Dml.Syntaxes
 {
@@ -108,6 +109,21 @@ namespace Homura.QueryBuilder.Iso.Dml.Syntaxes
         public IJoinTableSyntax Join(string tableName, string tableAlias)
         {
             throw new System.NotImplementedException();
+        }
+
+        public ISetClauseSyntax Replace(string expression, string pattern, string replacement)
+        {
+            return new ReplaceSyntax(this, EExpression.Expression, expression, pattern, replacement);
+        }
+
+        public ISetClauseSyntax ReplaceColumn(string columnName, string pattern, string replacement)
+        {
+            return new ReplaceSyntax(this, EExpression.Column, columnName, pattern, replacement);
+        }
+
+        public ISetClauseSyntax ReplaceColumn(string tableAlias, string columnName, string pattern, string replacement)
+        {
+            return new ReplaceSyntax(this, EExpression.Column, tableAlias, columnName, pattern, replacement);
         }
     }
 }

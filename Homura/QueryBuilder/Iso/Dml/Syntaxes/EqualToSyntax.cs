@@ -1,5 +1,6 @@
 ﻿using Homura.QueryBuilder.Core;
 using Homura.QueryBuilder.Iso.Dml.Transitions;
+using static Homura.QueryBuilder.Iso.Dml.Syntaxes.ReplaceSyntax;
 
 namespace Homura.QueryBuilder.Iso.Dml.Syntaxes
 {
@@ -83,6 +84,21 @@ namespace Homura.QueryBuilder.Iso.Dml.Syntaxes
         public R Expression(string expression)
         {
             return new ValueExpressionSyntax(this, expression) as R;
+        }
+
+        public R Replace(string expression, string pattern, string replacement)
+        {
+            return new ReplaceSyntax(this, EExpression.Expression, expression, pattern, replacement) as R;
+        }
+
+        public R ReplaceColumn(string columnName, string pattern, string replacement)
+        {
+            return new ReplaceSyntax(this, EExpression.Column, columnName, pattern, replacement) as R;
+        }
+
+        public R ReplaceColumn(string tableAlias, string columnName, string pattern, string replacement)
+        {
+            return new ReplaceSyntax(this, EExpression.Column, tableAlias, columnName, pattern, replacement) as R;
         }
     }
 }
