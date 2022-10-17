@@ -32,7 +32,7 @@ namespace Homura.ORM
             {
                 connection.Open();
                 ConnectionManager.PutAttendance(Guid.NewGuid(), new ConnectionManager.Attendance(InstanceId, connection, Environment.StackTrace));
-                s_logger.Debug($"Connection Opened. ConnectionString={ConnectionString}\n{Environment.StackTrace}");
+                s_logger.Trace($"Connection Opened. ConnectionString={ConnectionString}\n{Environment.StackTrace}");
             }
             catch (ArgumentException e)
             {
@@ -51,7 +51,7 @@ namespace Homura.ORM
             {
                 await connection.OpenAsync().ConfigureAwait(false);
                 ConnectionManager.PutAttendance(Guid.NewGuid(), new ConnectionManager.Attendance(InstanceId, connection, Environment.StackTrace));
-                s_logger.Debug($"Connection Opened. ConnectionString={ConnectionString}\n{Environment.StackTrace}");
+                s_logger.Trace($"Connection Opened. ConnectionString={ConnectionString}\n{Environment.StackTrace}");
             }
             catch (ArgumentException e)
             {
@@ -65,7 +65,7 @@ namespace Homura.ORM
         private void Connection_Disposed(object sender, EventArgs e)
         {
             ConnectionManager.RemoveAttendance(sender as DbConnection);
-            s_logger.Debug($"Connection Disposed. ConnectionString={ConnectionString}\n{Environment.StackTrace}");
+            s_logger.Trace($"Connection Disposed. ConnectionString={ConnectionString}\n{Environment.StackTrace}");
         }
 
         public bool TableExists(string tableName)

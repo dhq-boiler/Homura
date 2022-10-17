@@ -49,7 +49,7 @@ namespace Homura.Test.UnitTest
         {
             using (var conn = new SQLiteConnection($"Data Source={_filePath}"))
             {
-                conn.Open();
+                await conn.OpenAsync();
                 await DirectQuery.RunQueryAsync(conn, async (conn) =>
                 {
                     string sql = $"create table if not exists Alpha(ID NUMERIC PRIMARY KEY, Title TEXT NOT NULL, AuthorID NUMERIC, PublishDate NUMERIC, ByteSize INTEGER)";
@@ -73,6 +73,26 @@ namespace Homura.Test.UnitTest
                     }
                 });
                 Assert.That(ret, Is.EqualTo(1));
+            }
+        }
+
+        [Test]
+        public async Task RunQueryAsync_OnlyOnce()
+        {
+            using (var conn = new SQLiteConnection($"Data Source={_filePath}"))
+            {
+                await conn.OpenAsync();
+                await DirectQuery.RunQueryAsync(conn, async (conn) =>
+                {
+                    string sql = $"create table if not exists Alpha(ID NUMERIC PRIMARY KEY)";
+                    await conn.ExecuteAsync(sql);
+                });
+
+                await DirectQuery.RunQueryAsync(conn, async (conn) =>
+                {
+                    string sql = $"insert into Alpha values(1)";
+                    await conn.ExecuteAsync(sql);
+                });
             }
         }
 
