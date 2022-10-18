@@ -411,7 +411,6 @@ namespace Homura.ORM
                     {
                         conn = dao.GetConnection();
                     }
-
                     body(conn);
                 }
                 catch (ObjectDisposedException)
@@ -431,7 +430,7 @@ namespace Homura.ORM
             /// _IsTransaction フラグによって局所的に DbConnection を使用するかどうか選択できるクエリ実行用内部メソッド
             /// </summary>
             /// <param name="body"></param>
-            public static async Task ConnectionInternalAsync(IDao dao, Action<DbConnection> body, DbConnection conn = null)
+            public static async Task ConnectionInternalAsync(IDao dao, Func<DbConnection, Task> body, DbConnection conn = null)
             {
                 if (dao is null)
                 {
@@ -452,9 +451,9 @@ namespace Homura.ORM
                         conn = await dao.GetConnectionAsync().ConfigureAwait(false);
                     }
 
-                    await Task.Run(() => body(conn));
+                    await Task.Run(async () => await body(conn)).ConfigureAwait(true);
                 }
-                catch(ObjectDisposedException)
+                catch (ObjectDisposedException e)
                 {
                     await ConnectionInternalAsync(dao, body, await dao.GetConnectionAsync()).ConfigureAwait(false);
                 }
