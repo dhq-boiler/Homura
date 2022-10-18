@@ -563,7 +563,7 @@ namespace Homura.ORM
         {
             QueryHelper.KeepTryingUntilProcessSucceed(() =>
             {
-                QueryHelper.ForDao.ConnectionInternal(this, new Action<DbConnection>((connection) =>
+                QueryHelper.ForDao.ConnectionInternal(this, (connection) =>
                 {
                     using (var command = connection.CreateCommand())
                     {
@@ -585,7 +585,7 @@ namespace Homura.ORM
                             command.ExecuteNonQuery();
                         }
                     }
-                }), conn);
+                }, conn);
 
             }, timeout);
         }
@@ -594,7 +594,7 @@ namespace Homura.ORM
         {
             await QueryHelper.KeepTryingUntilProcessSucceedAsync<Task>(async() =>
             {
-                await QueryHelper.ForDao.ConnectionInternalAsync(this, new Action<DbConnection>(async (connection) =>
+                await QueryHelper.ForDao.ConnectionInternalAsync(this, async (connection) =>
                 {
                     using (var command = connection.CreateCommand())
                     {
@@ -616,7 +616,7 @@ namespace Homura.ORM
                             await command.ExecuteNonQueryAsync().ConfigureAwait(false);
                         }
                     }
-                }), conn).ConfigureAwait(false);
+                }, conn).ConfigureAwait(false);
 
             }, timeout).ConfigureAwait(false);
         }
@@ -655,7 +655,7 @@ namespace Homura.ORM
         {
             await QueryHelper.KeepTryingUntilProcessSucceedAsync<Task>(async () =>
             {
-                await QueryHelper.ForDao.ConnectionInternalAsync(this, new Action<DbConnection>(async (connection) =>
+                await QueryHelper.ForDao.ConnectionInternalAsync(this, async (connection) =>
                 {
                     using (var command = connection.CreateCommand())
                     {
@@ -677,7 +677,7 @@ namespace Homura.ORM
                             int deleted = await command.ExecuteNonQueryAsync().ConfigureAwait(false);
                         }
                     }
-                }), conn).ConfigureAwait(false);
+                }, conn).ConfigureAwait(false);
             }, timeout).ConfigureAwait(false);
         }
 
@@ -716,7 +716,7 @@ namespace Homura.ORM
         {
             await QueryHelper.KeepTryingUntilProcessSucceedAsync<Task>(async () =>
             {
-                await QueryHelper.ForDao.ConnectionInternalAsync(this, new Action<DbConnection>(async (connection) =>
+                await QueryHelper.ForDao.ConnectionInternalAsync(this, async (connection) =>
                 {
                     using (var command = connection.CreateCommand())
                     {
@@ -739,7 +739,7 @@ namespace Homura.ORM
                             int deleted = await command.ExecuteNonQueryAsync().ConfigureAwait(false);
                         }
                     }
-                }), conn).ConfigureAwait(false);
+                }, conn).ConfigureAwait(false);
             }, timeout).ConfigureAwait(false);
         }
 
@@ -802,7 +802,7 @@ namespace Homura.ORM
 
             await QueryHelper.KeepTryingUntilProcessSucceedAsync<Task>(async () =>
             {
-                await QueryHelper.ForDao.ConnectionInternalAsync(this, new Action<DbConnection>(async (connection) =>
+                await QueryHelper.ForDao.ConnectionInternalAsync(this, async (connection) =>
                 {
                     using (var command = connection.CreateCommand())
                     {
@@ -829,7 +829,7 @@ namespace Homura.ORM
                             }
                         }
                     }
-                }), conn).ConfigureAwait(false);
+                }, conn).ConfigureAwait(false);
             }, timeout).ConfigureAwait(false);
         }
 
@@ -1205,7 +1205,7 @@ namespace Homura.ORM
         {
             await QueryHelper.KeepTryingUntilProcessSucceedAsync<Task>(async () =>
             {
-                await QueryHelper.ForDao.ConnectionInternalAsync(this, new Action<DbConnection>(async (connection) =>
+                await QueryHelper.ForDao.ConnectionInternalAsync(this, async (connection) =>
                 {
                     using (var command = connection.CreateCommand())
                     {
@@ -1226,7 +1226,7 @@ namespace Homura.ORM
                             await command.ExecuteNonQueryAsync().ConfigureAwait(false);
                         }
                     }
-                }), conn).ConfigureAwait(false);
+                }, conn).ConfigureAwait(false);
             }, timeout).ConfigureAwait(false);
         }
 
@@ -1343,7 +1343,7 @@ namespace Homura.ORM
         {
             await QueryHelper.KeepTryingUntilProcessSucceedAsync<Task>(async () =>
             {
-                await QueryHelper.ForDao.ConnectionInternalAsync(this, new Action<DbConnection>(async (connection) =>
+                await QueryHelper.ForDao.ConnectionInternalAsync(this, async (connection) =>
                 {
                     using (var command = connection.CreateCommand())
                     {
@@ -1384,7 +1384,7 @@ namespace Homura.ORM
                         }
                     }
 
-                }), conn).ConfigureAwait(false);
+                }, conn).ConfigureAwait(false);
             }, timeout).ConfigureAwait(false);
         }
 
@@ -1462,7 +1462,7 @@ namespace Homura.ORM
         {
             await QueryHelper.KeepTryingUntilProcessSucceedAsync<Task>(async () =>
             {
-                await QueryHelper.ForDao.ConnectionInternalAsync(this, new Action<DbConnection>(async (connection) =>
+                await QueryHelper.ForDao.ConnectionInternalAsync(this, async (connection) =>
                 {
                     var newTable = new Table<E>(versionTo);
                     var oldTable = new Table<E>(versionFrom);
@@ -1512,7 +1512,7 @@ namespace Homura.ORM
                         LogManager.GetCurrentClassLogger().Debug($"{sql}");
                         await command.ExecuteNonQueryAsync().ConfigureAwait(false);
                     }
-                }), conn).ConfigureAwait(false);
+                }, conn).ConfigureAwait(false);
             }, timeout).ConfigureAwait(false);
         }
     }
