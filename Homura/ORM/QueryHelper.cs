@@ -217,6 +217,16 @@ namespace Homura.ORM
             /// <returns></returns>
             public static R ConnectionInternalAndReturn<R>(IDao dao, Func<DbConnection, R> body, DbConnection conn = null)
             {
+                if (dao is null)
+                {
+                    throw new ArgumentNullException(nameof(dao));
+                }
+
+                if (body is null)
+                {
+                    throw new ArgumentNullException(nameof(body));
+                }
+
                 bool isTransaction = conn != null;
 
                 try
@@ -227,6 +237,13 @@ namespace Homura.ORM
                     }
 
                     return body(conn);
+                }
+                catch (ObjectDisposedException)
+                {
+                    using (var tempConn = dao.GetConnection())
+                    {
+                        return body(tempConn);
+                    }
                 }
                 finally
                 {
@@ -245,6 +262,16 @@ namespace Homura.ORM
             /// <returns></returns>
             public static async Task<R> ConnectionInternalAndReturnAsync<R>(IDao dao, Func<DbConnection, R> body, DbConnection conn = null)
             {
+                if (dao is null)
+                {
+                    throw new ArgumentNullException(nameof(dao));
+                }
+
+                if (body is null)
+                {
+                    throw new ArgumentNullException(nameof(body));
+                }
+
                 bool isTransaction = conn != null;
 
                 try
@@ -254,7 +281,14 @@ namespace Homura.ORM
                         conn = await dao.GetConnectionAsync().ConfigureAwait(false);
                     }
 
-                    return await Task.Run(() => body(conn));
+                    return await Task.Run(() => body(conn)).ConfigureAwait(false);
+                }
+                catch (ObjectDisposedException)
+                {
+                    using (var tempConn = await dao.GetConnectionAsync().ConfigureAwait(false))
+                    {
+                        return await Task.Run(() => body(tempConn)).ConfigureAwait(false);
+                    }
                 }
                 finally
                 {
@@ -267,6 +301,16 @@ namespace Homura.ORM
 
             public static IEnumerable<R> ConnectionInternalYield<R>(IDao dao, Func<DbConnection, IEnumerable<R>> body, DbConnection conn = null)
             {
+                if (dao is null)
+                {
+                    throw new ArgumentNullException(nameof(dao));
+                }
+
+                if (body is null)
+                {
+                    throw new ArgumentNullException(nameof(body));
+                }
+
                 bool isTransaction = conn != null;
 
                 try
@@ -277,6 +321,13 @@ namespace Homura.ORM
                     }
 
                     return body(conn);
+                }
+                catch (ObjectDisposedException)
+                {
+                    using (var tempConn = dao.GetConnection())
+                    {
+                        return body(tempConn);
+                    }
                 }
                 finally
                 {
@@ -289,23 +340,50 @@ namespace Homura.ORM
 
             public static async IAsyncEnumerable<R> ConnectionInternalYieldAsync<R>(IDao dao, Func<DbConnection, IAsyncEnumerable<R>> body, DbConnection conn = null)
             {
-                bool isTransaction = conn != null;
+                if (dao is null)
+                {
+                    throw new ArgumentNullException(nameof(dao));
+                }
+
+                if (body is null)
+                {
+                    throw new ArgumentNullException(nameof(body));
+                }
+
+                IAsyncEnumerator<R> enumerator = null;
+                DbConnection tempConn = null;
 
                 try
                 {
-                    if (!isTransaction)
-                    {
-                        conn = await dao.GetConnectionAsync().ConfigureAwait(false);
-                    }
-
-                    yield return (R)body(conn);
+                    enumerator = body(conn).GetAsyncEnumerator();
                 }
-                finally
+                catch (ObjectDisposedException)
                 {
-                    if (!isTransaction)
+                    tempConn = await dao.GetConnectionAsync().ConfigureAwait(false);
+                    enumerator = body(tempConn).GetAsyncEnumerator();
+                }
+
+                while (true)
+                {
+                    R ret = default(R);
+                    try
                     {
-                        await conn.DisposeAsync().ConfigureAwait(false);
+                        if (!await enumerator.MoveNextAsync().ConfigureAwait(false))
+                        {
+                            break;
+                        }
+                        ret = enumerator.Current;
                     }
+                    catch (Exception)
+                    {
+                        break;
+                    }
+                    yield return ret;
+                }
+
+                if (tempConn is not null)
+                {
+                    await tempConn.DisposeAsync().ConfigureAwait(false);
                 }
             }
 
@@ -315,6 +393,16 @@ namespace Homura.ORM
             /// <param name="body"></param>
             public static void ConnectionInternal(IDao dao, Action<DbConnection> body, DbConnection conn = null)
             {
+                if (dao is null)
+                {
+                    throw new ArgumentNullException(nameof(dao));
+                }
+
+                if (body is null)
+                {
+                    throw new ArgumentNullException(nameof(body));
+                }
+
                 bool isTransaction = conn != null;
 
                 try
@@ -325,6 +413,10 @@ namespace Homura.ORM
                     }
 
                     body(conn);
+                }
+                catch (ObjectDisposedException)
+                {
+                    ConnectionInternal(dao, body, dao.GetConnection());
                 }
                 finally
                 {
@@ -341,6 +433,16 @@ namespace Homura.ORM
             /// <param name="body"></param>
             public static async Task ConnectionInternalAsync(IDao dao, Action<DbConnection> body, DbConnection conn = null)
             {
+                if (dao is null)
+                {
+                    throw new ArgumentNullException(nameof(dao));
+                }
+
+                if (body is null)
+                {
+                    throw new ArgumentNullException(nameof(body));
+                }
+
                 bool isTransaction = conn != null;
 
                 try
@@ -351,6 +453,10 @@ namespace Homura.ORM
                     }
 
                     await Task.Run(() => body(conn));
+                }
+                catch(ObjectDisposedException)
+                {
+                    await ConnectionInternalAsync(dao, body, await dao.GetConnectionAsync()).ConfigureAwait(false);
                 }
                 finally
                 {
