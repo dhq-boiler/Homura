@@ -67,13 +67,27 @@ namespace Homura.ORM
             {
                 if (x.Value.Transaction is not null)
                 {
-                    x.Value.Transaction.Dispose();
-                    s_logger.Debug($"Dispose Transaction Guid={x.Key}");
+                    try
+                    {
+                        x.Value.Transaction.Dispose();
+                        s_logger.Debug($"Dispose Transaction Guid={x.Key}");
+                    }
+                    catch (NullReferenceException)
+                    { }
+                    catch (ObjectDisposedException)
+                    { }
                 }
                 if (x.Value.Connection is not null)
                 {
-                    x.Value.Connection.Dispose();
-                    s_logger.Debug($"Dispose Connection Guid={x.Key}");
+                    try
+                    {
+                        x.Value.Connection.Dispose();
+                        s_logger.Debug($"Dispose Connection Guid={x.Key}");
+                    }
+                    catch (NullReferenceException)
+                    { }
+                    catch (ObjectDisposedException)
+                    { }
                 }
             });
             Attendances.Clear();
@@ -90,13 +104,27 @@ namespace Homura.ORM
             {
                 if (x.Value.Transaction is not null)
                 {
-                    x.Value.Transaction.Dispose();
-                    s_logger.Debug($"Dispose Transaction Guid={x.Key}");
+                    try
+                    {
+                        x.Value.Transaction.Dispose();
+                        s_logger.Debug($"Dispose Transaction Guid={x.Key}");
+                    }
+                    catch (NullReferenceException)
+                    { }
+                    catch (ObjectDisposedException)
+                    { }
                 }
                 if (x.Value.Connection is not null)
                 {
-                    x.Value.Connection.Dispose();
-                    s_logger.Debug($"Dispose Connection Guid={x.Key}");
+                    try
+                    {
+                        x.Value.Connection.Dispose();
+                        s_logger.Debug($"Dispose Connection Guid={x.Key}");
+                    }
+                    catch (NullReferenceException)
+                    { }
+                    catch (ObjectDisposedException)
+                    { }
                 }
                 Attendances.TryRemove(x);
             });
