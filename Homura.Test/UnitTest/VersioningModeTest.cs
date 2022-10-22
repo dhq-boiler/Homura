@@ -162,6 +162,91 @@ namespace Homura.Test.UnitTest
         }
 
         [Test]
+        public async Task ByAlterTable_UpgradeToTargetVersion_2回実行()
+        {
+            var svManager = new DataVersionManager();
+            svManager.CurrentConnection = ConnectionManager.DefaultConnection;
+            svManager.RegisterChangePlan(new Frey_VersionChangePlan_VersionOrigin(VersioningMode.ByAlterTable));
+            svManager.SetDefault();
+
+            await svManager.UpgradeToTargetVersion();
+
+            var dao = new FreyDao();
+            dao.CurrentConnection = ConnectionManager.DefaultConnection;
+
+            await dao.InsertAsync(new Frey()
+            {
+                Id = Guid.Empty,
+                Item1 = "org_item1",
+                Item2 = "org_item2",
+            });
+
+            Assert.That(await dao.CountAllAsync(), Is.EqualTo(1));
+
+            using (var conn = new SQLiteConnection($"Data Source={_filePath}"))
+            {
+                await conn.OpenAsync();
+
+                Assert.That(conn.GetTableNames(), Has.One.EqualTo("Frey"));
+                var items = await dao.FindAllAsync().ToListAsync();
+                Assert.That(items.Count(), Is.EqualTo(1)); //default version:Version_1
+                Assert.That(items.First().Id, Is.EqualTo(Guid.Empty));
+                Assert.That(items.First().Item1, Is.EqualTo("org_item1"));
+                Assert.That(items.First().Item2, Is.EqualTo("org_item2"));
+                Assert.That(items.First().Item3, Is.Null);
+
+                Assert.That(conn.GetTableNames(), Has.None.EqualTo("Valkyrie_0_1"));
+            }
+            svManager.RegisterChangePlan(new Frey_VersionChangePlan_Version_1(VersioningMode.ByAlterTable));
+            await svManager.UpgradeToTargetVersion();
+
+            using (var conn = new SQLiteConnection($"Data Source={_filePath}"))
+            {
+                await conn.OpenAsync();
+
+                Assert.That(conn.GetTableNames(), Has.One.EqualTo("Frey"));
+                {
+                    var items = await dao.FindAllAsync().ToListAsync();
+                    Assert.That(items.Count(), Is.EqualTo(1)); //default version:Version_1
+                    Assert.That(items.First().Id, Is.EqualTo(Guid.Empty));
+                    Assert.That(items.First().Item1, Is.EqualTo("org_item1"));
+                    Assert.That(items.First().Item2, Is.EqualTo("org_item2"));
+                    Assert.That(items.First().Item3, Is.Null);
+                }
+
+                Assert.That(conn.GetTableNames(), Has.None.EqualTo("Frey_0_1"));
+                Assert.That(conn.GetTableNames(), Has.None.EqualTo("Frey_1"));
+                Assert.That(conn.GetTableNames(), Has.None.EqualTo("Frey_1_1"));
+            }
+
+            svManager = new DataVersionManager();
+            svManager.CurrentConnection = ConnectionManager.DefaultConnection;
+            svManager.RegisterChangePlan(new Frey_VersionChangePlan_VersionOrigin(VersioningMode.ByAlterTable));
+            svManager.SetDefault();
+            svManager.RegisterChangePlan(new Frey_VersionChangePlan_Version_1(VersioningMode.ByAlterTable));
+            await svManager.UpgradeToTargetVersion();
+
+            using (var conn = new SQLiteConnection($"Data Source={_filePath}"))
+            {
+                await conn.OpenAsync();
+
+                Assert.That(conn.GetTableNames(), Has.One.EqualTo("Frey"));
+                {
+                    var items = await dao.FindAllAsync().ToListAsync();
+                    Assert.That(items.Count(), Is.EqualTo(1)); //default version:Version_1
+                    Assert.That(items.First().Id, Is.EqualTo(Guid.Empty));
+                    Assert.That(items.First().Item1, Is.EqualTo("org_item1"));
+                    Assert.That(items.First().Item2, Is.EqualTo("org_item2"));
+                    Assert.That(items.First().Item3, Is.Null);
+                }
+
+                Assert.That(conn.GetTableNames(), Has.None.EqualTo("Frey_0_1"));
+                Assert.That(conn.GetTableNames(), Has.None.EqualTo("Frey_1"));
+                Assert.That(conn.GetTableNames(), Has.None.EqualTo("Frey_1_1"));
+            }
+        }
+
+        [Test]
         public async Task ByTick_then_ByAlterTable()
         {
             var svManager = new DataVersionManager();
