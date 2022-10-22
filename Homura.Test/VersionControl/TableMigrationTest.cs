@@ -291,6 +291,68 @@ namespace Sunctum.Infrastructure.Test.IntegrationTest.Data.Rdbms.VersionControl
         }
 
         [Test]
+        public async Task UpgradeToTargetVersion_2回実行()
+        {
+            var svManager = new DataVersionManager();
+            svManager.CurrentConnection = ConnectionManager.DefaultConnection;
+            var registeringPlan = new ChangePlan<VersionOrigin>(VersioningMode.ByTick);
+            registeringPlan.AddVersionChangePlan(new AlphaChangePlan_VersionOrigin(VersioningMode.ByTick));
+            registeringPlan.AddVersionChangePlan(new BetaChangePlan_VersionOrigin(VersioningMode.ByTick));
+            registeringPlan.AddVersionChangePlan(new GammaChangePlan_VersionOrigin(VersioningMode.ByTick));
+            svManager.RegisterChangePlan(registeringPlan);
+            svManager.SetDefault();
+            await svManager.UpgradeToTargetVersion();
+
+            using (var conn = new SQLiteConnection($"Data Source={_filePath}"))
+            {
+                await conn.OpenAsync();
+
+                var tablenames = conn.GetTableNames();
+
+                Assert.That(tablenames, Has.One.EqualTo("Alpha"));
+                Assert.That(tablenames, Has.None.EqualTo("Alpha_1"));
+                Assert.That(tablenames, Has.None.EqualTo("Alpha_2"));
+
+                Assert.That(tablenames, Has.One.EqualTo("Beta"));
+                Assert.That(tablenames, Has.None.EqualTo("Beta_1"));
+                Assert.That(tablenames, Has.None.EqualTo("Beta_2"));
+
+                Assert.That(tablenames, Has.One.EqualTo("Gamma"));
+                Assert.That(tablenames, Has.None.EqualTo("Gamma_1"));
+                Assert.That(tablenames, Has.None.EqualTo("Gamma_2"));
+            }
+
+            svManager = new DataVersionManager();
+            svManager.CurrentConnection = ConnectionManager.DefaultConnection;
+            registeringPlan = new ChangePlan<VersionOrigin>(VersioningMode.ByTick);
+            registeringPlan.AddVersionChangePlan(new AlphaChangePlan_VersionOrigin(VersioningMode.ByTick));
+            registeringPlan.AddVersionChangePlan(new BetaChangePlan_VersionOrigin(VersioningMode.ByTick));
+            registeringPlan.AddVersionChangePlan(new GammaChangePlan_VersionOrigin(VersioningMode.ByTick));
+            svManager.RegisterChangePlan(registeringPlan);
+            svManager.SetDefault();
+            await svManager.UpgradeToTargetVersion();
+
+            using (var conn = new SQLiteConnection($"Data Source={_filePath}"))
+            {
+                await conn.OpenAsync();
+
+                var tablenames = conn.GetTableNames();
+
+                Assert.That(tablenames, Has.One.EqualTo("Alpha"));
+                Assert.That(tablenames, Has.None.EqualTo("Alpha_1"));
+                Assert.That(tablenames, Has.None.EqualTo("Alpha_2"));
+
+                Assert.That(tablenames, Has.One.EqualTo("Beta"));
+                Assert.That(tablenames, Has.None.EqualTo("Beta_1"));
+                Assert.That(tablenames, Has.None.EqualTo("Beta_2"));
+
+                Assert.That(tablenames, Has.One.EqualTo("Gamma"));
+                Assert.That(tablenames, Has.None.EqualTo("Gamma_1"));
+                Assert.That(tablenames, Has.None.EqualTo("Gamma_2"));
+            }
+        }
+
+        [Test]
         public async Task ByVersion_Book_ComplexCase()
         {
             var svManager = new DataVersionManager();

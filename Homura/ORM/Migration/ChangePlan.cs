@@ -236,9 +236,11 @@ namespace Homura.ORM.Migration
 
         public async Task DowngradeToTargetVersion(IConnection connection)
         {
-            OnBeginToDowngradeTo(new VersionChangeEventArgs(TargetVersion));
-
-            LogManager.GetCurrentClassLogger().Info($"Begin to downgrade to {TargetVersion.GetType().Name}.");
+            if (VersionChangePlanList.Any())
+            {
+                OnBeginToDowngradeTo(new VersionChangeEventArgs(TargetVersion));
+                LogManager.GetCurrentClassLogger().Info($"Begin to downgrade to {TargetVersion.GetType().Name}.");
+            }
 
             foreach (var vcp in VersionChangePlanList)
             {
@@ -247,16 +249,20 @@ namespace Homura.ORM.Migration
                 ModifiedCount += vcp.ModifiedCount;
             }
 
-            LogManager.GetCurrentClassLogger().Info($"Finish to downgrade to {TargetVersion.GetType().Name}.");
-
-            OnFinishedToDowngradeTo(new VersionChangeEventArgs(TargetVersion));
+            if (VersionChangePlanList.Any())
+            {
+                LogManager.GetCurrentClassLogger().Info($"Finish to downgrade to {TargetVersion.GetType().Name}.");
+                OnFinishedToDowngradeTo(new VersionChangeEventArgs(TargetVersion));
+            }
         }
 
         public async Task UpgradeToTargetVersion(IConnection connection)
         {
-            OnBeginToUpgradeTo(new VersionChangeEventArgs(TargetVersion));
-
-            LogManager.GetCurrentClassLogger().Info($"Begin to upgrade to {TargetVersion.GetType().Name}.");
+            if (VersionChangePlanList.Any())
+            {
+                OnBeginToUpgradeTo(new VersionChangeEventArgs(TargetVersion));
+                LogManager.GetCurrentClassLogger().Info($"Begin to upgrade to {TargetVersion.GetType().Name}.");
+            }
 
             foreach (var vcp in VersionChangePlanList)
             {
@@ -265,9 +271,11 @@ namespace Homura.ORM.Migration
                 ModifiedCount += vcp.ModifiedCount;
             }
 
-            LogManager.GetCurrentClassLogger().Info($"Finish to upgrade to {TargetVersion.GetType().Name}.");
-
-            OnFinishedToUpgradeTo(new VersionChangeEventArgs(TargetVersion));
+            if (VersionChangePlanList.Any())
+            {
+                LogManager.GetCurrentClassLogger().Info($"Finish to upgrade to {TargetVersion.GetType().Name}.");
+                OnFinishedToUpgradeTo(new VersionChangeEventArgs(TargetVersion));
+            }
         }
 
         public override bool Equals(object obj)
