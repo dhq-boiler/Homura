@@ -8,6 +8,7 @@ namespace Homura.ORM
 {
     public static class QueryHelper
     {
+        private static readonly Logger s_logger = LogManager.GetCurrentClassLogger();
         public static readonly TimeSpan Timeout = TimeSpan.FromMinutes(5);
 
         /// <summary>
@@ -28,7 +29,7 @@ namespace Homura.ORM
             {
                 try
                 {
-                    LogManager.GetCurrentClassLogger().Trace("try body()");
+                    s_logger.Trace("try body()");
                     body();
                     return;
                 }
@@ -36,12 +37,12 @@ namespace Homura.ORM
                 {
                     if (ex.Message.Contains("database is lock"))
                     {
-                        LogManager.GetCurrentClassLogger().Warn("database is lock");
+                        s_logger.Warn("database is lock");
                         continue;
                     }
                     else
                     {
-                        LogManager.GetCurrentClassLogger().Error(ex);
+                        s_logger.Error(ex);
                         throw;
                     }
                 }
@@ -68,19 +69,19 @@ namespace Homura.ORM
             {
                 try
                 {
-                    LogManager.GetCurrentClassLogger().Trace("try body()");
+                    s_logger.Trace("try body()");
                     return body();
                 }
                 catch (Exception ex)
                 {
                     if (ex.Message.Contains("database is lock"))
                     {
-                        LogManager.GetCurrentClassLogger().Warn("database is lock");
+                        s_logger.Warn("database is lock");
                         continue;
                     }
                     else
                     {
-                        LogManager.GetCurrentClassLogger().Error(ex);
+                        s_logger.Error(ex);
                         throw;
                     }
                 }
@@ -107,7 +108,7 @@ namespace Homura.ORM
             {
                 try
                 {
-                    LogManager.GetCurrentClassLogger().Trace("try body()");
+                    s_logger.Trace("try body()");
                     await body().ConfigureAwait(false);
                     return;
                 }
@@ -115,12 +116,12 @@ namespace Homura.ORM
                 {
                     if (ex.Message.Contains("database is lock"))
                     {
-                        LogManager.GetCurrentClassLogger().Warn("database is lock");
+                        s_logger.Warn("database is lock");
                         continue;
                     }
                     else
                     {
-                        LogManager.GetCurrentClassLogger().Error(ex);
+                        s_logger.Error(ex);
                         throw;
                     }
                 }
@@ -147,19 +148,19 @@ namespace Homura.ORM
             {
                 try
                 {
-                    LogManager.GetCurrentClassLogger().Trace("try body()");
+                    s_logger.Trace("try body()");
                     return body();
                 }
                 catch (Exception ex)
                 {
                     if (ex.Message.Contains("database is lock"))
                     {
-                        LogManager.GetCurrentClassLogger().Warn("database is lock");
+                        s_logger.Warn("database is lock");
                         continue;
                     }
                     else
                     {
-                        LogManager.GetCurrentClassLogger().Error(ex);
+                        s_logger.Error(ex);
                         throw;
                     }
                 }
@@ -186,19 +187,19 @@ namespace Homura.ORM
             {
                 try
                 {
-                    LogManager.GetCurrentClassLogger().Trace("try body()");
+                    s_logger.Trace("try body()");
                     return await body().ConfigureAwait(false);
                 }
                 catch (Exception ex)
                 {
                     if (ex.Message.Contains("database is lock"))
                     {
-                        LogManager.GetCurrentClassLogger().Warn("database is lock");
+                        s_logger.Warn("database is lock");
                         continue;
                     }
                     else
                     {
-                        LogManager.GetCurrentClassLogger().Error(ex);
+                        s_logger.Error(ex);
                         throw;
                     }
                 }
@@ -249,7 +250,18 @@ namespace Homura.ORM
                 {
                     if (!isTransaction)
                     {
-                        conn.Dispose();
+                        try
+                        {
+                            conn.Dispose();
+                        }
+                        catch (NullReferenceException e)
+                        {
+                            s_logger.Error(e);
+                        }
+                        catch (ObjectDisposedException e)
+                        {
+                            s_logger.Error(e);
+                        }
                     }
                 }
             }
@@ -294,7 +306,18 @@ namespace Homura.ORM
                 {
                     if (!isTransaction)
                     {
-                        await conn.DisposeAsync().ConfigureAwait(false);
+                        try
+                        {
+                            await conn.DisposeAsync().ConfigureAwait(false);
+                        }
+                        catch (NullReferenceException e)
+                        {
+                            s_logger.Error(e);
+                        }
+                        catch (ObjectDisposedException e)
+                        {
+                            s_logger.Error(e);
+                        }
                     }
                 }
             }
@@ -333,7 +356,18 @@ namespace Homura.ORM
                 {
                     if (!isTransaction)
                     {
-                        conn.Dispose();
+                        try
+                        {
+                            conn.Dispose();
+                        }
+                        catch (NullReferenceException e)
+                        {
+                            s_logger.Error(e);
+                        }
+                        catch (ObjectDisposedException e)
+                        {
+                            s_logger.Error(e);
+                        }
                     }
                 }
             }
@@ -383,7 +417,18 @@ namespace Homura.ORM
 
                 if (tempConn is not null)
                 {
-                    await tempConn.DisposeAsync().ConfigureAwait(false);
+                    try
+                    {
+                        await tempConn.DisposeAsync().ConfigureAwait(false);
+                    }
+                    catch (NullReferenceException e)
+                    {
+                        s_logger.Error(e);
+                    }
+                    catch (ObjectDisposedException e)
+                    {
+                        s_logger.Error(e);
+                    }
                 }
             }
 
@@ -421,7 +466,18 @@ namespace Homura.ORM
                 {
                     if (!isTransaction)
                     {
-                        conn.Dispose();
+                        try
+                        {
+                            conn.Dispose();
+                        }
+                        catch (NullReferenceException e)
+                        {
+                            s_logger.Error(e);
+                        }
+                        catch (ObjectDisposedException e)
+                        {
+                            s_logger.Error(e);
+                        }
                     }
                 }
             }
@@ -461,7 +517,18 @@ namespace Homura.ORM
                 {
                     if (!isTransaction)
                     {
-                        await conn.DisposeAsync().ConfigureAwait(false);
+                        try
+                        {
+                            await conn.DisposeAsync().ConfigureAwait(false);
+                        }
+                        catch (NullReferenceException e)
+                        {
+                            s_logger.Error(e);
+                        }
+                        catch (ObjectDisposedException e)
+                        {
+                            s_logger.Error(e);
+                        }
                     }
                 }
             }
