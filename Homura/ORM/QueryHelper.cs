@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data.Common;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Homura.ORM
@@ -246,6 +247,13 @@ namespace Homura.ORM
                         return body(tempConn);
                     }
                 }
+                catch (ThreadAbortException e)
+                {
+                    using (var tempConn = dao.GetConnection())
+                    {
+                        return body(tempConn);
+                    }
+                }
                 finally
                 {
                     if (!isTransaction)
@@ -302,6 +310,13 @@ namespace Homura.ORM
                         return await Task.Run(() => body(tempConn)).ConfigureAwait(false);
                     }
                 }
+                catch (ThreadAbortException e)
+                {
+                    using (var tempConn = await dao.GetConnectionAsync().ConfigureAwait(false))
+                    {
+                        return await Task.Run(() => body(tempConn)).ConfigureAwait(false);
+                    }
+                }
                 finally
                 {
                     if (!isTransaction)
@@ -346,6 +361,13 @@ namespace Homura.ORM
                     return body(conn);
                 }
                 catch (ObjectDisposedException)
+                {
+                    using (var tempConn = dao.GetConnection())
+                    {
+                        return body(tempConn);
+                    }
+                }
+                catch (ThreadAbortException e)
                 {
                     using (var tempConn = dao.GetConnection())
                     {
@@ -462,6 +484,10 @@ namespace Homura.ORM
                 {
                     ConnectionInternal(dao, body, dao.GetConnection());
                 }
+                catch (ThreadAbortException e)
+                {
+                    ConnectionInternal(dao, body, dao.GetConnection());
+                }
                 finally
                 {
                     if (!isTransaction)
@@ -510,6 +536,10 @@ namespace Homura.ORM
                     await Task.Run(async () => await body(conn)).ConfigureAwait(true);
                 }
                 catch (ObjectDisposedException e)
+                {
+                    await ConnectionInternalAsync(dao, body, await dao.GetConnectionAsync()).ConfigureAwait(false);
+                }
+                catch (ThreadAbortException e)
                 {
                     await ConnectionInternalAsync(dao, body, await dao.GetConnectionAsync()).ConfigureAwait(false);
                 }
