@@ -533,7 +533,7 @@ namespace Homura.ORM
                         conn = await dao.GetConnectionAsync().ConfigureAwait(false);
                     }
 
-                    await Task.Run(async () => await body(conn)).ConfigureAwait(true);
+                    await body(conn).ConfigureAwait(false);
                 }
                 catch (ObjectDisposedException e)
                 {
