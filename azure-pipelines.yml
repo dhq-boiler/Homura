@@ -14,8 +14,16 @@ variables:
   buildPlatform: 'Any CPU'
   buildConfiguration: 'Release'
   TargetSolution: '$(Build.SourcesDirectory)\Sunctum.sln'
+  dotNetFrameworks: 'net7.0'
+  dotNetVersion: '7.0.x'
 
 steps:
+- task: UseDotNet@2
+  displayName: 'Use .NET 7 framework'
+  inputs:
+    version: $(dotNetVersion)
+    includePreviewVersions: true
+
 - task: DotNetCoreCLI@2
   displayName: 'dotnet build'
   inputs:
