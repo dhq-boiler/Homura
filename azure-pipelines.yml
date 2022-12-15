@@ -13,7 +13,6 @@ variables:
   solution: '**/*.sln'
   buildPlatform: 'Any CPU'
   buildConfiguration: 'Release'
-  TargetSolution: '$(Build.SourcesDirectory)\Sunctum.sln'
   dotNetFrameworks: 'net7.0'
   dotNetVersion: '7.0.x'
 
