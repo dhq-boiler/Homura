@@ -1,7 +1,9 @@
 ﻿
 
+using Reactive.Bindings;
 using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Linq;
 using System.Reflection;
 
@@ -20,7 +22,6 @@ namespace Homura.ORM
 
         public override object DefaultValue { get; protected set; }
 
-        public override PropertyInfo PropInfo { get; protected set; }
 
         public override HandlingDefaultValue PassType { get; protected set; }
 
@@ -34,7 +35,19 @@ namespace Homura.ORM
             DBDataType = dbDataType;
             Constraints = constraints?.ToList();
             Order = order;
-            PropInfo = propertyInfo;
+            PropertyGetter = (obj) =>
+            {
+                if (entityDataType.GetInterfaces().Contains(typeof(IReactiveProperty)))
+                {
+                    var getter = obj.GetType().GetProperty(columnName);
+                    var rp = getter.GetValue(obj) as IReactiveProperty;
+                    return (rp, rp.GetType().GetProperty("Value"));
+                }
+                else
+                {
+                    return (obj, obj.GetType().GetProperty(columnName));
+                }
+            };
             PassType = passType;
             DefaultValue = defaultValue;
         }

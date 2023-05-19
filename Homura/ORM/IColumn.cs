@@ -1,5 +1,6 @@
 ﻿
 
+using Reactive.Bindings;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -20,7 +21,7 @@ namespace Homura.ORM
 
         object DefaultValue { get; }
 
-        PropertyInfo PropInfo { get; }
+        Func<object, (object, PropertyInfo)> PropertyGetter { get; }
 
         string ConstraintsToSql();
 

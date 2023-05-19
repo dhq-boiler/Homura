@@ -1,6 +1,7 @@
 ﻿using Homura.ORM;
 using Homura.ORM.Mapping;
 using Homura.Test.TestFixture.Migration;
+using Reactive.Bindings;
 using System;
 
 namespace Homura.Test.TestFixture.Entity
@@ -69,5 +70,12 @@ namespace Homura.Test.TestFixture.Entity
         [Column("Item4", "TEXT", 4, HandlingDefaultValue.AsValue)]
         [Since(typeof(Version_2))]
         public string Item4 { get; set; }
+    }
+
+    [DefaultVersion(typeof(Version_3))]
+    public class Valkyrie_3 : EntityBaseObject
+    {
+        [Column("Id", "NUMERIC", 0), PrimaryKey, Index]
+        public ReactivePropertySlim<Guid> Id { get; } = new();
     }
 }

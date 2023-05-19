@@ -19,6 +19,15 @@ namespace Homura.Extensions
             return isNull ? Guid.Empty : rdr.GetGuid(index);
         }
 
+        public static Guid? SafeGetNullableGuid(this IDataRecord rdr, string columnName, ITable table)
+        {
+            int index = rdr.CheckColumnExists(columnName, table);
+
+            bool isNull = rdr.IsDBNull(index);
+
+            return isNull ? null : rdr.GetGuid(index);
+        }
+
         public static string SafeGetString(this IDataRecord rdr, string columnName, ITable table)
         {
             int index = CheckColumnExists(rdr, columnName, table);
@@ -59,6 +68,36 @@ namespace Homura.Extensions
             bool isNull = rdr.IsDBNull(index);
 
             return isNull ? null : (long?)rdr.GetInt64(index);
+        }
+
+        public static float SafeGetFloat(this IDataRecord rdr, string columnName, ITable table)
+        {
+            int index = CheckColumnExists(rdr, columnName, table);
+            return rdr.GetFloat(index);
+        }
+
+        public static float? SafeGetNullableFloat(this IDataRecord rdr, string columnName, ITable table)
+        {
+            int index = CheckColumnExists(rdr, columnName, table);
+
+            bool isNull = rdr.IsDBNull(index);
+
+            return isNull ? null : (float?)rdr.GetFloat(index);
+        }
+
+        public static double SafeGetDouble(this IDataRecord rdr, string columnName, ITable table)
+        {
+            int index = CheckColumnExists(rdr, columnName, table);
+            return rdr.GetDouble(index);
+        }
+
+        public static double? SafeGetNullableDouble(this IDataRecord rdr, string columnName, ITable table)
+        {
+            int index = CheckColumnExists(rdr, columnName, table);
+
+            bool isNull = rdr.IsDBNull(index);
+
+            return isNull ? null : (double?)rdr.GetDouble(index);
         }
 
         public static DateTime SafeGetDateTime(this IDataRecord rdr, string columnName, ITable table)

@@ -1,5 +1,7 @@
-﻿using System;
+﻿using Reactive.Bindings;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 
 namespace Homura.ORM
@@ -10,7 +12,6 @@ namespace Homura.ORM
         private string _DBDataType;
         private IEnumerable<IDdlConstraint> _Constraints;
         private int? _Order;
-        private PropertyInfo _PropInfo;
         private Type _EntityDataType;
         private object _DefaultValue;
         private HandlingDefaultValue _PassType;
@@ -22,7 +23,19 @@ namespace Homura.ORM
             _DBDataType = newDataType;
             _Constraints = newConstraints;
             _Order = newOrder;
-            _PropInfo = newPropInfo;
+            PropertyGetter = (obj) =>
+            {
+                if (BaseColumn.EntityDataType.GetInterfaces().Contains(typeof(IReactiveProperty)))
+                {
+                    var getter = obj.GetType().GetProperty(_ColumnName);
+                    var rp = getter.GetValue(obj) as IReactiveProperty;
+                    return (rp, rp.GetType().GetProperty("Value"));
+                }
+                else
+                {
+                    return (obj, obj.GetType().GetProperty(_ColumnName));
+                }
+            };
         }
 
         public Column BaseColumn { get; private set; }
@@ -67,15 +80,6 @@ namespace Homura.ORM
             protected set { throw new NotSupportedException(); }
         }
 
-        public override PropertyInfo PropInfo
-        {
-            get
-            {
-                if (_PropInfo != null) return _PropInfo;
-                else return BaseColumn.PropInfo;
-            }
-            protected set { throw new NotSupportedException(); }
-        }
 
         public override Type EntityDataType
         {

@@ -1,8 +1,8 @@
 
 using Homura.ORM;
+using Homura.QueryBuilder.Iso.Dml;
 using Homura.QueryBuilder.Vendor.SQLite.Dcl;
 using Homura.QueryBuilder.Vendor.SQLite.Dml;
-using Homura.QueryBuilder.Iso.Dml;
 using NLog;
 using System;
 using System.Data;
@@ -12,7 +12,7 @@ using System.Linq;
 
 namespace Homura.Test.TestFixture.Dao
 {
-    public abstract class SQLiteBaseDao<E> : Dao<E> where E : EntityBaseObject
+    public abstract class SQLiteBaseDao<E> : Dao<E> where E : EntityBaseObject, new()
     {
         private static readonly Logger s_logger = LogManager.GetCurrentClassLogger();
 
@@ -34,9 +34,9 @@ namespace Homura.Test.TestFixture.Dao
                 {
                     using (var command = conn.CreateCommand())
                     {
-                        using (var query = new Vacuum())
+                        using (Vacuum query = new())
                         {
-                            string sql = query.ToSql();
+                            var sql = query.ToSql();
                             command.CommandText = sql;
                             command.CommandType = System.Data.CommandType.Text;
 
@@ -69,14 +69,14 @@ namespace Homura.Test.TestFixture.Dao
 
                     using (var query = new InsertOrReplace().Into.Table(new Table<E>().Name)
                                                             .Columns(overrideColumns.Select(c => c.ColumnName))
-                                                            .Values.Row(overrideColumns.Select(c => c.PropInfo.GetValue(entity))))
+                                                            .Values.Row(overrideColumns.Select(c => c.PropertyGetter(entity).Item2.GetValue(c.PropertyGetter(entity).Item1))))
                     {
-                        string sql = query.ToSql();
+                        var sql = query.ToSql();
                         command.CommandText = sql;
                         query.SetParameters(command);
 
                         s_logger.Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
-                        int inserted = command.ExecuteNonQuery();
+                        var inserted = command.ExecuteNonQuery();
                         if (inserted == 0)
                         {
                             throw new NoEntityInsertedException($"Failed:{sql} {query.GetParameters().ToStringKeyIsValue()}");
