@@ -1,12 +1,14 @@
 ﻿
 using Dapper;
 using Homura.Core;
+using Homura.Extensions;
 using Homura.ORM.Mapping;
 using Homura.ORM.Migration;
 using Homura.ORM.Setup;
 using Homura.QueryBuilder.Core;
 using Homura.QueryBuilder.Iso.Dml;
 using NLog;
+using Reactive.Bindings;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -18,7 +20,7 @@ using System.Threading.Tasks;
 
 namespace Homura.ORM
 {
-    public abstract class Dao<E> : MustInitialize<Type>, IDao<E> where E : EntityBaseObject
+    public abstract class Dao<E> : MustInitialize<Type>, IDao<E> where E : EntityBaseObject, new()
     {
         public static readonly string s_COLUMN_NAME = "COLUMN_NAME";
         public static readonly string s_IS_NULLABLE = "IS_NULLABLE";
@@ -137,7 +139,7 @@ namespace Homura.ORM
 
         protected IEnumerable<IColumn> GetColumnDefinitions(DbConnection conn = null)
         {
-            bool isTransaction = conn != null;
+            var isTransaction = conn != null;
 
             try
             {
@@ -149,8 +151,8 @@ namespace Homura.ORM
                 var objSchemaInfo = (conn as DbConnection).GetSchema(OleDbMetaDataCollectionNames.Columns, new string[] { null, null, TableName, null });
                 foreach (DataRow objRow in objSchemaInfo.Rows)
                 {
-                    bool isNullable = objRow.Field<bool>(s_IS_NULLABLE);
-                    bool isPrimaryKey = objRow.Field<bool>(s_PRIMARY_KEY);
+                    var isNullable = objRow.Field<bool>(s_IS_NULLABLE);
+                    var isPrimaryKey = objRow.Field<bool>(s_PRIMARY_KEY);
 
                     var constraints = ToIConstraintList(isNullable, isPrimaryKey);
 
@@ -175,12 +177,111 @@ namespace Homura.ORM
         private IEnumerable<IDdlConstraint> ToIConstraintList(bool isNullable, bool isPrimaryKey)
         {
             if (!isNullable)
+            {
                 yield return new NotNull();
+            }
+
             if (isPrimaryKey)
+            {
                 yield return new PrimaryKey();
+            }
         }
 
-        protected abstract E ToEntity(IDataRecord reader);
+        protected E ToEntity(IDataRecord reader)
+        {
+            var ret = CreateInstance();
+
+            foreach (var column in Columns)
+            {
+                if (column.EntityDataType is IReactiveProperty)
+                {
+                    var getter = ret.GetType().GetProperty(column.ColumnName);
+                    var rp = getter.GetValue(ret);
+                    var setter = rp.GetType().GetProperty("Value");
+                    setter.SetValue(rp, CatchThrow(() => GetColumnValue(reader, column, Table)));
+                }
+                else
+                {
+                    var setter = ret.GetType().GetProperty(column.ColumnName);
+                    setter.SetValue(ret, CatchThrow(() => GetColumnValue(reader, column, Table)));
+                }
+            }
+
+            return ret;
+        }
+
+        private object GetColumnValue(IDataRecord reader, IColumn column, ITable table)
+        {
+            if (column.EntityDataType == typeof(Guid) || column.EntityDataType == typeof(IReactiveProperty<Guid>))
+            {
+                return reader.SafeGetGuid(column.ColumnName, table);
+            }
+            else if (column.EntityDataType == typeof(Guid?) || column.EntityDataType == typeof(IReactiveProperty<Guid?>))
+            {
+                return reader.SafeGetNullableGuid(column.ColumnName, table);
+            }
+            else if (column.EntityDataType == typeof(string) || column.EntityDataType == typeof(IReactiveProperty<string>))
+            {
+                return reader.SafeGetString(column.ColumnName, table);
+            }
+            else if (column.EntityDataType == typeof(int) || column.EntityDataType == typeof(IReactiveProperty<int>))
+            {
+                return reader.SafeGetInt(column.ColumnName, table);
+            }
+            else if (column.EntityDataType == typeof(int?) || column.EntityDataType == typeof(IReactiveProperty<int?>))
+            {
+                return reader.SafeGetNullableInt(column.ColumnName, table);
+            }
+            else if (column.EntityDataType == typeof(long) || column.EntityDataType == typeof(IReactiveProperty<long>))
+            {
+                return reader.SafeGetLong(column.ColumnName, table);
+            }
+            else if (column.EntityDataType == typeof(long?) || column.EntityDataType == typeof(IReactiveProperty<long?>))
+            {
+                return reader.SafeNullableGetLong(column.ColumnName, table);
+            }
+            else if (column.EntityDataType == typeof(float) || column.EntityDataType == typeof(IReactiveProperty<float>))
+            {
+                return reader.SafeGetFloat(column.ColumnName, table);
+            }
+            else if (column.EntityDataType == typeof(float?) || column.EntityDataType == typeof(IReactiveProperty<float?>))
+            {
+                return reader.SafeGetNullableFloat(column.ColumnName, table);
+            }
+            else if (column.EntityDataType == typeof(double) || column.EntityDataType == typeof(IReactiveProperty<double>))
+            {
+                return reader.SafeGetDouble(column.ColumnName, table);
+            }
+            else if (column.EntityDataType == typeof(double?) || column.EntityDataType == typeof(IReactiveProperty<double?>))
+            {
+                return reader.SafeGetNullableDouble(column.ColumnName, table);
+            }
+            else if (column.EntityDataType == typeof(DateTime) || column.EntityDataType == typeof(IReactiveProperty<DateTime>))
+            {
+                return reader.SafeGetDateTime(column.ColumnName, table);
+            }
+            else if (column.EntityDataType == typeof(DateTime?) || column.EntityDataType == typeof(IReactiveProperty<DateTime?>))
+            {
+                return reader.SafeGetNullableDateTime(column.ColumnName, table);
+            }
+            else if (column.EntityDataType == typeof(bool) || column.EntityDataType == typeof(IReactiveProperty<bool>))
+            {
+                return reader.SafeGetBoolean(column.ColumnName, table);
+            }
+            else if (column.EntityDataType == typeof(bool?) || column.EntityDataType == typeof(IReactiveProperty<bool?>))
+            {
+                return reader.SafeGetNullableBoolean(column.ColumnName, table);
+            }
+            else
+            {
+                throw new NotSupportedException();
+            }
+        }
+
+        private E CreateInstance()
+        {
+            return new E();
+        }
 
         public void CreateTableIfNotExists(TimeSpan? timeout = null)
         {
@@ -188,7 +289,7 @@ namespace Homura.ORM
             {
                 using (var conn = GetConnection())
                 {
-                    string sql = $"create table if not exists {TableName}";
+                    var sql = $"create table if not exists {TableName}";
 
                     DefineColumns(ref sql, Columns);
 
@@ -204,7 +305,7 @@ namespace Homura.ORM
             {
                 using (var conn = await GetConnectionAsync().ConfigureAwait(false))
                 {
-                    string sql = $"create table if not exists {TableName}";
+                    var sql = $"create table if not exists {TableName}";
 
                     DefineColumns(ref sql, Columns);
 
@@ -220,7 +321,7 @@ namespace Homura.ORM
             {
                 using (var conn = GetConnection())
                 {
-                    string sql = $"drop table {TableName}";
+                    var sql = $"drop table {TableName}";
 
                     LogManager.GetCurrentClassLogger().Debug(sql);
                     conn.Execute(sql);
@@ -234,7 +335,7 @@ namespace Homura.ORM
             {
                 using (var conn = await GetConnectionAsync().ConfigureAwait(false))
                 {
-                    string sql = $"drop table {TableName}";
+                    var sql = $"drop table {TableName}";
 
                     LogManager.GetCurrentClassLogger().Debug(sql);
                     await conn.ExecuteAsync(sql).ConfigureAwait(false);
@@ -244,7 +345,7 @@ namespace Homura.ORM
 
         public int CreateIndexIfNotExists(TimeSpan? timeout = null)
         {
-            int created = 0;
+            var created = 0;
             QueryHelper.KeepTryingUntilProcessSucceed(() =>
             {
                 created = CreateIndexClass(created);
@@ -255,7 +356,7 @@ namespace Homura.ORM
 
         public async Task<int> CreateIndexIfNotExistsAsync(TimeSpan? timeout = null)
         {
-            int created = 0;
+            var created = 0;
             await QueryHelper.KeepTryingUntilProcessSucceedAsync<Task>(new Func<Task>(async () =>
             {
                 created = await CreateIndexClassAsync(created);
@@ -266,17 +367,17 @@ namespace Homura.ORM
 
         private int CreateIndexProperties(int created)
         {
-            HashSet<string> indexPropertyNames = SearchIndexProperties();
+            var indexPropertyNames = SearchIndexProperties();
             foreach (var indexPropertyName in indexPropertyNames)
             {
-                string indexName = $"index_{TableName}_{indexPropertyName}";
+                var indexName = $"index_{TableName}_{indexPropertyName}";
 
                 using (var conn = GetConnection())
                 {
-                    string sql = $"create index if not exists {indexName} on {TableName}({indexPropertyName})";
+                    var sql = $"create index if not exists {indexName} on {TableName}({indexPropertyName})";
 
                     LogManager.GetCurrentClassLogger().Debug(sql);
-                    int result = conn.Execute(sql);
+                    var result = conn.Execute(sql);
                     if (result != -1)
                     {
                         created += 1;
@@ -288,17 +389,17 @@ namespace Homura.ORM
         }
         private async Task<int> CreateIndexPropertiesAsync(int created)
         {
-            HashSet<string> indexPropertyNames = SearchIndexProperties();
+            var indexPropertyNames = SearchIndexProperties();
             foreach (var indexPropertyName in indexPropertyNames)
             {
-                string indexName = $"index_{TableName}_{indexPropertyName}";
+                var indexName = $"index_{TableName}_{indexPropertyName}";
 
                 using (var conn = await GetConnectionAsync().ConfigureAwait(false))
                 {
-                    string sql = $"create index if not exists {indexName} on {TableName}({indexPropertyName})";
+                    var sql = $"create index if not exists {indexName} on {TableName}({indexPropertyName})";
 
                     LogManager.GetCurrentClassLogger().Debug(sql);
-                    int result = await conn.ExecuteAsync(sql).ConfigureAwait(false);
+                    var result = await conn.ExecuteAsync(sql).ConfigureAwait(false);
                     if (result != -1)
                     {
                         created += 1;
@@ -311,11 +412,11 @@ namespace Homura.ORM
 
         private int CreateIndexClass(int created)
         {
-            HashSet<string> indexColumnNames = SearchIndexClass();
+            var indexColumnNames = SearchIndexClass();
             if (indexColumnNames.Count() > 0)
             {
-                string indexName = $"index_{TableName}_";
-                var queue = new Queue<string>(indexColumnNames);
+                var indexName = $"index_{TableName}_";
+                Queue<string> queue = new(indexColumnNames);
                 while (queue.Count() > 0)
                 {
                     indexName += queue.Dequeue();
@@ -326,8 +427,8 @@ namespace Homura.ORM
                 }
                 using (var conn = GetConnection())
                 {
-                    string sql = $"create index if not exists {indexName} on {TableName}(";
-                    var queue2 = new Queue<string>(indexColumnNames);
+                    var sql = $"create index if not exists {indexName} on {TableName}(";
+                    Queue<string> queue2 = new(indexColumnNames);
                     while (queue2.Count() > 0)
                     {
                         sql += queue2.Dequeue();
@@ -339,7 +440,7 @@ namespace Homura.ORM
                     sql += ")";
 
                     LogManager.GetCurrentClassLogger().Debug(sql);
-                    int result = conn.Execute(sql);
+                    var result = conn.Execute(sql);
                     if (result != -1)
                     {
                         created += 1;
@@ -352,11 +453,11 @@ namespace Homura.ORM
 
         private async Task<int> CreateIndexClassAsync(int created)
         {
-            HashSet<string> indexColumnNames = SearchIndexClass();
+            var indexColumnNames = SearchIndexClass();
             if (indexColumnNames.Count() > 0)
             {
-                string indexName = $"index_{TableName}_";
-                var queue = new Queue<string>(indexColumnNames);
+                var indexName = $"index_{TableName}_";
+                Queue<string> queue = new(indexColumnNames);
                 while (queue.Count() > 0)
                 {
                     indexName += queue.Dequeue();
@@ -367,8 +468,8 @@ namespace Homura.ORM
                 }
                 using (var conn = await GetConnectionAsync().ConfigureAwait(false))
                 {
-                    string sql = $"create index if not exists {indexName} on {TableName}(";
-                    var queue2 = new Queue<string>(indexColumnNames);
+                    var sql = $"create index if not exists {indexName} on {TableName}(";
+                    Queue<string> queue2 = new(indexColumnNames);
                     while (queue2.Count() > 0)
                     {
                         sql += queue2.Dequeue();
@@ -380,7 +481,7 @@ namespace Homura.ORM
                     sql += ")";
 
                     LogManager.GetCurrentClassLogger().Debug(sql);
-                    int result = await conn.ExecuteAsync(sql).ConfigureAwait(false);
+                    var result = await conn.ExecuteAsync(sql).ConfigureAwait(false);
                     if (result != -1)
                     {
                         created += 1;
@@ -393,7 +494,7 @@ namespace Homura.ORM
 
         private static HashSet<string> SearchIndexProperties()
         {
-            HashSet<string> indexColumnNames = new HashSet<string>();
+            HashSet<string> indexColumnNames = new();
             var pInfoList = typeof(E).GetProperties();
 
             foreach (var pInfo in pInfoList)
@@ -412,7 +513,7 @@ namespace Homura.ORM
 
         private static HashSet<string> SearchIndexClass()
         {
-            HashSet<string> indexColumnNames = new HashSet<string>();
+            HashSet<string> indexColumnNames = new();
             var cInfo = typeof(E);
             var indexAttr = cInfo.GetCustomAttribute<IndexAttribute>();
             if (indexAttr != null)
@@ -441,7 +542,7 @@ namespace Homura.ORM
                         using (var query = new Select().Count("1").As("Count")
                                                                         .From.Table(table))
                         {
-                            string sql = query.ToSql();
+                            var sql = query.ToSql();
 
                             command.CommandText = sql;
 
@@ -473,7 +574,7 @@ namespace Homura.ORM
                         using (var query = new Select().Count("1").As("Count")
                                                                         .From.Table(table))
                         {
-                            string sql = query.ToSql();
+                            var sql = query.ToSql();
 
                             command.CommandText = sql;
 
@@ -506,7 +607,7 @@ namespace Homura.ORM
                                                                         .From.Table(table)
                                                                         .Where.KeyEqualToValue(idDic))
                         {
-                            string sql = query.ToSql();
+                            var sql = query.ToSql();
 
                             command.CommandText = sql;
                             command.CommandType = CommandType.Text;
@@ -541,7 +642,7 @@ namespace Homura.ORM
                                                                         .From.Table(table)
                                                                         .Where.KeyEqualToValue(idDic))
                         {
-                            string sql = query.ToSql();
+                            var sql = query.ToSql();
 
                             command.CommandText = sql;
                             command.CommandType = CommandType.Text;
@@ -576,7 +677,7 @@ namespace Homura.ORM
                         using (var query = new Delete().From.Table(table)
                                                                         .Where.Column("ID").EqualTo.Value(id))
                         {
-                            string sql = query.ToSql();
+                            var sql = query.ToSql();
                             command.CommandText = sql;
 
                             query.SetParameters(command);
@@ -591,7 +692,7 @@ namespace Homura.ORM
 
         public async Task DeleteWhereIDIsAsync(Guid id, DbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null)
         {
-            await QueryHelper.KeepTryingUntilProcessSucceedAsync<Task>(async() =>
+            await QueryHelper.KeepTryingUntilProcessSucceedAsync<Task>(async () =>
             {
                 await QueryHelper.ForDao.ConnectionInternalAsync(this, async (connection) =>
                 {
@@ -606,7 +707,7 @@ namespace Homura.ORM
                         using (var query = new Delete().From.Table(table)
                                                                         .Where.Column("ID").EqualTo.Value(id))
                         {
-                            string sql = query.ToSql();
+                            var sql = query.ToSql();
                             command.CommandText = sql;
 
                             query.SetParameters(command);
@@ -636,14 +737,14 @@ namespace Homura.ORM
 
                         using (var query = new Delete().From.Table(table))
                         {
-                            string sql = query.ToSql();
+                            var sql = query.ToSql();
                             command.CommandText = sql;
                             command.CommandType = CommandType.Text;
 
                             query.SetParameters(command);
 
                             LogManager.GetCurrentClassLogger().Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
-                            int deleted = command.ExecuteNonQuery();
+                            var deleted = command.ExecuteNonQuery();
                         }
                     }
                 }), conn);
@@ -666,14 +767,14 @@ namespace Homura.ORM
 
                         using (var query = new Delete().From.Table(table))
                         {
-                            string sql = query.ToSql();
+                            var sql = query.ToSql();
                             command.CommandText = sql;
                             command.CommandType = CommandType.Text;
 
                             query.SetParameters(command);
 
                             LogManager.GetCurrentClassLogger().Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
-                            int deleted = await command.ExecuteNonQueryAsync().ConfigureAwait(false);
+                            var deleted = await command.ExecuteNonQueryAsync().ConfigureAwait(false);
                         }
                     }
                 }, conn).ConfigureAwait(false);
@@ -697,14 +798,14 @@ namespace Homura.ORM
                         using (var query = new Delete().From.Table(table)
                                                                         .Where.KeyEqualToValue(idDic))
                         {
-                            string sql = query.ToSql();
+                            var sql = query.ToSql();
                             command.CommandText = sql;
                             command.CommandType = CommandType.Text;
 
                             query.SetParameters(command);
 
                             LogManager.GetCurrentClassLogger().Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
-                            int deleted = command.ExecuteNonQuery();
+                            var deleted = command.ExecuteNonQuery();
                         }
                     }
                 }), conn);
@@ -728,14 +829,14 @@ namespace Homura.ORM
                         using (var query = new Delete().From.Table(table)
                                                                         .Where.KeyEqualToValue(idDic))
                         {
-                            string sql = query.ToSql();
+                            var sql = query.ToSql();
                             command.CommandText = sql;
                             command.CommandType = CommandType.Text;
 
                             query.SetParameters(command);
 
                             LogManager.GetCurrentClassLogger().Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
-                            int deleted = await command.ExecuteNonQueryAsync().ConfigureAwait(false);
+                            var deleted = await command.ExecuteNonQueryAsync().ConfigureAwait(false);
                         }
                     }
                 }, conn).ConfigureAwait(false);
@@ -771,12 +872,12 @@ namespace Homura.ORM
                         using (var query = new Insert().Into.Table(table).Columns(overrideColumns.Select(c => c.ColumnName))
                                                                                           .Values.Value(overrideColumns.Select(c => c.PropInfo.GetValue(entity))))
                         {
-                            string sql = query.ToSql();
+                            var sql = query.ToSql();
                             command.CommandText = sql;
                             query.SetParameters(command);
 
                             LogManager.GetCurrentClassLogger().Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
-                            int inserted = command.ExecuteNonQuery();
+                            var inserted = command.ExecuteNonQuery();
                             if (inserted == 0)
                             {
                                 throw new NoEntityInsertedException($"Failed:{sql} {query.GetParameters().ToStringKeyIsValue()}");
@@ -816,12 +917,12 @@ namespace Homura.ORM
                         using (var query = new Insert().Into.Table(table).Columns(overrideColumns.Select(c => c.ColumnName))
                                                                                           .Values.Value(overrideColumns.Select(c => c.PropInfo.GetValue(entity))))
                         {
-                            string sql = query.ToSql();
+                            var sql = query.ToSql();
                             command.CommandText = sql;
                             query.SetParameters(command);
 
                             LogManager.GetCurrentClassLogger().Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
-                            int inserted = await command.ExecuteNonQueryAsync().ConfigureAwait(false);
+                            var inserted = await command.ExecuteNonQueryAsync().ConfigureAwait(false);
                             if (inserted == 0)
                             {
                                 throw new NoEntityInsertedException($"Failed:{sql} {query.GetParameters().ToStringKeyIsValue()}");
@@ -834,7 +935,7 @@ namespace Homura.ORM
 
         protected IEnumerable<IColumn> SwapIfOverrided(IEnumerable<IColumn> columns)
         {
-            List<IColumn> ret = new List<IColumn>();
+            List<IColumn> ret = new();
 
             foreach (var column in columns)
             {
@@ -860,13 +961,13 @@ namespace Homura.ORM
 
             var beginTime = DateTime.Now;
 
-            List<E> ret = new List<E>();
+            List<E> ret = new();
 
             while ((DateTime.Now - beginTime) <= timeout)
             {
                 try
                 {
-                    bool isTransaction = conn != null;
+                    var isTransaction = conn != null;
 
                     try
                     {
@@ -885,7 +986,7 @@ namespace Homura.ORM
 
                             using (var query = new Select().Asterisk().From.Table(table))
                             {
-                                string sql = query.ToSql();
+                                var sql = query.ToSql();
                                 command.CommandText = sql;
                                 command.CommandType = CommandType.Text;
 
@@ -936,13 +1037,13 @@ namespace Homura.ORM
 
             var beginTime = DateTime.Now;
 
-            List<E> ret = new List<E>();
+            List<E> ret = new();
 
             while ((DateTime.Now - beginTime) <= timeout)
             {
                 try
                 {
-                    bool isTransaction = conn != null;
+                    var isTransaction = conn != null;
 
                     try
                     {
@@ -961,7 +1062,7 @@ namespace Homura.ORM
 
                             using (var query = new Select().Asterisk().From.Table(table))
                             {
-                                string sql = query.ToSql();
+                                var sql = query.ToSql();
                                 command.CommandText = sql;
                                 command.CommandType = CommandType.Text;
 
@@ -1018,13 +1119,13 @@ namespace Homura.ORM
 
             var beginTime = DateTime.Now;
 
-            List<E> ret = new List<E>();
+            List<E> ret = new();
 
             while ((DateTime.Now - beginTime) <= timeout)
             {
                 try
                 {
-                    bool isTransaction = conn != null;
+                    var isTransaction = conn != null;
 
                     try
                     {
@@ -1044,7 +1145,7 @@ namespace Homura.ORM
                             using (var query = new Select().Asterisk().From.Table(table)
                                                                                        .Where.KeyEqualToValue(idDic))
                             {
-                                string sql = query.ToSql();
+                                var sql = query.ToSql();
                                 command.CommandText = sql;
                                 command.CommandType = CommandType.Text;
                                 query.SetParameters(command);
@@ -1096,13 +1197,13 @@ namespace Homura.ORM
 
             var beginTime = DateTime.Now;
 
-            List<E> ret = new List<E>();
+            List<E> ret = new();
 
             while ((DateTime.Now - beginTime) <= timeout)
             {
                 try
                 {
-                    bool isTransaction = conn != null;
+                    var isTransaction = conn != null;
 
                     try
                     {
@@ -1122,7 +1223,7 @@ namespace Homura.ORM
                             using (var query = new Select().Asterisk().From.Table(table)
                                                                                        .Where.KeyEqualToValue(idDic))
                             {
-                                string sql = query.ToSql();
+                                var sql = query.ToSql();
                                 command.CommandText = sql;
                                 command.CommandType = CommandType.Text;
                                 query.SetParameters(command);
@@ -1188,7 +1289,7 @@ namespace Homura.ORM
                         using (var query = new Update().Table(table).Set.KeyEqualToValue(table.ColumnsWithoutPrimaryKeys.ToDictionary(c => c.ColumnName, c => c.PropInfo.GetValue(entity)))
                                                                                      .Where.KeyEqualToValue(table.PrimaryKeyColumns.ToDictionary(c => c.ColumnName, c => c.PropInfo.GetValue(entity))))
                         {
-                            string sql = query.ToSql();
+                            var sql = query.ToSql();
                             command.CommandText = sql;
                             query.SetParameters(command);
 
@@ -1217,7 +1318,7 @@ namespace Homura.ORM
                         using (var query = new Update().Table(table).Set.KeyEqualToValue(table.ColumnsWithoutPrimaryKeys.ToDictionary(c => c.ColumnName, c => c.PropInfo.GetValue(entity)))
                                                                                      .Where.KeyEqualToValue(table.PrimaryKeyColumns.ToDictionary(c => c.ColumnName, c => c.PropInfo.GetValue(entity))))
                         {
-                            string sql = query.ToSql();
+                            var sql = query.ToSql();
                             command.CommandText = sql;
                             query.SetParameters(command);
 
@@ -1231,7 +1332,7 @@ namespace Homura.ORM
 
         private static string sqlToDefineColumns(IColumn c)
         {
-            string r = $"{c.ColumnName} {c.DBDataType}";
+            var r = $"{c.ColumnName} {c.DBDataType}";
             if (c.Constraints != null && c.Constraints.Count() > 0)
             {
                 r += $" {c.ConstraintsToSql()}";
@@ -1267,7 +1368,7 @@ namespace Homura.ORM
         private void EnumerateColumnsIntoSQL(ref string sql, Func<IColumn, string> content, string connection, IEnumerable<IColumn> columns)
         {
             CheckDelimiter(ref sql);
-            var queue = new Queue<IColumn>(columns);
+            Queue<IColumn> queue = new(columns);
             while (queue.Count > 0)
             {
                 var column = queue.Dequeue();
@@ -1283,10 +1384,7 @@ namespace Homura.ORM
 
         protected void InitializeColumnDefinitions()
         {
-            if (OverridedColumns != null)
-            {
-                OverridedColumns.Clear();
-            }
+            OverridedColumns?.Clear();
         }
 
         public void UpgradeTable(VersionChangeUnit upgradePath, VersioningMode mode, DbConnection conn = null, TimeSpan? timeout = null)
@@ -1297,14 +1395,14 @@ namespace Homura.ORM
                 {
                     using (var command = connection.CreateCommand())
                     {
-                        var newTable = new Table<E>(upgradePath.To);
-                        var oldTable = new Table<E>(upgradePath.From);
+                        Table<E> newTable = new(upgradePath.To);
+                        Table<E> oldTable = new(upgradePath.From);
 
                         using (var query = new Insert().Into.Table(newTable)
                                                        .Columns(newTable.Columns.Select(c => c.ColumnName))
                                                        .Select.Columns(oldTable.Columns.Select(c => c.ColumnName).Union(newTable.NewColumns(oldTable, newTable).Select(v => v.WrapOutput()))).From.Table(oldTable))
                         {
-                            string sql = query.ToSql();
+                            var sql = query.ToSql();
                             command.CommandText = sql;
 
                             LogManager.GetCurrentClassLogger().Debug($"{sql}");
@@ -1316,7 +1414,7 @@ namespace Homura.ORM
                     {
                         using (var command = connection.CreateCommand())
                         {
-                            string sql = $"delete from {new Table<E>(upgradePath.From).Name}";
+                            var sql = $"delete from {new Table<E>(upgradePath.From).Name}";
                             command.CommandText = sql;
                             LogManager.GetCurrentClassLogger().Debug($"{sql}");
                             command.ExecuteNonQuery();
@@ -1327,7 +1425,7 @@ namespace Homura.ORM
                     {
                         using (var command = connection.CreateCommand())
                         {
-                            string sql = $"drop table {new Table<E>(upgradePath.From).Name}";
+                            var sql = $"drop table {new Table<E>(upgradePath.From).Name}";
                             command.CommandText = sql;
                             LogManager.GetCurrentClassLogger().Debug($"{sql}");
                             command.ExecuteNonQuery();
@@ -1346,14 +1444,14 @@ namespace Homura.ORM
                 {
                     using (var command = connection.CreateCommand())
                     {
-                        var newTable = new Table<E>(upgradePath.To);
-                        var oldTable = new Table<E>(upgradePath.From);
+                        Table<E> newTable = new(upgradePath.To);
+                        Table<E> oldTable = new(upgradePath.From);
 
                         using (var query = new Insert().Into.Table(newTable)
                                                        .Columns(newTable.Columns.Select(c => c.ColumnName))
                                                        .Select.Columns(oldTable.Columns.Select(c => c.ColumnName).Union(newTable.NewColumns(oldTable, newTable).Select(v => v.WrapOutput()))).From.Table(oldTable))
                         {
-                            string sql = query.ToSql();
+                            var sql = query.ToSql();
                             command.CommandText = sql;
 
                             LogManager.GetCurrentClassLogger().Debug($"{sql}");
@@ -1365,7 +1463,7 @@ namespace Homura.ORM
                     {
                         using (var command = connection.CreateCommand())
                         {
-                            string sql = $"delete from {new Table<E>(upgradePath.From).Name}";
+                            var sql = $"delete from {new Table<E>(upgradePath.From).Name}";
                             command.CommandText = sql;
                             LogManager.GetCurrentClassLogger().Debug($"{sql}");
                             await command.ExecuteNonQueryAsync().ConfigureAwait(false);
@@ -1376,7 +1474,7 @@ namespace Homura.ORM
                     {
                         using (var command = connection.CreateCommand())
                         {
-                            string sql = $"drop table {new Table<E>(upgradePath.From).Name}";
+                            var sql = $"drop table {new Table<E>(upgradePath.From).Name}";
                             command.CommandText = sql;
                             LogManager.GetCurrentClassLogger().Debug($"{sql}");
                             await command.ExecuteNonQueryAsync().ConfigureAwait(false);
@@ -1405,17 +1503,19 @@ namespace Homura.ORM
             {
                 QueryHelper.ForDao.ConnectionInternal(this, new Action<DbConnection>((connection) =>
                 {
-                    var newTable = new Table<E>(versionTo);
-                    var oldTable = new Table<E>(versionFrom);
+                    Table<E> newTable = new(versionTo);
+                    Table<E> oldTable = new(versionFrom);
                     using (var command = connection.CreateCommand())
                     {
                         //Toテーブル作成
-                        string sql = $"create table {newTable.Name}_To(";
+                        var sql = $"create table {newTable.Name}_To(";
                         foreach (var c in newTable.Columns)
                         {
                             sql += $"{c.ColumnName} {c.DBDataType}";
                             if (!c.Equals(newTable.Columns.Last()))
+                            {
                                 sql += ", ";
+                            }
                         }
                         sql += ")";
                         command.CommandText = sql;
@@ -1463,17 +1563,19 @@ namespace Homura.ORM
             {
                 await QueryHelper.ForDao.ConnectionInternalAsync(this, async (connection) =>
                 {
-                    var newTable = new Table<E>(versionTo);
-                    var oldTable = new Table<E>(versionFrom);
+                    Table<E> newTable = new(versionTo);
+                    Table<E> oldTable = new(versionFrom);
                     using (var command = connection.CreateCommand())
                     {
                         //Toテーブル作成
-                        string sql = $"create table {newTable.Name}_To(";
+                        var sql = $"create table {newTable.Name}_To(";
                         foreach (var c in newTable.Columns)
                         {
                             sql += $"{c.ColumnName} {c.DBDataType}";
                             if (!c.Equals(newTable.Columns.Last()))
+                            {
                                 sql += ", ";
+                            }
                         }
                         sql += ")";
                         command.CommandText = sql;

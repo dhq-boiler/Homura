@@ -1,7 +1,4 @@
-﻿
-
-using Homura.Extensions;
-using Homura.ORM;
+﻿using Homura.ORM;
 using Homura.QueryBuilder.Iso.Dml;
 using Homura.QueryBuilder.Vendor.SQLite.Dml;
 using Homura.Test.TestFixture.Entity;
@@ -38,7 +35,7 @@ namespace Homura.Test.TestFixture.Dao
                     }
                     if (targetColumn.Order != column.Order)
                     {
-                        var overridedColumn = new OverridedColumn((Column)column, newOrder: targetColumn.Order);
+                        OverridedColumn overridedColumn = new((Column)column, newOrder: targetColumn.Order);
                         OverridedColumns.Add(overridedColumn);
                         s_logger.Debug($"{TableName}.{column.ColumnName} overrided:{overridedColumn}");
                     }
@@ -48,7 +45,7 @@ namespace Homura.Test.TestFixture.Dao
 
         public IEnumerable<Page> FindByBookIdTop1(Guid bookID, IDbConnection conn = null)
         {
-            bool isTransaction = conn != null;
+            var isTransaction = conn != null;
 
             try
             {
@@ -65,7 +62,7 @@ namespace Homura.Test.TestFixture.Dao
                                                    .OrderBy.Column("PageIndex")
                                                    .Limit(1))
                     {
-                        string sql = query.ToSql();
+                        var sql = query.ToSql();
                         command.CommandText = sql;
                         query.SetParameters(command);
 
@@ -90,7 +87,7 @@ namespace Homura.Test.TestFixture.Dao
 
         public IEnumerable<Page> FindAll(string anotherDatabaseAliasName, IDbConnection conn = null)
         {
-            bool isTransaction = conn != null;
+            var isTransaction = conn != null;
 
             try
             {
@@ -104,7 +101,7 @@ namespace Homura.Test.TestFixture.Dao
                     using (var query = new Select().Asterisk()
                                                    .From.Table(new Table<Page>() { Schema = anotherDatabaseAliasName }))
                     {
-                        string sql = query.ToSql();
+                        var sql = query.ToSql();
                         command.CommandText = sql;
                         command.CommandType = CommandType.Text;
 
@@ -130,7 +127,7 @@ namespace Homura.Test.TestFixture.Dao
 
         public IEnumerable<Page> FindBy(string anotherDatabaseAliasName, Dictionary<string, object> idDic, DbConnection conn = null)
         {
-            bool isTransaction = conn != null;
+            var isTransaction = conn != null;
 
             try
             {
@@ -145,7 +142,7 @@ namespace Homura.Test.TestFixture.Dao
                                                    .From.Table(new Table<Page>() { Schema = anotherDatabaseAliasName })
                                                    .Where.KeyEqualToValue(idDic))
                     {
-                        string sql = query.ToSql();
+                        var sql = query.ToSql();
                         command.CommandText = sql;
                         command.CommandType = CommandType.Text;
                         query.SetParameters(command);
@@ -172,7 +169,7 @@ namespace Homura.Test.TestFixture.Dao
 
         public void IncrementPageIndex(Guid bookID, IDbConnection conn = null)
         {
-            bool isTransaction = conn != null;
+            var isTransaction = conn != null;
 
             try
             {
@@ -187,7 +184,7 @@ namespace Homura.Test.TestFixture.Dao
                                                    .Set.Column("PageIndex").EqualTo.Expression("PageIndex + 1")
                                                    .Where.Column("BookID").EqualTo.Value(bookID))
                     {
-                        string sql = query.ToSql();
+                        var sql = query.ToSql();
                         command.CommandText = sql;
                         query.SetParameters(command);
 
@@ -202,24 +199,6 @@ namespace Homura.Test.TestFixture.Dao
                     conn.Dispose();
                 }
             }
-        }
-
-        protected override Page ToEntity(IDataRecord reader)
-        {
-            Guid id = reader.SafeGetGuid("ID", Table);
-            string title = reader.SafeGetString("Title", Table);
-            Guid bookid = reader.SafeGetGuid("BookID", Table);
-            Guid imageid = reader.SafeGetGuid("ImageID", Table);
-            int pageindex = reader.SafeGetInt("PageIndex", Table);
-
-            return new Page()
-            {
-                ID = id,
-                Title = title,
-                BookID = bookid,
-                ImageID = imageid,
-                PageIndex = pageindex,
-            };
         }
     }
 }

@@ -1,7 +1,4 @@
-﻿
-
-using Homura.Extensions;
-using Homura.ORM;
+﻿using Homura.ORM;
 using Homura.QueryBuilder.Iso.Dml;
 using Homura.Test.TestFixture.Entity;
 using NLog;
@@ -24,7 +21,7 @@ namespace Homura.Test.TestFixture.Dao
 
         public IEnumerable<Book> FindAll(string anotherDatabaseAliasName, DbConnection conn = null)
         {
-            bool isTransaction = conn != null;
+            var isTransaction = conn != null;
 
             try
             {
@@ -37,7 +34,7 @@ namespace Homura.Test.TestFixture.Dao
                 {
                     using (var query = new Select().Asterisk().From.Table(new Table<Book>() { Schema = anotherDatabaseAliasName }))
                     {
-                        string sql = query.ToSql();
+                        var sql = query.ToSql();
                         command.CommandText = sql;
                         command.CommandType = CommandType.Text;
 
@@ -59,19 +56,6 @@ namespace Homura.Test.TestFixture.Dao
                     conn.Dispose();
                 }
             }
-        }
-
-        protected override Book ToEntity(IDataRecord reader)
-        {
-            return new Book()
-            {
-                ID = CatchThrow(() => reader.SafeGetGuid("ID", Table)),
-                Title = CatchThrow(() => reader.SafeGetString("Title", Table)),
-                AuthorID = CatchThrow(() => reader.SafeGetGuid("AuthorID", Table)),
-                PublishDate = CatchThrow(() => reader.SafeGetNullableDateTime("PublishDate", Table)),
-                ByteSize = CatchThrow(() => reader.SafeNullableGetLong("ByteSize", Table)),
-                FingerPrint = CatchThrow(() => reader.SafeGetString("FingerPrint", Table)),
-            };
         }
     }
 }
