@@ -193,7 +193,7 @@ namespace Homura.ORM
 
             foreach (var column in Columns)
             {
-                if (column.EntityDataType is IReactiveProperty)
+                if (column.EntityDataType.GetInterfaces().Contains(typeof(IReactiveProperty)))
                 {
                     var getter = ret.GetType().GetProperty(column.ColumnName);
                     var rp = getter.GetValue(ret);
@@ -212,63 +212,63 @@ namespace Homura.ORM
 
         private object GetColumnValue(IDataRecord reader, IColumn column, ITable table)
         {
-            if (column.EntityDataType == typeof(Guid) || column.EntityDataType == typeof(IReactiveProperty<Guid>))
+            if (column.EntityDataType == typeof(Guid) || column.EntityDataType.GetInterfaces().Contains(typeof(IReactiveProperty<Guid>)))
             {
                 return reader.SafeGetGuid(column.ColumnName, table);
             }
-            else if (column.EntityDataType == typeof(Guid?) || column.EntityDataType == typeof(IReactiveProperty<Guid?>))
+            else if (column.EntityDataType == typeof(Guid?) || column.EntityDataType.GetInterfaces().Contains(typeof(IReactiveProperty<Guid?>)))
             {
                 return reader.SafeGetNullableGuid(column.ColumnName, table);
             }
-            else if (column.EntityDataType == typeof(string) || column.EntityDataType == typeof(IReactiveProperty<string>))
+            else if (column.EntityDataType == typeof(string) || column.EntityDataType.GetInterfaces().Contains(typeof(IReactiveProperty<string>)))
             {
                 return reader.SafeGetString(column.ColumnName, table);
             }
-            else if (column.EntityDataType == typeof(int) || column.EntityDataType == typeof(IReactiveProperty<int>))
+            else if (column.EntityDataType == typeof(int) || column.EntityDataType.GetInterfaces().Contains(typeof(IReactiveProperty<int>)))
             {
                 return reader.SafeGetInt(column.ColumnName, table);
             }
-            else if (column.EntityDataType == typeof(int?) || column.EntityDataType == typeof(IReactiveProperty<int?>))
+            else if (column.EntityDataType == typeof(int?) || column.EntityDataType.GetInterfaces().Contains(typeof(IReactiveProperty<int?>)))
             {
                 return reader.SafeGetNullableInt(column.ColumnName, table);
             }
-            else if (column.EntityDataType == typeof(long) || column.EntityDataType == typeof(IReactiveProperty<long>))
+            else if (column.EntityDataType == typeof(long) || column.EntityDataType.GetInterfaces().Contains(typeof(IReactiveProperty<long>)))
             {
                 return reader.SafeGetLong(column.ColumnName, table);
             }
-            else if (column.EntityDataType == typeof(long?) || column.EntityDataType == typeof(IReactiveProperty<long?>))
+            else if (column.EntityDataType == typeof(long?) || column.EntityDataType.GetInterfaces().Contains(typeof(IReactiveProperty<long?>)))
             {
                 return reader.SafeNullableGetLong(column.ColumnName, table);
             }
-            else if (column.EntityDataType == typeof(float) || column.EntityDataType == typeof(IReactiveProperty<float>))
+            else if (column.EntityDataType == typeof(float) || column.EntityDataType.GetInterfaces().Contains(typeof(IReactiveProperty<float>)))
             {
                 return reader.SafeGetFloat(column.ColumnName, table);
             }
-            else if (column.EntityDataType == typeof(float?) || column.EntityDataType == typeof(IReactiveProperty<float?>))
+            else if (column.EntityDataType == typeof(float?) || column.EntityDataType.GetInterfaces().Contains(typeof(IReactiveProperty<float?>)))
             {
                 return reader.SafeGetNullableFloat(column.ColumnName, table);
             }
-            else if (column.EntityDataType == typeof(double) || column.EntityDataType == typeof(IReactiveProperty<double>))
+            else if (column.EntityDataType == typeof(double) || column.EntityDataType.GetInterfaces().Contains(typeof(IReactiveProperty<double>)))
             {
                 return reader.SafeGetDouble(column.ColumnName, table);
             }
-            else if (column.EntityDataType == typeof(double?) || column.EntityDataType == typeof(IReactiveProperty<double?>))
+            else if (column.EntityDataType == typeof(double?) || column.EntityDataType.GetInterfaces().Contains(typeof(IReactiveProperty<double?>)))
             {
                 return reader.SafeGetNullableDouble(column.ColumnName, table);
             }
-            else if (column.EntityDataType == typeof(DateTime) || column.EntityDataType == typeof(IReactiveProperty<DateTime>))
+            else if (column.EntityDataType == typeof(DateTime) || column.EntityDataType.GetInterfaces().Contains(typeof(IReactiveProperty<DateTime>)))
             {
                 return reader.SafeGetDateTime(column.ColumnName, table);
             }
-            else if (column.EntityDataType == typeof(DateTime?) || column.EntityDataType == typeof(IReactiveProperty<DateTime?>))
+            else if (column.EntityDataType == typeof(DateTime?) || column.EntityDataType.GetInterfaces().Contains(typeof(IReactiveProperty<DateTime?>)))
             {
                 return reader.SafeGetNullableDateTime(column.ColumnName, table);
             }
-            else if (column.EntityDataType == typeof(bool) || column.EntityDataType == typeof(IReactiveProperty<bool>))
+            else if (column.EntityDataType == typeof(bool) || column.EntityDataType.GetInterfaces().Contains(typeof(IReactiveProperty<bool>)))
             {
                 return reader.SafeGetBoolean(column.ColumnName, table);
             }
-            else if (column.EntityDataType == typeof(bool?) || column.EntityDataType == typeof(IReactiveProperty<bool?>))
+            else if (column.EntityDataType == typeof(bool?) || column.EntityDataType.GetInterfaces().Contains(typeof(IReactiveProperty<bool?>)))
             {
                 return reader.SafeGetNullableBoolean(column.ColumnName, table);
             }
@@ -870,7 +870,7 @@ namespace Homura.ORM
                         }
 
                         using (var query = new Insert().Into.Table(table).Columns(overrideColumns.Select(c => c.ColumnName))
-                                                                                          .Values.Value(overrideColumns.Select(c => c.PropInfo.GetValue(entity))))
+                                                                                          .Values.Value(overrideColumns.Select(c => c.PropertyGetter(entity).Item2.GetValue(c.PropertyGetter(entity).Item1))))
                         {
                             var sql = query.ToSql();
                             command.CommandText = sql;
@@ -915,7 +915,7 @@ namespace Homura.ORM
                         }
 
                         using (var query = new Insert().Into.Table(table).Columns(overrideColumns.Select(c => c.ColumnName))
-                                                                                          .Values.Value(overrideColumns.Select(c => c.PropInfo.GetValue(entity))))
+                                                                                          .Values.Value(overrideColumns.Select(c => c.PropertyGetter(entity).Item2.GetValue(c.PropertyGetter(entity).Item1))))
                         {
                             var sql = query.ToSql();
                             command.CommandText = sql;
@@ -1286,8 +1286,8 @@ namespace Homura.ORM
                             table.Schema = anotherDatabaseAliasName;
                         }
 
-                        using (var query = new Update().Table(table).Set.KeyEqualToValue(table.ColumnsWithoutPrimaryKeys.ToDictionary(c => c.ColumnName, c => c.PropInfo.GetValue(entity)))
-                                                                                     .Where.KeyEqualToValue(table.PrimaryKeyColumns.ToDictionary(c => c.ColumnName, c => c.PropInfo.GetValue(entity))))
+                        using (var query = new Update().Table(table).Set.KeyEqualToValue(table.ColumnsWithoutPrimaryKeys.ToDictionary(c => c.ColumnName, c => c.PropertyGetter(entity).Item2.GetValue(c.PropertyGetter(entity).Item1)))
+                                                                                     .Where.KeyEqualToValue(table.PrimaryKeyColumns.ToDictionary(c => c.ColumnName, c => c.PropertyGetter(entity).Item2.GetValue(c.PropertyGetter(entity).Item1))))
                         {
                             var sql = query.ToSql();
                             command.CommandText = sql;
@@ -1315,8 +1315,8 @@ namespace Homura.ORM
                             table.Schema = anotherDatabaseAliasName;
                         }
 
-                        using (var query = new Update().Table(table).Set.KeyEqualToValue(table.ColumnsWithoutPrimaryKeys.ToDictionary(c => c.ColumnName, c => c.PropInfo.GetValue(entity)))
-                                                                                     .Where.KeyEqualToValue(table.PrimaryKeyColumns.ToDictionary(c => c.ColumnName, c => c.PropInfo.GetValue(entity))))
+                        using (var query = new Update().Table(table).Set.KeyEqualToValue(table.ColumnsWithoutPrimaryKeys.ToDictionary(c => c.ColumnName, c => c.PropertyGetter(entity).Item2.GetValue(c.PropertyGetter(entity).Item1)))
+                                                                                     .Where.KeyEqualToValue(table.PrimaryKeyColumns.ToDictionary(c => c.ColumnName, c => c.PropertyGetter(entity).Item2.GetValue(c.PropertyGetter(entity).Item1))))
                         {
                             var sql = query.ToSql();
                             command.CommandText = sql;

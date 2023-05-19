@@ -69,7 +69,7 @@ namespace Homura.Test.TestFixture.Dao
 
                     using (var query = new InsertOrReplace().Into.Table(new Table<E>().Name)
                                                             .Columns(overrideColumns.Select(c => c.ColumnName))
-                                                            .Values.Row(overrideColumns.Select(c => c.PropInfo.GetValue(entity))))
+                                                            .Values.Row(overrideColumns.Select(c => c.PropertyGetter(entity).Item2.GetValue(c.PropertyGetter(entity).Item1))))
                     {
                         var sql = query.ToSql();
                         command.CommandText = sql;

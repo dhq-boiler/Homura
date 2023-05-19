@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Homura.Core;
+using Reactive.Bindings;
 
 namespace Homura.ORM
 {
@@ -22,7 +23,13 @@ namespace Homura.ORM
 
         public abstract object DefaultValue { get; protected set; }
 
-        public abstract PropertyInfo PropInfo { get; protected set; }
+
+        public Func<object, (object, PropertyInfo)> PropertyGetter { get; protected set; }
+
+        private PropertyInfo GetPropertyInfo(object obj)
+        {
+            return PropertyGetter(obj).Item2;
+        }
 
         public abstract HandlingDefaultValue PassType { get; protected set; }
 
@@ -49,7 +56,7 @@ namespace Homura.ORM
 
         public PlaceholderRightValue ToParameter(EntityBaseObject entity)
         {
-            return new PlaceholderRightValue($"@{ColumnName.ToLower()}", PropInfo.GetValue(entity));
+            return new PlaceholderRightValue($"@{ColumnName.ToLower()}", PropertyGetter(entity).Item2.GetValue(PropertyGetter(entity).Item1));
         }
 
         public string WrapOutput()

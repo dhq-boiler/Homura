@@ -36,4 +36,15 @@ namespace Homura.Test.TestFixture.Dao
             : base(entityVersionType)
         { }
     }
+
+    public class Valkyrie_3_Dao : Dao<Valkyrie_3>
+    {
+        public Valkyrie_3_Dao()
+            : base()
+        { }
+
+        public Valkyrie_3_Dao(Type entityVersionType)
+            : base(entityVersionType)
+        { }
+    }
 }
