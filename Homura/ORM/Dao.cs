@@ -216,7 +216,7 @@ namespace Homura.ORM
             return ret;
         }
 
-        private object GetColumnValue(IDataRecord reader, IColumn column, ITable table)
+        protected object GetColumnValue(IDataRecord reader, IColumn column, ITable table)
         {
             if (column.EntityDataType == typeof(Guid) || column.EntityDataType.GetInterfaces().Contains(typeof(IReactiveProperty<Guid>)))
             {
