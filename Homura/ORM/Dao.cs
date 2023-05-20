@@ -187,9 +187,15 @@ namespace Homura.ORM
             }
         }
 
-        protected E ToEntity(IDataRecord reader)
+        protected virtual E ToEntity(IDataRecord reader)
+        {
+            return ToEntityInDefaultWay(reader);
+        }
+
+        protected E ToEntityInDefaultWay(IDataRecord reader)
         {
             var ret = CreateInstance();
+            const string VALUE_STR = "Value";
 
             foreach (var column in Columns)
             {
@@ -197,7 +203,7 @@ namespace Homura.ORM
                 {
                     var getter = ret.GetType().GetProperty(column.ColumnName);
                     var rp = getter.GetValue(ret);
-                    var setter = rp.GetType().GetProperty("Value");
+                    var setter = rp.GetType().GetProperty(VALUE_STR);
                     setter.SetValue(rp, CatchThrow(() => GetColumnValue(reader, column, Table)));
                 }
                 else
@@ -274,7 +280,7 @@ namespace Homura.ORM
             }
             else
             {
-                throw new NotSupportedException();
+                throw new NotSupportedException($"{column.EntityDataType.FullName} is not supported.");
             }
         }
 
