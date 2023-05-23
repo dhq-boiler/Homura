@@ -37,15 +37,21 @@ namespace Homura.ORM
             Order = order;
             PropertyGetter = (obj) =>
             {
-                if (entityDataType.GetInterfaces().Contains(typeof(IReactiveProperty)))
+                var getter = obj.GetType().GetProperty(columnName);
+                var columnValue = getter.GetValue(obj);
+                if (columnValue is null)
                 {
-                    var getter = obj.GetType().GetProperty(columnName);
+                    return null;
+                }
+                else if (columnValue.GetType().GetInterfaces().Contains(typeof(IReactiveProperty)))
+                {
                     var rp = getter.GetValue(obj) as IReactiveProperty;
-                    return (rp, rp.GetType().GetProperty("Value"));
+                    var ret = rp.GetType().GetProperty("Value").GetValue(rp);
+                    return ret;
                 }
                 else
                 {
-                    return (obj, obj.GetType().GetProperty(columnName));
+                    return obj.GetType().GetProperty(columnName).GetValue(obj);
                 }
             };
             PassType = passType;

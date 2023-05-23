@@ -96,7 +96,7 @@ namespace Homura.ORM
         /// </summary>
         /// <param name="body">試行し続ける対象のFunc</param>
         /// <param name="timeout">タイムアウト</param>
-        public static async Task KeepTryingUntilProcessSucceedAsync<T>(Func<Task> body, TimeSpan? timeout = null)
+        public static async Task KeepTryingUntilProcessSucceedAsync(Func<Task> body, TimeSpan? timeout = null)
         {
             if (timeout == null)
             {
@@ -112,6 +112,45 @@ namespace Homura.ORM
                     s_logger.Trace("try body()");
                     await body().ConfigureAwait(false);
                     return;
+                }
+                catch (Exception ex)
+                {
+                    if (ex.Message.Contains("database is lock"))
+                    {
+                        s_logger.Warn("database is lock");
+                        continue;
+                    }
+                    else
+                    {
+                        s_logger.Error(ex);
+                        throw;
+                    }
+                }
+            }
+
+            throw new TimeoutException();
+        }
+
+        /// <summary>
+        /// Funcを成功するかタイムアウトするまで非同期で試行し続けます。
+        /// </summary>
+        /// <param name="body">試行し続ける対象のFunc</param>
+        /// <param name="timeout">タイムアウト</param>
+        public static async Task<int> KeepTryingUntilProcessSucceedAsync(Func<Task<int>> body, TimeSpan? timeout = null)
+        {
+            if (timeout == null)
+            {
+                timeout = TimeSpan.FromMinutes(5);
+            }
+
+            var beginTime = DateTime.Now;
+
+            while ((DateTime.Now - beginTime) <= timeout)
+            {
+                try
+                {
+                    s_logger.Trace("try body()");
+                    return await body().ConfigureAwait(false);
                 }
                 catch (Exception ex)
                 {
@@ -542,6 +581,61 @@ namespace Homura.ORM
                 catch (ThreadAbortException e)
                 {
                     await ConnectionInternalAsync(dao, body, await dao.GetConnectionAsync()).ConfigureAwait(false);
+                }
+                finally
+                {
+                    if (!isTransaction)
+                    {
+                        try
+                        {
+                            await conn.DisposeAsync().ConfigureAwait(false);
+                        }
+                        catch (NullReferenceException e)
+                        {
+                            s_logger.Error(e);
+                        }
+                        catch (ObjectDisposedException e)
+                        {
+                            s_logger.Error(e);
+                        }
+                    }
+                }
+            }
+
+            /// <summary>
+            /// _IsTransaction フラグによって局所的に DbConnection を使用するかどうか選択できるクエリ実行用内部メソッド
+            /// </summary>
+            /// <param name="body"></param>
+            public static async Task<int> ConnectionInternalAsync(IDao dao, Func<DbConnection, Task<int>> body, DbConnection conn = null)
+            {
+                if (dao is null)
+                {
+                    throw new ArgumentNullException(nameof(dao));
+                }
+
+                if (body is null)
+                {
+                    throw new ArgumentNullException(nameof(body));
+                }
+
+                bool isTransaction = conn != null;
+
+                try
+                {
+                    if (!isTransaction)
+                    {
+                        conn = await dao.GetConnectionAsync().ConfigureAwait(false);
+                    }
+
+                    return await body(conn).ConfigureAwait(false);
+                }
+                catch (ObjectDisposedException e)
+                {
+                    return await ConnectionInternalAsync(dao, body, await dao.GetConnectionAsync()).ConfigureAwait(false);
+                }
+                catch (ThreadAbortException e)
+                {
+                    return await ConnectionInternalAsync(dao, body, await dao.GetConnectionAsync()).ConfigureAwait(false);
                 }
                 finally
                 {

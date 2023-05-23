@@ -21,7 +21,7 @@ namespace Homura.ORM
 
         object DefaultValue { get; }
 
-        Func<object, (object, PropertyInfo)> PropertyGetter { get; }
+        Func<object, object> PropertyGetter { get; }
 
         string ConstraintsToSql();
 

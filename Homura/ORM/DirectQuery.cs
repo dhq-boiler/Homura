@@ -18,7 +18,7 @@ namespace Homura.ORM
 
         public static async Task RunQueryAsync(DbConnection conn, Func<DbConnection, Task> body)
         {
-            await QueryHelper.KeepTryingUntilProcessSucceedAsync<Task>(async () => await body(conn).ConfigureAwait(false)).ConfigureAwait(false);
+            await QueryHelper.KeepTryingUntilProcessSucceedAsync(async () => await body(conn).ConfigureAwait(false)).ConfigureAwait(false);
         }
 
         public static async Task<R> RunQueryAsync<R>(DbConnection conn, Func<DbConnection, Task<R>> body)
