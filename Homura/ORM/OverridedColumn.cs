@@ -25,15 +25,21 @@ namespace Homura.ORM
             _Order = newOrder;
             PropertyGetter = (obj) =>
             {
-                if (BaseColumn.EntityDataType.GetInterfaces().Contains(typeof(IReactiveProperty)))
+                var getter = obj.GetType().GetProperty(_ColumnName);
+                var columnValue = getter.GetValue(obj);
+                if (columnValue is null)
                 {
-                    var getter = obj.GetType().GetProperty(_ColumnName);
+                    return null;
+                }
+                else if (columnValue.GetType().GetInterfaces().Contains(typeof(IReactiveProperty)))
+                {
                     var rp = getter.GetValue(obj) as IReactiveProperty;
-                    return (rp, rp.GetType().GetProperty("Value"));
+                    var ret = rp.GetType().GetProperty("Value").GetValue(rp);
+                    return ret;
                 }
                 else
                 {
-                    return (obj, obj.GetType().GetProperty(_ColumnName));
+                    return obj.GetType().GetProperty(_ColumnName).GetValue(obj);
                 }
             };
         }

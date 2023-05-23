@@ -307,7 +307,7 @@ namespace Homura.ORM
 
         public async Task CreateTableIfNotExistsAsync(TimeSpan? timeout = null)
         {
-            await QueryHelper.KeepTryingUntilProcessSucceedAsync<Task>(new Func<Task>(async () =>
+            await QueryHelper.KeepTryingUntilProcessSucceedAsync(new Func<Task>(async () =>
             {
                 using (var conn = await GetConnectionAsync().ConfigureAwait(false))
                 {
@@ -337,7 +337,7 @@ namespace Homura.ORM
 
         public async Task DropTableAsync(TimeSpan? timeout = null)
         {
-            await QueryHelper.KeepTryingUntilProcessSucceedAsync<Task>(new Func<Task>(async () =>
+            await QueryHelper.KeepTryingUntilProcessSucceedAsync(new Func<Task>(async () =>
             {
                 using (var conn = await GetConnectionAsync().ConfigureAwait(false))
                 {
@@ -363,7 +363,7 @@ namespace Homura.ORM
         public async Task<int> CreateIndexIfNotExistsAsync(TimeSpan? timeout = null)
         {
             var created = 0;
-            await QueryHelper.KeepTryingUntilProcessSucceedAsync<Task>(new Func<Task>(async () =>
+            await QueryHelper.KeepTryingUntilProcessSucceedAsync(new Func<Task>(async () =>
             {
                 created = await CreateIndexClassAsync(created);
                 created = await CreateIndexPropertiesAsync(created);
@@ -698,7 +698,7 @@ namespace Homura.ORM
 
         public async Task DeleteWhereIDIsAsync(Guid id, DbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null)
         {
-            await QueryHelper.KeepTryingUntilProcessSucceedAsync<Task>(async () =>
+            await QueryHelper.KeepTryingUntilProcessSucceedAsync(async () =>
             {
                 await QueryHelper.ForDao.ConnectionInternalAsync(this, async (connection) =>
                 {
@@ -759,7 +759,7 @@ namespace Homura.ORM
 
         public async Task DeleteAllAsync(DbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null)
         {
-            await QueryHelper.KeepTryingUntilProcessSucceedAsync<Task>(async () =>
+            await QueryHelper.KeepTryingUntilProcessSucceedAsync(async () =>
             {
                 await QueryHelper.ForDao.ConnectionInternalAsync(this, async (connection) =>
                 {
@@ -820,7 +820,7 @@ namespace Homura.ORM
 
         public async Task DeleteAsync(Dictionary<string, object> idDic, DbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null)
         {
-            await QueryHelper.KeepTryingUntilProcessSucceedAsync<Task>(async () =>
+            await QueryHelper.KeepTryingUntilProcessSucceedAsync(async () =>
             {
                 await QueryHelper.ForDao.ConnectionInternalAsync(this, async (connection) =>
                 {
@@ -876,7 +876,7 @@ namespace Homura.ORM
                         }
 
                         using (var query = new Insert().Into.Table(table).Columns(overrideColumns.Select(c => c.ColumnName))
-                                                                                          .Values.Value(overrideColumns.Select(c => c.PropertyGetter(entity).Item2.GetValue(c.PropertyGetter(entity).Item1))))
+                                                                                          .Values.Value(overrideColumns.Select(c => c.PropertyGetter(entity))))
                         {
                             var sql = query.ToSql();
                             command.CommandText = sql;
@@ -906,7 +906,7 @@ namespace Homura.ORM
                 throw new DatabaseSchemaException($"Didn't insert because mismatch definition of table:{TableName}", e);
             }
 
-            await QueryHelper.KeepTryingUntilProcessSucceedAsync<Task>(async () =>
+            await QueryHelper.KeepTryingUntilProcessSucceedAsync(async () =>
             {
                 await QueryHelper.ForDao.ConnectionInternalAsync(this, async (connection) =>
                 {
@@ -921,7 +921,7 @@ namespace Homura.ORM
                         }
 
                         using (var query = new Insert().Into.Table(table).Columns(overrideColumns.Select(c => c.ColumnName))
-                                                                                          .Values.Value(overrideColumns.Select(c => c.PropertyGetter(entity).Item2.GetValue(c.PropertyGetter(entity).Item1))))
+                                                                                          .Values.Value(overrideColumns.Select(c => c.PropertyGetter(entity))))
                         {
                             var sql = query.ToSql();
                             command.CommandText = sql;
@@ -1292,8 +1292,8 @@ namespace Homura.ORM
                             table.Schema = anotherDatabaseAliasName;
                         }
 
-                        using (var query = new Update().Table(table).Set.KeyEqualToValue(table.ColumnsWithoutPrimaryKeys.ToDictionary(c => c.ColumnName, c => c.PropertyGetter(entity).Item2.GetValue(c.PropertyGetter(entity).Item1)))
-                                                                                     .Where.KeyEqualToValue(table.PrimaryKeyColumns.ToDictionary(c => c.ColumnName, c => c.PropertyGetter(entity).Item2.GetValue(c.PropertyGetter(entity).Item1))))
+                        using (var query = new Update().Table(table).Set.KeyEqualToValue(table.ColumnsWithoutPrimaryKeys.ToDictionary(c => c.ColumnName, c => c.PropertyGetter(entity)))
+                                                                                     .Where.KeyEqualToValue(table.PrimaryKeyColumns.ToDictionary(c => c.ColumnName, c => c.PropertyGetter(entity))))
                         {
                             var sql = query.ToSql();
                             command.CommandText = sql;
@@ -1307,11 +1307,11 @@ namespace Homura.ORM
             }, timeout);
         }
 
-        public async Task UpdateAsync(E entity, DbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null)
+        public async Task<int> UpdateAsync(E entity, DbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null)
         {
-            await QueryHelper.KeepTryingUntilProcessSucceedAsync<Task>(async () =>
+            return await QueryHelper.KeepTryingUntilProcessSucceedAsync(async () =>
             {
-                await QueryHelper.ForDao.ConnectionInternalAsync(this, async (connection) =>
+                return await QueryHelper.ForDao.ConnectionInternalAsync(this, async (connection) =>
                 {
                     using (var command = connection.CreateCommand())
                     {
@@ -1321,15 +1321,18 @@ namespace Homura.ORM
                             table.Schema = anotherDatabaseAliasName;
                         }
 
-                        using (var query = new Update().Table(table).Set.KeyEqualToValue(table.ColumnsWithoutPrimaryKeys.ToDictionary(c => c.ColumnName, c => c.PropertyGetter(entity).Item2.GetValue(c.PropertyGetter(entity).Item1)))
-                                                                                     .Where.KeyEqualToValue(table.PrimaryKeyColumns.ToDictionary(c => c.ColumnName, c => c.PropertyGetter(entity).Item2.GetValue(c.PropertyGetter(entity).Item1))))
+                        var a = table.ColumnsWithoutPrimaryKeys.ToDictionary(c => c.ColumnName, c => c.PropertyGetter(entity));
+                        var b = table.PrimaryKeyColumns.ToDictionary(c => c.ColumnName, c => c.PropertyGetter(entity));
+
+                        using (var query = new Update().Table(table).Set.KeyEqualToValue(table.ColumnsWithoutPrimaryKeys.ToDictionary(c => c.ColumnName, c => c.PropertyGetter(entity)))
+                                                                                     .Where.KeyEqualToValue(table.PrimaryKeyColumns.ToDictionary(c => c.ColumnName, c => c.PropertyGetter(entity))))
                         {
                             var sql = query.ToSql();
                             command.CommandText = sql;
                             query.SetParameters(command);
 
                             LogManager.GetCurrentClassLogger().Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
-                            await command.ExecuteNonQueryAsync().ConfigureAwait(false);
+                            return await command.ExecuteNonQueryAsync().ConfigureAwait(false);
                         }
                     }
                 }, conn).ConfigureAwait(false);
@@ -1444,7 +1447,7 @@ namespace Homura.ORM
 
         public async Task UpgradeTableAsync(VersionChangeUnit upgradePath, VersioningMode mode, DbConnection conn = null, TimeSpan? timeout = null)
         {
-            await QueryHelper.KeepTryingUntilProcessSucceedAsync<Task>(async () =>
+            await QueryHelper.KeepTryingUntilProcessSucceedAsync(async () =>
             {
                 await QueryHelper.ForDao.ConnectionInternalAsync(this, async (connection) =>
                 {
@@ -1565,7 +1568,7 @@ namespace Homura.ORM
 
         public async Task AdjustColumnsAsync(Type versionFrom, Type versionTo, DbConnection conn = null, TimeSpan? timeout = null)
         {
-            await QueryHelper.KeepTryingUntilProcessSucceedAsync<Task>(async () =>
+            await QueryHelper.KeepTryingUntilProcessSucceedAsync(async () =>
             {
                 await QueryHelper.ForDao.ConnectionInternalAsync(this, async (connection) =>
                 {

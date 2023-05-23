@@ -24,11 +24,11 @@ namespace Homura.ORM
         public abstract object DefaultValue { get; protected set; }
 
 
-        public Func<object, (object, PropertyInfo)> PropertyGetter { get; protected set; }
+        public Func<object, object> PropertyGetter { get; protected set; }
 
-        private PropertyInfo GetPropertyInfo(object obj)
+        private object GetValue(object obj)
         {
-            return PropertyGetter(obj).Item2;
+            return PropertyGetter(obj);
         }
 
         public abstract HandlingDefaultValue PassType { get; protected set; }
@@ -56,7 +56,7 @@ namespace Homura.ORM
 
         public PlaceholderRightValue ToParameter(EntityBaseObject entity)
         {
-            return new PlaceholderRightValue($"@{ColumnName.ToLower()}", PropertyGetter(entity).Item2.GetValue(PropertyGetter(entity).Item1));
+            return new PlaceholderRightValue($"@{ColumnName.ToLower()}", PropertyGetter(entity));
         }
 
         public string WrapOutput()

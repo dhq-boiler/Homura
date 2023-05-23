@@ -39,11 +39,32 @@ namespace Homura.Test.UnitTest
 
             var record = new Valkyrie_3();
             record.Id.Value = Guid.Parse("C10F1D49-1C4B-437E-B293-21599C516ABC");
+            record.Item1.Value = Guid.Parse("D10F1D49-1C4B-437E-B293-21599C516ABC");
             await dao.InsertAsync(record);
 
             var records = await dao.FindAllAsync().ToListAsync();
             Assert.That(records, Has.Count.EqualTo(1));
             Assert.That(records[0], Has.Property("Id").Property("Value").EqualTo(Guid.Parse("C10F1D49-1C4B-437E-B293-21599C516ABC")));
+            Assert.That(records[0], Has.Property("Item1").Property("Value").EqualTo(Guid.Parse("D10F1D49-1C4B-437E-B293-21599C516ABC")));
+
+            record.Id.Value =  Guid.Parse("C10F1D49-1C4B-437E-B293-21599C516ABC");
+            record.Item1.Value = Guid.Parse("E10F1D49-1C4B-437E-B293-21599C516ABC");
+            var updateCount = await dao.UpdateAsync(record);
+
+            records = await dao.FindAllAsync().ToListAsync();
+            Assert.That(records, Has.Count.EqualTo(1));
+            Assert.That(records[0], Has.Property("Id").Property("Value").EqualTo(Guid.Parse("C10F1D49-1C4B-437E-B293-21599C516ABC")));
+            Assert.That(records[0], Has.Property("Item1").Property("Value").EqualTo(Guid.Parse("E10F1D49-1C4B-437E-B293-21599C516ABC")));
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            ConnectionManager.DisposeDebris(Guid.Parse("C10F1D49-1C4B-437E-B293-21599C516ABC"));
+            if (File.Exists(_filePath))
+            {
+                File.Delete(_filePath);
+            }
         }
     }
 }

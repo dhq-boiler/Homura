@@ -72,10 +72,13 @@ namespace Homura.Test.TestFixture.Entity
         public string Item4 { get; set; }
     }
 
-    [DefaultVersion(typeof(Version_3))]
+    [DefaultVersion(typeof(VersionOrigin))]
     public class Valkyrie_3 : EntityBaseObject
     {
         [Column("Id", "NUMERIC", 0), PrimaryKey, Index]
         public ReactivePropertySlim<Guid> Id { get; } = new();
+
+        [Column("Item1", "NUMERIC", 1)]
+        public ReactivePropertySlim<Guid> Item1 { get; } = new();
     }
 }

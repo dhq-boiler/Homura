@@ -34,7 +34,7 @@ namespace Homura.Test.TestFixture.Dao
                 throw new DatabaseSchemaException($"Didn't insert because mismatch definition of table:{TableName}", e);
             }
 
-            await QueryHelper.KeepTryingUntilProcessSucceedAsync<Task>(async () =>
+            await QueryHelper.KeepTryingUntilProcessSucceedAsync(async () =>
             {
                 await QueryHelper.ForDao.ConnectionInternalAsync(this, async (connection) =>
                 {
@@ -46,7 +46,7 @@ namespace Homura.Test.TestFixture.Dao
 
                             using (var query = new InsertOrReplace().Into.Table(new Table<Alpha>().Name)
                                                                     .Columns(overrideColumns.Select(c => c.ColumnName))
-                                                                    .Values.Row(overrideColumns.Select(c => c.PropertyGetter(entity).Item2.GetValue(c.PropertyGetter(entity).Item1))))
+                                                                    .Values.Row(overrideColumns.Select(c => c.PropertyGetter(entity))))
                             {
                                 var sql = query.ToSql();
                                 command.CommandText = sql;
