@@ -66,8 +66,8 @@ namespace Sunctum.Infrastructure.Test.IntegrationTest.Data.Rdbms.VersionControl
             {
                 await conn.OpenAsync();
 
-                Assert.That(conn.GetTableNames(), Has.One.EqualTo("Origin"));
-                Assert.That(conn.GetTableNames(), Has.None.EqualTo("Origin_1"));
+                Assert.That(await conn.GetTableNames(), Has.One.EqualTo("Origin"));
+                Assert.That(await conn.GetTableNames(), Has.None.EqualTo("Origin_1"));
             }
 
             var registeringPlan1 = new ChangePlan<Version_1>(VersioningMode.ByTick);
@@ -80,8 +80,8 @@ namespace Sunctum.Infrastructure.Test.IntegrationTest.Data.Rdbms.VersionControl
             {
                 await conn.OpenAsync();
 
-                Assert.That(conn.GetTableNames(), Has.One.EqualTo("Origin"));
-                Assert.That(conn.GetTableNames(), Has.One.EqualTo("Origin_1"));
+                Assert.That(await conn.GetTableNames(), Has.One.EqualTo("Origin"));
+                Assert.That(await conn.GetTableNames(), Has.One.EqualTo("Origin_1"));
 
                 var items = await dao.FindAllAsync().ToListAsync();
                 Assert.That(items.Count(), Is.EqualTo(1)); //default version:Version_1
@@ -110,7 +110,7 @@ namespace Sunctum.Infrastructure.Test.IntegrationTest.Data.Rdbms.VersionControl
             {
                 await conn.OpenAsync();
 
-                var tablenames = conn.GetTableNames();
+                var tablenames = await conn.GetTableNames();
 
                 Assert.That(tablenames, Has.One.EqualTo("Alpha"));
                 Assert.That(tablenames, Has.None.EqualTo("Alpha_1"));
@@ -134,7 +134,7 @@ namespace Sunctum.Infrastructure.Test.IntegrationTest.Data.Rdbms.VersionControl
             {
                 await conn.OpenAsync();
 
-                var tablenames = conn.GetTableNames();
+                var tablenames = await conn.GetTableNames();
 
                 Assert.That(tablenames, Has.One.EqualTo("Alpha"));
                 Assert.That(tablenames, Has.One.EqualTo("Alpha_1"));
@@ -159,7 +159,7 @@ namespace Sunctum.Infrastructure.Test.IntegrationTest.Data.Rdbms.VersionControl
             {
                 await conn.OpenAsync();
 
-                var tablenames = conn.GetTableNames();
+                var tablenames = await conn.GetTableNames();
 
                 Assert.That(tablenames, Has.One.EqualTo("Alpha"));
                 Assert.That(tablenames, Has.One.EqualTo("Alpha_1"));
@@ -184,7 +184,7 @@ namespace Sunctum.Infrastructure.Test.IntegrationTest.Data.Rdbms.VersionControl
             {
                 await conn.OpenAsync();
 
-                var tablenames = conn.GetTableNames();
+                var tablenames = await conn.GetTableNames();
 
                 Assert.That(tablenames, Has.One.EqualTo("Alpha"));
                 Assert.That(tablenames, Has.One.EqualTo("Alpha_1"));
@@ -226,7 +226,7 @@ namespace Sunctum.Infrastructure.Test.IntegrationTest.Data.Rdbms.VersionControl
             {
                 await conn.OpenAsync();
 
-                var tablenames = conn.GetTableNames();
+                var tablenames = await conn.GetTableNames();
 
                 Assert.That(tablenames, Has.One.EqualTo("Alpha"));
                 Assert.That(tablenames, Has.One.EqualTo("Alpha_1"));
@@ -307,7 +307,7 @@ namespace Sunctum.Infrastructure.Test.IntegrationTest.Data.Rdbms.VersionControl
             {
                 await conn.OpenAsync();
 
-                var tablenames = conn.GetTableNames();
+                var tablenames = await conn.GetTableNames();
 
                 Assert.That(tablenames, Has.One.EqualTo("Alpha"));
                 Assert.That(tablenames, Has.None.EqualTo("Alpha_1"));
@@ -336,7 +336,7 @@ namespace Sunctum.Infrastructure.Test.IntegrationTest.Data.Rdbms.VersionControl
             {
                 await conn.OpenAsync();
 
-                var tablenames = conn.GetTableNames();
+                var tablenames = await conn.GetTableNames();
 
                 Assert.That(tablenames, Has.One.EqualTo("Alpha"));
                 Assert.That(tablenames, Has.None.EqualTo("Alpha_1"));

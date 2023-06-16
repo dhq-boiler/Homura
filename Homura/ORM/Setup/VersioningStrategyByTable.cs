@@ -69,7 +69,7 @@ namespace Homura.ORM.Setup
         internal override async Task UpgradeToTargetVersion(IConnection connection)
         {
             //DBに存在するテーブル名を取得
-            IEnumerable<string> existingTableNames = DbInfoRetriever.GetTableNames(connection);
+            IEnumerable<string> existingTableNames = await DbInfoRetriever.GetTableNames(connection).ToListAsync();
 
             //テーブル名をキーに変換
             IEnumerable<EntityVersionKey> existingTableKey = UpgradeHelper.ConvertTablenameToKey(_planMap, existingTableNames);

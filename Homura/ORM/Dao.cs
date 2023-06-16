@@ -13,7 +13,6 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
-using System.Data.OleDb;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -137,7 +136,7 @@ namespace Homura.ORM
         protected virtual void VerifyColumnDefinitions(DbConnection conn)
         { }
 
-        protected IEnumerable<IColumn> GetColumnDefinitions(DbConnection conn = null)
+        protected async IAsyncEnumerable<IColumn> GetColumnDefinitions(DbConnection conn = null)
         {
             var isTransaction = conn != null;
 
@@ -147,12 +146,13 @@ namespace Homura.ORM
                 {
                     conn = GetConnection();
                 }
-
-                var objSchemaInfo = (conn as DbConnection).GetSchema(OleDbMetaDataCollectionNames.Columns, new string[] { null, null, TableName, null });
-                foreach (DataRow objRow in objSchemaInfo.Rows)
+                var tableName = TableName;
+                var tables = await conn.GetSchemaAsync("Columns");
+                var targetTableRows = tables.Rows.OfType<DataRow>().Where(r => r.ItemArray[2].ToString() == tableName);
+                foreach (var objRow in targetTableRows)
                 {
-                    var isNullable = objRow.Field<bool>(s_IS_NULLABLE);
-                    var isPrimaryKey = objRow.Field<bool>(s_PRIMARY_KEY);
+                    var isNullable = (bool)objRow.ItemArray[10];
+                    var isPrimaryKey = (bool)objRow.ItemArray[27];
 
                     var constraints = ToIConstraintList(isNullable, isPrimaryKey);
 
@@ -161,7 +161,7 @@ namespace Homura.ORM
                         typeof(E).GetProperty(objRow.Field<string>(s_COLUMN_NAME)).PropertyType,
                         objRow.Field<string>(s_DATA_TYPE).ToUpper(),
                         constraints,
-                        objSchemaInfo.Rows.IndexOf(objRow),
+                        targetTableRows.ToList().IndexOf(objRow),
                         null);
                 }
             }

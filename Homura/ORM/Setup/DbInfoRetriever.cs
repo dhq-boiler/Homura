@@ -6,11 +6,14 @@ namespace Homura.ORM.Setup
 {
     internal class DbInfoRetriever
     {
-        public static IEnumerable<string> GetTableNames(IConnection connection)
+        public static async IAsyncEnumerable<string> GetTableNames(IConnection connection)
         {
             using (var conn = connection.OpenConnection())
             {
-                return conn.GetTableNames();
+                foreach (var item in await conn.GetTableNames())
+                {
+                    yield return item;
+                }
             }
         }
     }

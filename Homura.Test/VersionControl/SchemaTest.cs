@@ -43,9 +43,9 @@ namespace Homura.Test.VersionControl
             {
                 await conn.OpenAsync();
 
-                Assert.That(conn.GetTableNames(), Has.Exactly(1).EqualTo(dao.TableName));
+                Assert.That(await conn.GetTableNames(), Has.Exactly(1).EqualTo(dao.TableName));
 
-                var columnNames = conn.GetColumnNames(dao.TableName);
+                var columnNames = await conn.GetColumnNames(dao.TableName);
                 Assert.That(columnNames.Count(), Is.EqualTo(3));
                 Assert.That(columnNames, Has.Exactly(1).EqualTo("Id"));
                 Assert.That(columnNames, Has.Exactly(1).EqualTo("Item1"));
@@ -68,9 +68,9 @@ namespace Homura.Test.VersionControl
             {
                 await conn.OpenAsync();
 
-                Assert.That(conn.GetTableNames(), Has.Exactly(1).EqualTo(dao.TableName));
+                Assert.That(await conn.GetTableNames(), Has.Exactly(1).EqualTo(dao.TableName));
 
-                var columnNames = conn.GetColumnNames(dao.TableName);
+                var columnNames = await conn.GetColumnNames(dao.TableName);
                 Assert.That(columnNames.Count(), Is.EqualTo(3));
                 Assert.That(columnNames, Has.Exactly(1).EqualTo("Id"));
                 Assert.That(columnNames, Has.Exactly(1).EqualTo("Item1"));
@@ -93,9 +93,9 @@ namespace Homura.Test.VersionControl
             {
                 await conn.OpenAsync();
 
-                Assert.That(conn.GetTableNames(), Has.Exactly(1).EqualTo(dao.TableName));
+                Assert.That(await conn.GetTableNames(), Has.Exactly(1).EqualTo(dao.TableName));
 
-                var columnNames = conn.GetColumnNames(dao.TableName);
+                var columnNames = await conn.GetColumnNames(dao.TableName);
                 Assert.That(columnNames.Count(), Is.EqualTo(4));
                 Assert.That(columnNames, Has.Exactly(1).EqualTo("Id"));
                 Assert.That(columnNames, Has.Exactly(1).EqualTo("Item1"));
@@ -120,9 +120,9 @@ namespace Homura.Test.VersionControl
             {
                 await conn.OpenAsync();
 
-                Assert.That(conn.GetTableNames(), Has.Exactly(1).EqualTo(dao.TableName));
+                Assert.That(await conn.GetTableNames(), Has.Exactly(1).EqualTo(dao.TableName));
 
-                var columnNames = conn.GetColumnNames(dao.TableName);
+                var columnNames = await conn.GetColumnNames(dao.TableName);
                 Assert.That(columnNames.Count(), Is.EqualTo(3));
                 Assert.That(columnNames, Has.Exactly(1).EqualTo("Id"));
                 Assert.That(columnNames, Has.Exactly(1).EqualTo("Item1"));
@@ -141,9 +141,9 @@ namespace Homura.Test.VersionControl
             {
                 await conn.OpenAsync();
 
-                Assert.That(conn.GetTableNames(), Has.Exactly(1).EqualTo(dao.TableName));
+                Assert.That(await conn.GetTableNames(), Has.Exactly(1).EqualTo(dao.TableName));
 
-                var columnNames = conn.GetColumnNames(dao.TableName);
+                var columnNames = await conn.GetColumnNames(dao.TableName);
                 Assert.That(columnNames.Count(), Is.EqualTo(3));
                 Assert.That(columnNames, Has.Exactly(1).EqualTo("Id"));
                 Assert.That(columnNames, Has.Exactly(1).EqualTo("Item1"));
@@ -157,9 +157,9 @@ namespace Homura.Test.VersionControl
             {
                 await conn.OpenAsync();
 
-                Assert.That(conn.GetTableNames(), Has.Exactly(1).EqualTo(dao.TableName));
+                Assert.That(await conn.GetTableNames(), Has.Exactly(1).EqualTo(dao.TableName));
 
-                var columnNames = conn.GetColumnNames(dao.TableName);
+                var columnNames = await conn.GetColumnNames(dao.TableName);
                 Assert.That(columnNames.Count(), Is.EqualTo(4));
                 Assert.That(columnNames, Has.Exactly(1).EqualTo("Id"));
                 Assert.That(columnNames, Has.Exactly(1).EqualTo("Item1"));
