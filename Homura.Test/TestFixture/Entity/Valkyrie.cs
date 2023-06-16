@@ -80,5 +80,11 @@ namespace Homura.Test.TestFixture.Entity
 
         [Column("Item1", "NUMERIC", 1)]
         public ReactivePropertySlim<Guid> Item1 { get; } = new();
+
+        [Column("Item2", "INTEGER", 2, HandlingDefaultValue.AsValue, false)]
+        public ReactivePropertySlim<bool> Item2 { get; } = new();
+
+        [Column("Item3", "INTEGER", 3, HandlingDefaultValue.AsValue, false)]
+        public ReactivePropertySlim<bool?> Item3 { get; } = new();
     }
 }

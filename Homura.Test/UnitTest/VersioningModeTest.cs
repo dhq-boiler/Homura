@@ -58,8 +58,8 @@ namespace Homura.Test.UnitTest
             {
                 await conn.OpenAsync();
 
-                Assert.That(conn.GetTableNames(), Has.One.EqualTo("Valkyrie_0"));
-                Assert.That(conn.GetTableNames(), Has.None.EqualTo("Valkyrie_0_1"));
+                Assert.That(await conn.GetTableNames(), Has.One.EqualTo("Valkyrie_0"));
+                Assert.That(await conn.GetTableNames(), Has.None.EqualTo("Valkyrie_0_1"));
             }
 
             svManager.RegisterChangePlan(new Valkyrie_1_VersionChangePlan_Version_1(VersioningMode.ByTick));
@@ -70,8 +70,8 @@ namespace Homura.Test.UnitTest
             {
                 await conn.OpenAsync();
 
-                Assert.That(conn.GetTableNames(), Has.One.EqualTo("Valkyrie_1"));
-                Assert.That(conn.GetTableNames(), Has.None.EqualTo("Valkyrie_1_1"));
+                Assert.That(await conn.GetTableNames(), Has.One.EqualTo("Valkyrie_1"));
+                Assert.That(await conn.GetTableNames(), Has.None.EqualTo("Valkyrie_1_1"));
 
                 var items = await dao.FindAllAsync().ToListAsync();
                 Assert.That(items.Count(), Is.EqualTo(1)); //default version:Version_1
@@ -89,9 +89,9 @@ namespace Homura.Test.UnitTest
             {
                 await conn.OpenAsync();
 
-                Assert.That(conn.GetTableNames(), Has.One.EqualTo("Valkyrie_1"));
-                Assert.That(conn.GetTableNames(), Has.One.EqualTo("Valkyrie_1_1"));
-                Assert.That(conn.GetTableNames(), Has.None.EqualTo("Valkyrie_1_2"));
+                Assert.That(await conn.GetTableNames(), Has.One.EqualTo("Valkyrie_1"));
+                Assert.That(await conn.GetTableNames(), Has.One.EqualTo("Valkyrie_1_1"));
+                Assert.That(await conn.GetTableNames(), Has.None.EqualTo("Valkyrie_1_2"));
 
                 var items = await dao.FindAllAsync().ToListAsync();
                 Assert.That(items.Count(), Is.EqualTo(1)); //default version:Version_2
@@ -128,7 +128,7 @@ namespace Homura.Test.UnitTest
             {
                 await conn.OpenAsync();
 
-                Assert.That(conn.GetTableNames(), Has.One.EqualTo("Frey"));
+                Assert.That(await conn.GetTableNames(), Has.One.EqualTo("Frey"));
                 var items = await dao.FindAllAsync().ToListAsync();
                 Assert.That(items.Count(), Is.EqualTo(1)); //default version:Version_1
                 Assert.That(items.First().Id, Is.EqualTo(Guid.Empty));
@@ -136,7 +136,7 @@ namespace Homura.Test.UnitTest
                 Assert.That(items.First().Item2, Is.EqualTo("org_item2"));
                 Assert.That(items.First().Item3, Is.Null);
 
-                Assert.That(conn.GetTableNames(), Has.None.EqualTo("Valkyrie_0_1"));
+                Assert.That(await conn.GetTableNames(), Has.None.EqualTo("Valkyrie_0_1"));
             }
             svManager.RegisterChangePlan(new Frey_VersionChangePlan_Version_1(VersioningMode.ByAlterTable));
             await svManager.UpgradeToTargetVersion();
@@ -145,7 +145,7 @@ namespace Homura.Test.UnitTest
             {
                 await conn.OpenAsync();
 
-                Assert.That(conn.GetTableNames(), Has.One.EqualTo("Frey"));
+                Assert.That(await conn.GetTableNames(), Has.One.EqualTo("Frey"));
                 {
                     var items = await dao.FindAllAsync().ToListAsync();
                     Assert.That(items.Count(), Is.EqualTo(1)); //default version:Version_1
@@ -155,9 +155,9 @@ namespace Homura.Test.UnitTest
                     Assert.That(items.First().Item3, Is.Null);
                 }
 
-                Assert.That(conn.GetTableNames(), Has.None.EqualTo("Frey_0_1"));
-                Assert.That(conn.GetTableNames(), Has.None.EqualTo("Frey_1"));
-                Assert.That(conn.GetTableNames(), Has.None.EqualTo("Frey_1_1"));
+                Assert.That(await conn.GetTableNames(), Has.None.EqualTo("Frey_0_1"));
+                Assert.That(await conn.GetTableNames(), Has.None.EqualTo("Frey_1"));
+                Assert.That(await conn.GetTableNames(), Has.None.EqualTo("Frey_1_1"));
             }
         }
 
@@ -187,7 +187,7 @@ namespace Homura.Test.UnitTest
             {
                 await conn.OpenAsync();
 
-                Assert.That(conn.GetTableNames(), Has.One.EqualTo("Frey"));
+                Assert.That(await conn.GetTableNames(), Has.One.EqualTo("Frey"));
                 var items = await dao.FindAllAsync().ToListAsync();
                 Assert.That(items.Count(), Is.EqualTo(1)); //default version:Version_1
                 Assert.That(items.First().Id, Is.EqualTo(Guid.Empty));
@@ -195,7 +195,7 @@ namespace Homura.Test.UnitTest
                 Assert.That(items.First().Item2, Is.EqualTo("org_item2"));
                 Assert.That(items.First().Item3, Is.Null);
 
-                Assert.That(conn.GetTableNames(), Has.None.EqualTo("Valkyrie_0_1"));
+                Assert.That(await conn.GetTableNames(), Has.None.EqualTo("Valkyrie_0_1"));
             }
             svManager.RegisterChangePlan(new Frey_VersionChangePlan_Version_1(VersioningMode.ByAlterTable));
             await svManager.UpgradeToTargetVersion();
@@ -204,7 +204,7 @@ namespace Homura.Test.UnitTest
             {
                 await conn.OpenAsync();
 
-                Assert.That(conn.GetTableNames(), Has.One.EqualTo("Frey"));
+                Assert.That(await conn.GetTableNames(), Has.One.EqualTo("Frey"));
                 {
                     var items = await dao.FindAllAsync().ToListAsync();
                     Assert.That(items.Count(), Is.EqualTo(1)); //default version:Version_1
@@ -214,9 +214,9 @@ namespace Homura.Test.UnitTest
                     Assert.That(items.First().Item3, Is.Null);
                 }
 
-                Assert.That(conn.GetTableNames(), Has.None.EqualTo("Frey_0_1"));
-                Assert.That(conn.GetTableNames(), Has.None.EqualTo("Frey_1"));
-                Assert.That(conn.GetTableNames(), Has.None.EqualTo("Frey_1_1"));
+                Assert.That(await conn.GetTableNames(), Has.None.EqualTo("Frey_0_1"));
+                Assert.That(await conn.GetTableNames(), Has.None.EqualTo("Frey_1"));
+                Assert.That(await conn.GetTableNames(), Has.None.EqualTo("Frey_1_1"));
             }
 
             svManager = new DataVersionManager();
@@ -230,7 +230,7 @@ namespace Homura.Test.UnitTest
             {
                 await conn.OpenAsync();
 
-                Assert.That(conn.GetTableNames(), Has.One.EqualTo("Frey"));
+                Assert.That(await conn.GetTableNames(), Has.One.EqualTo("Frey"));
                 {
                     var items = await dao.FindAllAsync().ToListAsync();
                     Assert.That(items.Count(), Is.EqualTo(1)); //default version:Version_1
@@ -240,9 +240,9 @@ namespace Homura.Test.UnitTest
                     Assert.That(items.First().Item3, Is.Null);
                 }
 
-                Assert.That(conn.GetTableNames(), Has.None.EqualTo("Frey_0_1"));
-                Assert.That(conn.GetTableNames(), Has.None.EqualTo("Frey_1"));
-                Assert.That(conn.GetTableNames(), Has.None.EqualTo("Frey_1_1"));
+                Assert.That(await conn.GetTableNames(), Has.None.EqualTo("Frey_0_1"));
+                Assert.That(await conn.GetTableNames(), Has.None.EqualTo("Frey_1"));
+                Assert.That(await conn.GetTableNames(), Has.None.EqualTo("Frey_1_1"));
             }
         }
 
@@ -272,7 +272,7 @@ namespace Homura.Test.UnitTest
             {
                 await conn.OpenAsync();
 
-                Assert.That(conn.GetTableNames(), Has.One.EqualTo("Roki"));
+                Assert.That(await conn.GetTableNames(), Has.One.EqualTo("Roki"));
                 var items = await dao.FindAllAsync().ToListAsync();
                 Assert.That(items.Count(), Is.EqualTo(1)); //default version:Version_1
                 Assert.That(items.First().Id, Is.EqualTo(Guid.Empty));
@@ -287,8 +287,8 @@ namespace Homura.Test.UnitTest
             {
                 await conn.OpenAsync();
 
-                Assert.That(conn.GetTableNames(), Has.None.EqualTo("Roki"));
-                Assert.That(conn.GetTableNames(), Has.One.EqualTo("Roki_1"));
+                Assert.That(await conn.GetTableNames(), Has.None.EqualTo("Roki"));
+                Assert.That(await conn.GetTableNames(), Has.One.EqualTo("Roki_1"));
                 {
                     dao = new RokiDao(typeof(Version_1));
                     dao.CurrentConnection = ConnectionManager.DefaultConnection;
@@ -300,8 +300,8 @@ namespace Homura.Test.UnitTest
                     Assert.That(items.First().Item3, Is.Null);
                 }
 
-                Assert.That(conn.GetTableNames(), Has.None.EqualTo("Roki"));
-                Assert.That(conn.GetTableNames(), Has.One.EqualTo("Roki_1"));
+                Assert.That(await conn.GetTableNames(), Has.None.EqualTo("Roki"));
+                Assert.That(await conn.GetTableNames(), Has.One.EqualTo("Roki_1"));
             }
 
             svManager.RegisterChangePlan(new Roki_VersionChangePlan_Version_2(VersioningMode.ByAlterTable));
@@ -311,8 +311,8 @@ namespace Homura.Test.UnitTest
             {
                 await conn.OpenAsync();
 
-                Assert.That(conn.GetTableNames(), Has.None.EqualTo("Roki"));
-                Assert.That(conn.GetTableNames(), Has.One.EqualTo("Roki_1"));
+                Assert.That(await conn.GetTableNames(), Has.None.EqualTo("Roki"));
+                Assert.That(await conn.GetTableNames(), Has.One.EqualTo("Roki_1"));
                 {
                     dao = new RokiDao(DataVersionManager.DefaultSchemaVersion);
                     dao.CurrentConnection = ConnectionManager.DefaultConnection;
@@ -352,7 +352,7 @@ namespace Homura.Test.UnitTest
             {
                 await conn.OpenAsync();
 
-                Assert.That(conn.GetTableNames(), Has.One.EqualTo("Frey"));
+                Assert.That(await conn.GetTableNames(), Has.One.EqualTo("Frey"));
                 var items = await dao.FindAllAsync().ToListAsync();
                 Assert.That(items.Count(), Is.EqualTo(1)); //default version:Version_1
                 Assert.That(items.First().Id, Is.EqualTo(Guid.Empty));
@@ -360,7 +360,7 @@ namespace Homura.Test.UnitTest
                 Assert.That(items.First().Item2, Is.EqualTo("org_item2"));
                 Assert.That(items.First().Item3, Is.Null);
 
-                Assert.That(conn.GetTableNames(), Has.None.EqualTo("Valkyrie_0_1"));
+                Assert.That(await conn.GetTableNames(), Has.None.EqualTo("Valkyrie_0_1"));
             }
             svManager.RegisterChangePlan(new Frey_VersionChangePlan_Version_1(VersioningMode.ByAlterTable));
             await svManager.UpgradeToTargetVersion();
@@ -369,7 +369,7 @@ namespace Homura.Test.UnitTest
             {
                 await conn.OpenAsync();
 
-                Assert.That(conn.GetTableNames(), Has.One.EqualTo("Frey"));
+                Assert.That(await conn.GetTableNames(), Has.One.EqualTo("Frey"));
                 {
                     var items = await dao.FindAllAsync().ToListAsync();
                     Assert.That(items.Count(), Is.EqualTo(1)); //default version:Version_1
@@ -379,9 +379,9 @@ namespace Homura.Test.UnitTest
                     Assert.That(items.First().Item3, Is.Null);
                 }
 
-                Assert.That(conn.GetTableNames(), Has.None.EqualTo("Frey_0_1"));
-                Assert.That(conn.GetTableNames(), Has.None.EqualTo("Frey_1"));
-                Assert.That(conn.GetTableNames(), Has.None.EqualTo("Frey_1_1"));
+                Assert.That(await conn.GetTableNames(), Has.None.EqualTo("Frey_0_1"));
+                Assert.That(await conn.GetTableNames(), Has.None.EqualTo("Frey_1"));
+                Assert.That(await conn.GetTableNames(), Has.None.EqualTo("Frey_1_1"));
             }
         }
 
@@ -411,7 +411,7 @@ namespace Homura.Test.UnitTest
             {
                 await conn.OpenAsync();
 
-                Assert.That(conn.GetTableNames(), Has.One.EqualTo("Frey"));
+                Assert.That(await conn.GetTableNames(), Has.One.EqualTo("Frey"));
                 var items = await dao.FindAllAsync().ToListAsync();
                 Assert.That(items.Count(), Is.EqualTo(1)); //default version:Version_1
                 Assert.That(items.First().Id, Is.EqualTo(Guid.Empty));
@@ -419,7 +419,7 @@ namespace Homura.Test.UnitTest
                 Assert.That(items.First().Item2, Is.EqualTo("org_item2"));
                 Assert.That(items.First().Item3, Is.Null);
 
-                Assert.That(conn.GetTableNames(), Has.None.EqualTo("Valkyrie_0_1"));
+                Assert.That(await conn.GetTableNames(), Has.None.EqualTo("Valkyrie_0_1"));
             }
             svManager.RegisterChangePlan(new Frey_VersionChangePlan_Version_1(VersioningMode.ByAlterTable | VersioningMode.DeleteAllRecordInTableCastedOff));
             await svManager.UpgradeToTargetVersion();
@@ -428,7 +428,7 @@ namespace Homura.Test.UnitTest
             {
                 await conn.OpenAsync();
 
-                Assert.That(conn.GetTableNames(), Has.One.EqualTo("Frey"));
+                Assert.That(await conn.GetTableNames(), Has.One.EqualTo("Frey"));
                 {
                     var items = await dao.FindAllAsync().ToListAsync();
                     Assert.That(items.Count(), Is.EqualTo(1)); //default version:Version_1
@@ -438,9 +438,9 @@ namespace Homura.Test.UnitTest
                     Assert.That(items.First().Item3, Is.Null);
                 }
 
-                Assert.That(conn.GetTableNames(), Has.None.EqualTo("Frey_0_1"));
-                Assert.That(conn.GetTableNames(), Has.None.EqualTo("Frey_1"));
-                Assert.That(conn.GetTableNames(), Has.None.EqualTo("Frey_1_1"));
+                Assert.That(await conn.GetTableNames(), Has.None.EqualTo("Frey_0_1"));
+                Assert.That(await conn.GetTableNames(), Has.None.EqualTo("Frey_1"));
+                Assert.That(await conn.GetTableNames(), Has.None.EqualTo("Frey_1_1"));
             }
         }
 
@@ -470,8 +470,8 @@ namespace Homura.Test.UnitTest
             {
                 await conn.OpenAsync();
 
-                Assert.That(conn.GetTableNames(), Has.One.EqualTo("Valkyrie_0"));
-                Assert.That(conn.GetTableNames(), Has.None.EqualTo("Valkyrie_0_1"));
+                Assert.That(await conn.GetTableNames(), Has.One.EqualTo("Valkyrie_0"));
+                Assert.That(await conn.GetTableNames(), Has.None.EqualTo("Valkyrie_0_1"));
             }
 
             svManager.RegisterChangePlan(new Valkyrie_1_VersionChangePlan_Version_1(VersioningMode.ByTick | VersioningMode.DropTableCastedOff));
@@ -482,10 +482,10 @@ namespace Homura.Test.UnitTest
             {
                 await conn.OpenAsync();
 
-                Assert.That(conn.GetTableNames(), Has.One.EqualTo("Valkyrie_0"));
-                Assert.That(conn.GetTableNames(), Has.None.EqualTo("Valkyrie_0_1"));
-                Assert.That(conn.GetTableNames(), Has.One.EqualTo("Valkyrie_1"));
-                Assert.That(conn.GetTableNames(), Has.None.EqualTo("Valkyrie_1_1"));
+                Assert.That(await conn.GetTableNames(), Has.One.EqualTo("Valkyrie_0"));
+                Assert.That(await conn.GetTableNames(), Has.None.EqualTo("Valkyrie_0_1"));
+                Assert.That(await conn.GetTableNames(), Has.One.EqualTo("Valkyrie_1"));
+                Assert.That(await conn.GetTableNames(), Has.None.EqualTo("Valkyrie_1_1"));
 
                 var items = await dao.FindAllAsync().ToListAsync();
                 Assert.That(items.Count(), Is.EqualTo(1)); //default version:Version_1
@@ -503,11 +503,11 @@ namespace Homura.Test.UnitTest
             {
                 await conn.OpenAsync();
 
-                Assert.That(conn.GetTableNames(), Has.One.EqualTo("Valkyrie_0"));
-                Assert.That(conn.GetTableNames(), Has.None.EqualTo("Valkyrie_0_1"));
-                Assert.That(conn.GetTableNames(), Has.None.EqualTo("Valkyrie_1"));
-                Assert.That(conn.GetTableNames(), Has.One.EqualTo("Valkyrie_1_1"));
-                Assert.That(conn.GetTableNames(), Has.None.EqualTo("Valkyrie_1_2"));
+                Assert.That(await conn.GetTableNames(), Has.One.EqualTo("Valkyrie_0"));
+                Assert.That(await conn.GetTableNames(), Has.None.EqualTo("Valkyrie_0_1"));
+                Assert.That(await conn.GetTableNames(), Has.None.EqualTo("Valkyrie_1"));
+                Assert.That(await conn.GetTableNames(), Has.One.EqualTo("Valkyrie_1_1"));
+                Assert.That(await conn.GetTableNames(), Has.None.EqualTo("Valkyrie_1_2"));
 
                 var items = await dao.FindAllAsync().ToListAsync();
                 Assert.That(items.Count(), Is.EqualTo(1)); //default version:Version_2
@@ -544,7 +544,7 @@ namespace Homura.Test.UnitTest
             {
                 await conn.OpenAsync();
 
-                Assert.That(conn.GetTableNames(), Has.One.EqualTo("Valkyrie_0"));
+                Assert.That(await conn.GetTableNames(), Has.One.EqualTo("Valkyrie_0"));
                 var items = await dao.FindAllAsync().ToListAsync();
                 Assert.That(items.Count(), Is.EqualTo(1)); //default version:Version_1
                 Assert.That(items.First().Id, Is.EqualTo(Guid.Empty));
@@ -552,7 +552,7 @@ namespace Homura.Test.UnitTest
                 Assert.That(items.First().Item2, Is.EqualTo("org_item2"));
                 Assert.That(items.First().Item3, Is.Null);
 
-                Assert.That(conn.GetTableNames(), Has.None.EqualTo("Valkyrie_0_1"));
+                Assert.That(await conn.GetTableNames(), Has.None.EqualTo("Valkyrie_0_1"));
             }
 
             svManager.RegisterChangePlan(new Valkyrie_1_VersionChangePlan_Version_1(VersioningMode.ByTick | VersioningMode.DeleteAllRecordInTableCastedOff));
@@ -571,7 +571,7 @@ namespace Homura.Test.UnitTest
             {
                 await conn.OpenAsync();
 
-                Assert.That(conn.GetTableNames(), Has.One.EqualTo("Valkyrie_0"));
+                Assert.That(await conn.GetTableNames(), Has.One.EqualTo("Valkyrie_0"));
                 dao = new Valkyrie_0_Dao();
                 var items = await dao.FindAllAsync().ToListAsync();
                 Assert.That(items.Count(), Is.EqualTo(1)); //default version:Version_1
@@ -580,9 +580,9 @@ namespace Homura.Test.UnitTest
                 Assert.That(items.First().Item2, Is.EqualTo("org_item2"));
                 Assert.That(items.First().Item3, Is.Null);
 
-                Assert.That(conn.GetTableNames(), Has.None.EqualTo("Valkyrie_0_1"));
+                Assert.That(await conn.GetTableNames(), Has.None.EqualTo("Valkyrie_0_1"));
 
-                Assert.That(conn.GetTableNames(), Has.One.EqualTo("Valkyrie_1"));
+                Assert.That(await conn.GetTableNames(), Has.One.EqualTo("Valkyrie_1"));
                 dao1 = new Valkyrie_1_Dao(typeof(VersionOrigin)); 
                 var items1 = await dao1.FindAllAsync().ToListAsync();
                 Assert.That(items1.Count(), Is.EqualTo(1)); //default version:Version_1
@@ -591,7 +591,7 @@ namespace Homura.Test.UnitTest
                 Assert.That(items1.First().Item2, Is.EqualTo("org_item2"));
                 Assert.That(items1.First().Item3, Is.Null);
 
-                Assert.That(conn.GetTableNames(), Has.None.EqualTo("Valkyrie_1_1"));
+                Assert.That(await conn.GetTableNames(), Has.None.EqualTo("Valkyrie_1_1"));
             }
 
             svManager.RegisterChangePlan(new Valkyrie_1_VersionChangePlan_Version_2(VersioningMode.ByTick | VersioningMode.DeleteAllRecordInTableCastedOff));
@@ -601,7 +601,7 @@ namespace Homura.Test.UnitTest
             {
                 await conn.OpenAsync();
 
-                Assert.That(conn.GetTableNames(), Has.One.EqualTo("Valkyrie_0"));
+                Assert.That(await conn.GetTableNames(), Has.One.EqualTo("Valkyrie_0"));
                 var dao0 = new Valkyrie_0_Dao();
                 var items0 = await dao.FindAllAsync().ToListAsync();
                 Assert.That(items0.Count(), Is.EqualTo(1)); //default version:Version_1
@@ -610,14 +610,14 @@ namespace Homura.Test.UnitTest
                 Assert.That(items0.First().Item2, Is.EqualTo("org_item2"));
                 Assert.That(items0.First().Item3, Is.Null);
 
-                Assert.That(conn.GetTableNames(), Has.None.EqualTo("Valkyrie_0_1"));
+                Assert.That(await conn.GetTableNames(), Has.None.EqualTo("Valkyrie_0_1"));
 
-                Assert.That(conn.GetTableNames(), Has.One.EqualTo("Valkyrie_1"));
+                Assert.That(await conn.GetTableNames(), Has.One.EqualTo("Valkyrie_1"));
                 dao1 = new Valkyrie_1_Dao(typeof(VersionOrigin));
                 var items1 = await dao1.FindAllAsync().ToListAsync();
                 Assert.That(items1.Count(), Is.EqualTo(0)); //default version:Version_2
 
-                Assert.That(conn.GetTableNames(), Has.One.EqualTo("Valkyrie_1_1"));
+                Assert.That(await conn.GetTableNames(), Has.One.EqualTo("Valkyrie_1_1"));
                 var dao2 = new Valkyrie_1_Dao(typeof(Version_1));
                 var items2 = await dao2.FindAllAsync().ToListAsync();
                 Assert.That(items2.Count(), Is.EqualTo(1)); //default version:Version_2
@@ -626,7 +626,7 @@ namespace Homura.Test.UnitTest
                 Assert.That(items2.First().Item2, Is.EqualTo("org_item2"));
                 Assert.That(items2.First().Item3, Is.Null);
 
-                Assert.That(conn.GetTableNames(), Has.None.EqualTo("Valkyrie_1_2"));
+                Assert.That(await conn.GetTableNames(), Has.None.EqualTo("Valkyrie_1_2"));
             }
         }
     }

@@ -3,8 +3,8 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
-using System.Data.OleDb;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Homura.ORM
 {
@@ -47,26 +47,26 @@ namespace Homura.ORM
             }
         }
 
-        public static IEnumerable<string> GetTableNames(this DbConnection conn)
+        public static async Task<IEnumerable<string>> GetTableNames(this DbConnection conn)
         {
             if (conn.State == ConnectionState.Closed)
             {
                 conn.Open();
             }
 
-            var objSchemaInfo = conn.GetSchema(OleDbMetaDataCollectionNames.Tables);
-            return objSchemaInfo.AsEnumerable().Select(r => r.Field<string>("TABLE_NAME"));
+            var tables = await conn.GetSchemaAsync("Tables");
+            return tables.Rows.OfType<DataRow>().Select(r => r[2] as string);
         }
 
-        public static IEnumerable<string> GetColumnNames(this DbConnection conn, string tableName)
+        public static async Task<IEnumerable<string>> GetColumnNames(this DbConnection conn, string tableName)
         {
             if (conn.State == ConnectionState.Closed)
             {
                 conn.Open();
             }
 
-            var objSchemaInfo = conn.GetSchema(OleDbMetaDataCollectionNames.Columns, new string[] { null, null, tableName, null });
-            return objSchemaInfo.AsEnumerable().Select(r => r.Field<string>("COLUMN_NAME"));
+            var tables = await conn.GetSchemaAsync("Columns");
+            return tables.Rows.OfType<DataRow>().Where(r => r[2].ToString() == tableName).Select(r => r[3].ToString());
         }
     }
 }
