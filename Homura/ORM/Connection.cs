@@ -4,6 +4,8 @@ using NLog;
 using System;
 using System.Data;
 using System.Data.Common;
+using System.Diagnostics;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace Homura.ORM
@@ -31,8 +33,8 @@ namespace Homura.ORM
             try
             {
                 connection.Open();
-                ConnectionManager.PutAttendance(Guid.NewGuid(), new ConnectionManager.Attendance(InstanceId, connection, Environment.StackTrace));
-                s_logger.Trace($"Connection Opened. ConnectionString={ConnectionString}\n{Environment.StackTrace}");
+                ConnectionManager.PutAttendance(Guid.NewGuid(), new ConnectionManager.Attendance(InstanceId, connection, GetStackTrace()));
+                s_logger.Trace($"Connection Opened. ConnectionString={ConnectionString}\n{GetStackTrace()}");
             }
             catch (ArgumentException e)
             {
@@ -50,8 +52,8 @@ namespace Homura.ORM
             try
             {
                 await connection.OpenAsync().ConfigureAwait(false);
-                ConnectionManager.PutAttendance(Guid.NewGuid(), new ConnectionManager.Attendance(InstanceId, connection, Environment.StackTrace));
-                s_logger.Trace($"Connection Opened. ConnectionString={ConnectionString}\n{Environment.StackTrace}");
+                ConnectionManager.PutAttendance(Guid.NewGuid(), new ConnectionManager.Attendance(InstanceId, connection, GetStackTrace()));
+                s_logger.Trace($"Connection Opened. ConnectionString={ConnectionString}\n{GetStackTrace()}");
             }
             catch (ArgumentException e)
             {
@@ -65,7 +67,7 @@ namespace Homura.ORM
         private void Connection_Disposed(object sender, EventArgs e)
         {
             ConnectionManager.RemoveAttendance(sender as DbConnection);
-            s_logger.Trace($"Connection Disposed. ConnectionString={ConnectionString}\n{Environment.StackTrace}");
+            s_logger.Trace($"Connection Disposed. ConnectionString={ConnectionString}\n{GetStackTrace()}");
         }
 
         public bool TableExists(string tableName)
@@ -116,6 +118,22 @@ namespace Homura.ORM
             {
                 throw;
             }
+        }
+
+        private string GetStackTrace()
+        {
+            var builder = new StringBuilder();
+            var stackTrace = new StackTrace();
+            var frames = stackTrace.GetFrames();
+
+            if (frames != null)
+            {
+                foreach (var frame in frames)
+                {
+                    builder.Append(frame.ToString());
+                }
+            }
+            return builder.ToString();
         }
     }
 }
