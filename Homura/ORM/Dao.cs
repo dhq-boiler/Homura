@@ -37,7 +37,7 @@ namespace Homura.ORM
         /// デフォルトコンストラクタ．
         /// アクセス対象となるエンティティのバージョンは，DefaultVersion属性で指定されたバージョンになる．
         /// </summary>
-        public Dao()
+        protected Dao()
             : base(null)
         {
             OverridedColumns = new List<IColumn>();
@@ -49,13 +49,13 @@ namespace Homura.ORM
         /// アクセス対象となるエンティティのバージョンは，コンストラクタ引数に渡したバージョンになる．
         /// </summary>
         /// <param name="entityVersionType">バージョン値．VersionOriginクラスまたはそのサブクラスのTypeオブジェクト．</param>
-        public Dao(Type entityVersionType) : base(entityVersionType)
+        protected Dao(Type entityVersionType) : base(entityVersionType)
         {
             OverridedColumns = new List<IColumn>();
             EntityVersionType = entityVersionType;
         }
 
-        public Dao(DataVersionManager dataVersionManager) : base(VersionHelper.GetVersionTypeFromDataVersionManager<E>(dataVersionManager))
+        protected Dao(DataVersionManager dataVersionManager) : base(VersionHelper.GetVersionTypeFromDataVersionManager<E>(dataVersionManager))
         {
             OverridedColumns = new List<IColumn>();
             EntityVersionType = VersionHelper.GetVersionTypeFromDataVersionManager<E>(dataVersionManager);
@@ -80,21 +80,9 @@ namespace Homura.ORM
 
         protected List<IColumn> OverridedColumns { get; set; }
 
-        public string TableName
-        {
-            get
-            {
-                return Table.Name;
-            }
-        }
+        public string TableName => Table.Name;
 
-        protected IEnumerable<IColumn> Columns
-        {
-            get
-            {
-                return Table.Columns;
-            }
-        }
+        protected IEnumerable<IColumn> Columns => Table.Columns;
 
         public DbConnection GetConnection()
         {
@@ -144,7 +132,7 @@ namespace Homura.ORM
             {
                 if (!isTransaction)
                 {
-                    conn = GetConnection();
+                    conn = await GetConnectionAsync();
                 }
                 var tableName = TableName;
                 var tables = await conn.GetSchemaAsync("Columns");
@@ -174,7 +162,7 @@ namespace Homura.ORM
             }
         }
 
-        private IEnumerable<IDdlConstraint> ToIConstraintList(bool isNullable, bool isPrimaryKey)
+        private static IEnumerable<IDdlConstraint> ToIConstraintList(bool isNullable, bool isPrimaryKey)
         {
             if (!isNullable)
             {
@@ -286,22 +274,19 @@ namespace Homura.ORM
 
         private E CreateInstance()
         {
-            return new E();
+            //return new E();
+            return InstanceCreator<E>.CreateInstance()();
         }
 
         public void CreateTableIfNotExists(TimeSpan? timeout = null)
         {
             QueryHelper.KeepTryingUntilProcessSucceed(() =>
             {
-                using (var conn = GetConnection())
-                {
-                    var sql = $"create table if not exists {TableName}";
-
-                    DefineColumns(ref sql, Columns);
-
-                    LogManager.GetCurrentClassLogger().Debug(sql);
-                    conn.Execute(sql);
-                }
+                using var conn = GetConnection();
+                var sql = $"create table if not exists {TableName}";
+                DefineColumns(ref sql, Columns);
+                LogManager.GetCurrentClassLogger().Debug(sql);
+                conn.Execute(sql);
             }, timeout);
         }
 
@@ -309,15 +294,11 @@ namespace Homura.ORM
         {
             await QueryHelper.KeepTryingUntilProcessSucceedAsync(new Func<Task>(async () =>
             {
-                using (var conn = await GetConnectionAsync().ConfigureAwait(false))
-                {
-                    var sql = $"create table if not exists {TableName}";
-
-                    DefineColumns(ref sql, Columns);
-
-                    LogManager.GetCurrentClassLogger().Debug(sql);
-                    await conn.ExecuteAsync(sql).ConfigureAwait(false);
-                }
+                await using var conn = await GetConnectionAsync().ConfigureAwait(false);
+                var sql = $"create table if not exists {TableName}";
+                DefineColumns(ref sql, Columns);
+                LogManager.GetCurrentClassLogger().Debug(sql);
+                await conn.ExecuteAsync(sql).ConfigureAwait(false);
             }), timeout);
         }
 
@@ -325,13 +306,10 @@ namespace Homura.ORM
         {
             QueryHelper.KeepTryingUntilProcessSucceed(() =>
             {
-                using (var conn = GetConnection())
-                {
-                    var sql = $"drop table {TableName}";
-
-                    LogManager.GetCurrentClassLogger().Debug(sql);
-                    conn.Execute(sql);
-                }
+                using var conn = GetConnection();
+                var sql = $"drop table {TableName}";
+                LogManager.GetCurrentClassLogger().Debug(sql);
+                conn.Execute(sql);
             }, timeout);
         }
 
@@ -339,13 +317,10 @@ namespace Homura.ORM
         {
             await QueryHelper.KeepTryingUntilProcessSucceedAsync(new Func<Task>(async () =>
             {
-                using (var conn = await GetConnectionAsync().ConfigureAwait(false))
-                {
-                    var sql = $"drop table {TableName}";
-
-                    LogManager.GetCurrentClassLogger().Debug(sql);
-                    await conn.ExecuteAsync(sql).ConfigureAwait(false);
-                }
+                using var conn = await GetConnectionAsync().ConfigureAwait(false);
+                var sql = $"drop table {TableName}";
+                LogManager.GetCurrentClassLogger().Debug(sql);
+                await conn.ExecuteAsync(sql).ConfigureAwait(false);
             }), timeout).ConfigureAwait(false);
         }
 
@@ -378,16 +353,13 @@ namespace Homura.ORM
             {
                 var indexName = $"index_{TableName}_{indexPropertyName}";
 
-                using (var conn = GetConnection())
+                using var conn = GetConnection();
+                var sql = $"create index if not exists {indexName} on {TableName}({indexPropertyName})";
+                LogManager.GetCurrentClassLogger().Debug(sql);
+                var result = conn.Execute(sql);
+                if (result != -1)
                 {
-                    var sql = $"create index if not exists {indexName} on {TableName}({indexPropertyName})";
-
-                    LogManager.GetCurrentClassLogger().Debug(sql);
-                    var result = conn.Execute(sql);
-                    if (result != -1)
-                    {
-                        created += 1;
-                    }
+                    created += 1;
                 }
             }
 
@@ -399,17 +371,13 @@ namespace Homura.ORM
             foreach (var indexPropertyName in indexPropertyNames)
             {
                 var indexName = $"index_{TableName}_{indexPropertyName}";
-
-                using (var conn = await GetConnectionAsync().ConfigureAwait(false))
+                using var conn = await GetConnectionAsync().ConfigureAwait(false);
+                var sql = $"create index if not exists {indexName} on {TableName}({indexPropertyName})";
+                LogManager.GetCurrentClassLogger().Debug(sql);
+                var result = await conn.ExecuteAsync(sql).ConfigureAwait(false);
+                if (result != -1)
                 {
-                    var sql = $"create index if not exists {indexName} on {TableName}({indexPropertyName})";
-
-                    LogManager.GetCurrentClassLogger().Debug(sql);
-                    var result = await conn.ExecuteAsync(sql).ConfigureAwait(false);
-                    if (result != -1)
-                    {
-                        created += 1;
-                    }
+                    created += 1;
                 }
             }
 
@@ -419,39 +387,36 @@ namespace Homura.ORM
         private int CreateIndexClass(int created)
         {
             var indexColumnNames = SearchIndexClass();
-            if (indexColumnNames.Count() > 0)
+            if (!indexColumnNames.Any()) return created;
+            var indexName = $"index_{TableName}_";
+            Queue<string> queue = new(indexColumnNames);
+            while (queue.Any())
             {
-                var indexName = $"index_{TableName}_";
-                Queue<string> queue = new(indexColumnNames);
-                while (queue.Count() > 0)
+                indexName += queue.Dequeue();
+                if (queue.Any())
                 {
-                    indexName += queue.Dequeue();
-                    if (queue.Count() > 0)
-                    {
-                        indexName += "_";
-                    }
+                    indexName += "_";
                 }
-                using (var conn = GetConnection())
-                {
-                    var sql = $"create index if not exists {indexName} on {TableName}(";
-                    Queue<string> queue2 = new(indexColumnNames);
-                    while (queue2.Count() > 0)
-                    {
-                        sql += queue2.Dequeue();
-                        if (queue2.Count() > 0)
-                        {
-                            sql += ", ";
-                        }
-                    }
-                    sql += ")";
+            }
 
-                    LogManager.GetCurrentClassLogger().Debug(sql);
-                    var result = conn.Execute(sql);
-                    if (result != -1)
-                    {
-                        created += 1;
-                    }
+            using var conn = GetConnection();
+            var sql = $"create index if not exists {indexName} on {TableName}(";
+            Queue<string> queue2 = new(indexColumnNames);
+            while (queue2.Any())
+            {
+                sql += queue2.Dequeue();
+                if (queue2.Any())
+                {
+                    sql += ", ";
                 }
+            }
+            sql += ")";
+
+            LogManager.GetCurrentClassLogger().Debug(sql);
+            var result = conn.Execute(sql);
+            if (result != -1)
+            {
+                created += 1;
             }
 
             return created;
@@ -460,39 +425,36 @@ namespace Homura.ORM
         private async Task<int> CreateIndexClassAsync(int created)
         {
             var indexColumnNames = SearchIndexClass();
-            if (indexColumnNames.Count() > 0)
+            if (!indexColumnNames.Any()) return created;
+            var indexName = $"index_{TableName}_";
+            Queue<string> queue = new(indexColumnNames);
+            while (queue.Any())
             {
-                var indexName = $"index_{TableName}_";
-                Queue<string> queue = new(indexColumnNames);
-                while (queue.Count() > 0)
+                indexName += queue.Dequeue();
+                if (queue.Any())
                 {
-                    indexName += queue.Dequeue();
-                    if (queue.Count() > 0)
-                    {
-                        indexName += "_";
-                    }
+                    indexName += "_";
                 }
-                using (var conn = await GetConnectionAsync().ConfigureAwait(false))
-                {
-                    var sql = $"create index if not exists {indexName} on {TableName}(";
-                    Queue<string> queue2 = new(indexColumnNames);
-                    while (queue2.Count() > 0)
-                    {
-                        sql += queue2.Dequeue();
-                        if (queue2.Count() > 0)
-                        {
-                            sql += ", ";
-                        }
-                    }
-                    sql += ")";
+            }
 
-                    LogManager.GetCurrentClassLogger().Debug(sql);
-                    var result = await conn.ExecuteAsync(sql).ConfigureAwait(false);
-                    if (result != -1)
-                    {
-                        created += 1;
-                    }
+            await using var conn = await GetConnectionAsync().ConfigureAwait(false);
+            var sql = $"create index if not exists {indexName} on {TableName}(";
+            Queue<string> queue2 = new(indexColumnNames);
+            while (queue2.Any())
+            {
+                sql += queue2.Dequeue();
+                if (queue2.Any())
+                {
+                    sql += ", ";
                 }
+            }
+            sql += ")";
+
+            LogManager.GetCurrentClassLogger().Debug(sql);
+            var result = await conn.ExecuteAsync(sql).ConfigureAwait(false);
+            if (result != -1)
+            {
+                created += 1;
             }
 
             return created;
@@ -522,12 +484,10 @@ namespace Homura.ORM
             HashSet<string> indexColumnNames = new();
             var cInfo = typeof(E);
             var indexAttr = cInfo.GetCustomAttribute<IndexAttribute>();
-            if (indexAttr != null)
+            if (indexAttr == null) return indexColumnNames;
+            foreach (var name in indexAttr.PropertyNames)
             {
-                foreach (var name in indexAttr.PropertyNames)
-                {
-                    indexColumnNames.Add(name);
-                }
+                indexColumnNames.Add(name);
             }
             return indexColumnNames;
         }
@@ -537,29 +497,23 @@ namespace Homura.ORM
             return QueryHelper.KeepTryingUntilProcessSucceed<int>(() =>
                 QueryHelper.ForDao.ConnectionInternalAndReturn(this, new Func<DbConnection, int>((connection) =>
                 {
-                    using (var command = connection.CreateCommand())
+                    using var command = connection.CreateCommand();
+                    var table = (Homura.ORM.Table<E>)Table.Clone();
+                    if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName))
                     {
-                        var table = (Homura.ORM.Table<E>)Table.Clone();
-                        if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName))
-                        {
-                            table.Schema = anotherDatabaseAliasName;
-                        }
-
-                        using (var query = new Select().Count("1").As("Count")
-                                                                        .From.Table(table))
-                        {
-                            var sql = query.ToSql();
-
-                            command.CommandText = sql;
-
-                            LogManager.GetCurrentClassLogger().Debug(sql);
-                            using (var reader = command.ExecuteReader())
-                            {
-                                reader.Read();
-                                return reader.GetInt32(reader.GetOrdinal("Count"));
-                            }
-                        }
+                        table.Schema = anotherDatabaseAliasName;
                     }
+
+                    using var query = new Select().Count("1").As("Count")
+                        .From.Table(table);
+                    var sql = query.ToSql();
+
+                    command.CommandText = sql;
+
+                    LogManager.GetCurrentClassLogger().Debug(sql);
+                    using var reader = command.ExecuteReader();
+                    reader.Read();
+                    return reader.GetInt32(reader.GetOrdinal("Count"));
                 }), conn)
             , timeout);
         }
@@ -569,29 +523,23 @@ namespace Homura.ORM
             return await QueryHelper.KeepTryingUntilProcessSucceedAndReturnAsync<int>(async () =>
                 await await QueryHelper.ForDao.ConnectionInternalAndReturnAsync(this, new Func<DbConnection, Task<int>>(async (connection) =>
                 {
-                    using (var command = connection.CreateCommand())
+                    await using var command = connection.CreateCommand();
+                    var table = (Homura.ORM.Table<E>)Table.Clone();
+                    if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName))
                     {
-                        var table = (Homura.ORM.Table<E>)Table.Clone();
-                        if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName))
-                        {
-                            table.Schema = anotherDatabaseAliasName;
-                        }
-
-                        using (var query = new Select().Count("1").As("Count")
-                                                                        .From.Table(table))
-                        {
-                            var sql = query.ToSql();
-
-                            command.CommandText = sql;
-
-                            LogManager.GetCurrentClassLogger().Debug(sql);
-                            using (var reader = await command.ExecuteReaderAsync().ConfigureAwait(false))
-                            {
-                                await reader.ReadAsync().ConfigureAwait(false);
-                                return reader.GetInt32(reader.GetOrdinal("Count"));
-                            }
-                        }
+                        table.Schema = anotherDatabaseAliasName;
                     }
+
+                    using var query = new Select().Count("1").As("Count")
+                        .From.Table(table);
+                    var sql = query.ToSql();
+
+                    command.CommandText = sql;
+
+                    LogManager.GetCurrentClassLogger().Debug(sql);
+                    await using var reader = await command.ExecuteReaderAsync().ConfigureAwait(false);
+                    await reader.ReadAsync().ConfigureAwait(false);
+                    return reader.GetInt32(reader.GetOrdinal("Count"));
                 }), conn).ConfigureAwait(false)
             , timeout).ConfigureAwait(false);
         }
@@ -601,32 +549,26 @@ namespace Homura.ORM
             return QueryHelper.KeepTryingUntilProcessSucceed<int>(() =>
                 QueryHelper.ForDao.ConnectionInternalAndReturn(this, new Func<DbConnection, int>((connection) =>
                 {
-                    using (var command = connection.CreateCommand())
+                    using var command = connection.CreateCommand();
+                    var table = (Table<E>)Table.Clone();
+                    if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName))
                     {
-                        var table = (Table<E>)Table.Clone();
-                        if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName))
-                        {
-                            table.Schema = anotherDatabaseAliasName;
-                        }
-
-                        using (var query = new Select().Count("1").As("Count")
-                                                                        .From.Table(table)
-                                                                        .Where.KeyEqualToValue(idDic))
-                        {
-                            var sql = query.ToSql();
-
-                            command.CommandText = sql;
-                            command.CommandType = CommandType.Text;
-                            query.SetParameters(command);
-
-                            LogManager.GetCurrentClassLogger().Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
-                            using (var reader = command.ExecuteReader())
-                            {
-                                reader.Read();
-                                return reader.GetInt32(reader.GetOrdinal("Count"));
-                            }
-                        }
+                        table.Schema = anotherDatabaseAliasName;
                     }
+
+                    using var query = new Select().Count("1").As("Count")
+                        .From.Table(table)
+                        .Where.KeyEqualToValue(idDic);
+                    var sql = query.ToSql();
+
+                    command.CommandText = sql;
+                    command.CommandType = CommandType.Text;
+                    query.SetParameters(command);
+
+                    LogManager.GetCurrentClassLogger().Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
+                    using var reader = command.ExecuteReader();
+                    reader.Read();
+                    return reader.GetInt32(reader.GetOrdinal("Count"));
                 }), conn)
             , timeout);
         }
@@ -636,32 +578,26 @@ namespace Homura.ORM
             return await QueryHelper.KeepTryingUntilProcessSucceedAndReturnAsync(async () =>
                 await await QueryHelper.ForDao.ConnectionInternalAndReturnAsync(this, new Func<DbConnection, Task<int>>(async (connection) =>
                 {
-                    using (var command = connection.CreateCommand())
+                    await using var command = connection.CreateCommand();
+                    var table = (Table<E>)Table.Clone();
+                    if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName))
                     {
-                        var table = (Table<E>)Table.Clone();
-                        if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName))
-                        {
-                            table.Schema = anotherDatabaseAliasName;
-                        }
-
-                        using (var query = new Select().Count("1").As("Count")
-                                                                        .From.Table(table)
-                                                                        .Where.KeyEqualToValue(idDic))
-                        {
-                            var sql = query.ToSql();
-
-                            command.CommandText = sql;
-                            command.CommandType = CommandType.Text;
-                            query.SetParameters(command);
-
-                            LogManager.GetCurrentClassLogger().Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
-                            using (var reader = await command.ExecuteReaderAsync().ConfigureAwait(false))
-                            {
-                                await reader.ReadAsync().ConfigureAwait(false);
-                                return reader.GetInt32(reader.GetOrdinal("Count"));
-                            }
-                        }
+                        table.Schema = anotherDatabaseAliasName;
                     }
+
+                    using var query = new Select().Count("1").As("Count")
+                        .From.Table(table)
+                        .Where.KeyEqualToValue(idDic);
+                    var sql = query.ToSql();
+
+                    command.CommandText = sql;
+                    command.CommandType = CommandType.Text;
+                    query.SetParameters(command);
+
+                    LogManager.GetCurrentClassLogger().Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
+                    await using var reader = await command.ExecuteReaderAsync().ConfigureAwait(false);
+                    await reader.ReadAsync().ConfigureAwait(false);
+                    return reader.GetInt32(reader.GetOrdinal("Count"));
                 }), conn).ConfigureAwait(false)
             , timeout).ConfigureAwait(false);
         }
@@ -672,26 +608,22 @@ namespace Homura.ORM
             {
                 QueryHelper.ForDao.ConnectionInternal(this, (connection) =>
                 {
-                    using (var command = connection.CreateCommand())
+                    using var command = connection.CreateCommand();
+                    var table = (Table<E>)Table.Clone();
+                    if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName))
                     {
-                        var table = (Table<E>)Table.Clone();
-                        if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName))
-                        {
-                            table.Schema = anotherDatabaseAliasName;
-                        }
-
-                        using (var query = new Delete().From.Table(table)
-                                                                        .Where.Column("ID").EqualTo.Value(id))
-                        {
-                            var sql = query.ToSql();
-                            command.CommandText = sql;
-
-                            query.SetParameters(command);
-
-                            LogManager.GetCurrentClassLogger().Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
-                            command.ExecuteNonQuery();
-                        }
+                        table.Schema = anotherDatabaseAliasName;
                     }
+
+                    using var query = new Delete().From.Table(table)
+                        .Where.Column("ID").EqualTo.Value(id);
+                    var sql = query.ToSql();
+                    command.CommandText = sql;
+
+                    query.SetParameters(command);
+
+                    LogManager.GetCurrentClassLogger().Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
+                    command.ExecuteNonQuery();
                 }, conn);
             }, timeout);
         }
@@ -702,26 +634,22 @@ namespace Homura.ORM
             {
                 await QueryHelper.ForDao.ConnectionInternalAsync(this, async (connection) =>
                 {
-                    using (var command = connection.CreateCommand())
+                    await using var command = connection.CreateCommand();
+                    var table = (Table<E>)Table.Clone();
+                    if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName))
                     {
-                        var table = (Table<E>)Table.Clone();
-                        if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName))
-                        {
-                            table.Schema = anotherDatabaseAliasName;
-                        }
-
-                        using (var query = new Delete().From.Table(table)
-                                                                        .Where.Column("ID").EqualTo.Value(id))
-                        {
-                            var sql = query.ToSql();
-                            command.CommandText = sql;
-
-                            query.SetParameters(command);
-
-                            LogManager.GetCurrentClassLogger().Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
-                            await command.ExecuteNonQueryAsync().ConfigureAwait(false);
-                        }
+                        table.Schema = anotherDatabaseAliasName;
                     }
+
+                    using var query = new Delete().From.Table(table)
+                        .Where.Column("ID").EqualTo.Value(id);
+                    var sql = query.ToSql();
+                    command.CommandText = sql;
+
+                    query.SetParameters(command);
+
+                    LogManager.GetCurrentClassLogger().Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
+                    await command.ExecuteNonQueryAsync().ConfigureAwait(false);
                 }, conn).ConfigureAwait(false);
 
             }, timeout).ConfigureAwait(false);
@@ -733,26 +661,22 @@ namespace Homura.ORM
             {
                 QueryHelper.ForDao.ConnectionInternal(this, new Action<DbConnection>((connection) =>
                 {
-                    using (var command = connection.CreateCommand())
+                    using var command = connection.CreateCommand();
+                    var table = (Table<E>)Table.Clone();
+                    if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName))
                     {
-                        var table = (Table<E>)Table.Clone();
-                        if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName))
-                        {
-                            table.Schema = anotherDatabaseAliasName;
-                        }
-
-                        using (var query = new Delete().From.Table(table))
-                        {
-                            var sql = query.ToSql();
-                            command.CommandText = sql;
-                            command.CommandType = CommandType.Text;
-
-                            query.SetParameters(command);
-
-                            LogManager.GetCurrentClassLogger().Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
-                            var deleted = command.ExecuteNonQuery();
-                        }
+                        table.Schema = anotherDatabaseAliasName;
                     }
+
+                    using var query = new Delete().From.Table(table);
+                    var sql = query.ToSql();
+                    command.CommandText = sql;
+                    command.CommandType = CommandType.Text;
+
+                    query.SetParameters(command);
+
+                    LogManager.GetCurrentClassLogger().Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
+                    var deleted = command.ExecuteNonQuery();
                 }), conn);
             }, timeout);
         }
@@ -763,26 +687,22 @@ namespace Homura.ORM
             {
                 await QueryHelper.ForDao.ConnectionInternalAsync(this, async (connection) =>
                 {
-                    using (var command = connection.CreateCommand())
+                    await using var command = connection.CreateCommand();
+                    var table = (Table<E>)Table.Clone();
+                    if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName))
                     {
-                        var table = (Table<E>)Table.Clone();
-                        if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName))
-                        {
-                            table.Schema = anotherDatabaseAliasName;
-                        }
-
-                        using (var query = new Delete().From.Table(table))
-                        {
-                            var sql = query.ToSql();
-                            command.CommandText = sql;
-                            command.CommandType = CommandType.Text;
-
-                            query.SetParameters(command);
-
-                            LogManager.GetCurrentClassLogger().Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
-                            var deleted = await command.ExecuteNonQueryAsync().ConfigureAwait(false);
-                        }
+                        table.Schema = anotherDatabaseAliasName;
                     }
+
+                    using var query = new Delete().From.Table(table);
+                    var sql = query.ToSql();
+                    command.CommandText = sql;
+                    command.CommandType = CommandType.Text;
+
+                    query.SetParameters(command);
+
+                    LogManager.GetCurrentClassLogger().Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
+                    var deleted = await command.ExecuteNonQueryAsync().ConfigureAwait(false);
                 }, conn).ConfigureAwait(false);
             }, timeout).ConfigureAwait(false);
         }
@@ -793,27 +713,23 @@ namespace Homura.ORM
             {
                 QueryHelper.ForDao.ConnectionInternal(this, new Action<DbConnection>((connection) =>
                 {
-                    using (var command = connection.CreateCommand())
+                    using var command = connection.CreateCommand();
+                    var table = (Table<E>)Table.Clone();
+                    if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName))
                     {
-                        var table = (Table<E>)Table.Clone();
-                        if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName))
-                        {
-                            table.Schema = anotherDatabaseAliasName;
-                        }
-
-                        using (var query = new Delete().From.Table(table)
-                                                                        .Where.KeyEqualToValue(idDic))
-                        {
-                            var sql = query.ToSql();
-                            command.CommandText = sql;
-                            command.CommandType = CommandType.Text;
-
-                            query.SetParameters(command);
-
-                            LogManager.GetCurrentClassLogger().Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
-                            var deleted = command.ExecuteNonQuery();
-                        }
+                        table.Schema = anotherDatabaseAliasName;
                     }
+
+                    using var query = new Delete().From.Table(table)
+                        .Where.KeyEqualToValue(idDic);
+                    var sql = query.ToSql();
+                    command.CommandText = sql;
+                    command.CommandType = CommandType.Text;
+
+                    query.SetParameters(command);
+
+                    LogManager.GetCurrentClassLogger().Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
+                    var deleted = command.ExecuteNonQuery();
                 }), conn);
             }, timeout);
         }
@@ -824,27 +740,23 @@ namespace Homura.ORM
             {
                 await QueryHelper.ForDao.ConnectionInternalAsync(this, async (connection) =>
                 {
-                    using (var command = connection.CreateCommand())
+                    await using var command = connection.CreateCommand();
+                    var table = (Table<E>)Table.Clone();
+                    if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName))
                     {
-                        var table = (Table<E>)Table.Clone();
-                        if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName))
-                        {
-                            table.Schema = anotherDatabaseAliasName;
-                        }
-
-                        using (var query = new Delete().From.Table(table)
-                                                                        .Where.KeyEqualToValue(idDic))
-                        {
-                            var sql = query.ToSql();
-                            command.CommandText = sql;
-                            command.CommandType = CommandType.Text;
-
-                            query.SetParameters(command);
-
-                            LogManager.GetCurrentClassLogger().Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
-                            var deleted = await command.ExecuteNonQueryAsync().ConfigureAwait(false);
-                        }
+                        table.Schema = anotherDatabaseAliasName;
                     }
+
+                    using var query = new Delete().From.Table(table)
+                        .Where.KeyEqualToValue(idDic);
+                    var sql = query.ToSql();
+                    command.CommandText = sql;
+                    command.CommandType = CommandType.Text;
+
+                    query.SetParameters(command);
+
+                    LogManager.GetCurrentClassLogger().Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
+                    var deleted = await command.ExecuteNonQueryAsync().ConfigureAwait(false);
                 }, conn).ConfigureAwait(false);
             }, timeout).ConfigureAwait(false);
         }
@@ -865,30 +777,26 @@ namespace Homura.ORM
             {
                 QueryHelper.ForDao.ConnectionInternal(this, new Action<DbConnection>((connection) =>
                 {
-                    using (var command = connection.CreateCommand())
+                    using var command = connection.CreateCommand();
+                    var overrideColumns = SwapIfOverrided(Columns);
+
+                    var table = (Table<E>)Table.Clone();
+                    if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName))
                     {
-                        var overrideColumns = SwapIfOverrided(Columns);
+                        table.Schema = anotherDatabaseAliasName;
+                    }
 
-                        var table = (Table<E>)Table.Clone();
-                        if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName))
-                        {
-                            table.Schema = anotherDatabaseAliasName;
-                        }
+                    using var query = new Insert().Into.Table(table).Columns(overrideColumns.Select(c => c.ColumnName))
+                        .Values.Value(overrideColumns.Select(c => c.PropertyGetter(entity)));
+                    var sql = query.ToSql();
+                    command.CommandText = sql;
+                    query.SetParameters(command);
 
-                        using (var query = new Insert().Into.Table(table).Columns(overrideColumns.Select(c => c.ColumnName))
-                                                                                          .Values.Value(overrideColumns.Select(c => c.PropertyGetter(entity))))
-                        {
-                            var sql = query.ToSql();
-                            command.CommandText = sql;
-                            query.SetParameters(command);
-
-                            LogManager.GetCurrentClassLogger().Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
-                            var inserted = command.ExecuteNonQuery();
-                            if (inserted == 0)
-                            {
-                                throw new NoEntityInsertedException($"Failed:{sql} {query.GetParameters().ToStringKeyIsValue()}");
-                            }
-                        }
+                    LogManager.GetCurrentClassLogger().Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
+                    var inserted = command.ExecuteNonQuery();
+                    if (inserted == 0)
+                    {
+                        throw new NoEntityInsertedException($"Failed:{sql} {query.GetParameters().ToStringKeyIsValue()}");
                     }
                 }), conn);
             }, timeout);
@@ -910,30 +818,26 @@ namespace Homura.ORM
             {
                 await QueryHelper.ForDao.ConnectionInternalAsync(this, async (connection) =>
                 {
-                    using (var command = connection.CreateCommand())
+                    await using var command = connection.CreateCommand();
+                    var overrideColumns = SwapIfOverrided(Columns);
+
+                    var table = (Table<E>)Table.Clone();
+                    if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName))
                     {
-                        var overrideColumns = SwapIfOverrided(Columns);
+                        table.Schema = anotherDatabaseAliasName;
+                    }
 
-                        var table = (Table<E>)Table.Clone();
-                        if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName))
-                        {
-                            table.Schema = anotherDatabaseAliasName;
-                        }
+                    using var query = new Insert().Into.Table(table).Columns(overrideColumns.Select(c => c.ColumnName))
+                        .Values.Value(overrideColumns.Select(c => c.PropertyGetter(entity)));
+                    var sql = query.ToSql();
+                    command.CommandText = sql;
+                    query.SetParameters(command);
 
-                        using (var query = new Insert().Into.Table(table).Columns(overrideColumns.Select(c => c.ColumnName))
-                                                                                          .Values.Value(overrideColumns.Select(c => c.PropertyGetter(entity))))
-                        {
-                            var sql = query.ToSql();
-                            command.CommandText = sql;
-                            query.SetParameters(command);
-
-                            LogManager.GetCurrentClassLogger().Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
-                            var inserted = await command.ExecuteNonQueryAsync().ConfigureAwait(false);
-                            if (inserted == 0)
-                            {
-                                throw new NoEntityInsertedException($"Failed:{sql} {query.GetParameters().ToStringKeyIsValue()}");
-                            }
-                        }
+                    LogManager.GetCurrentClassLogger().Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
+                    var inserted = await command.ExecuteNonQueryAsync().ConfigureAwait(false);
+                    if (inserted == 0)
+                    {
+                        throw new NoEntityInsertedException($"Failed:{sql} {query.GetParameters().ToStringKeyIsValue()}");
                     }
                 }, conn).ConfigureAwait(false);
             }, timeout).ConfigureAwait(false);
@@ -960,10 +864,7 @@ namespace Homura.ORM
 
         public IEnumerable<E> FindAll(DbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null)
         {
-            if (timeout == null)
-            {
-                timeout = TimeSpan.FromMinutes(5);
-            }
+            timeout ??= TimeSpan.FromMinutes(5);
 
             var beginTime = DateTime.Now;
 
@@ -982,30 +883,25 @@ namespace Homura.ORM
                             conn = GetConnection();
                         }
 
-                        using (var command = conn.CreateCommand())
+                        using var command = conn.CreateCommand();
+                        var table = (Table<E>)Table.Clone();
+                        if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName))
                         {
-                            var table = (Table<E>)Table.Clone();
-                            if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName))
-                            {
-                                table.Schema = anotherDatabaseAliasName;
-                            }
-
-                            using (var query = new Select().Asterisk().From.Table(table))
-                            {
-                                var sql = query.ToSql();
-                                command.CommandText = sql;
-                                command.CommandType = CommandType.Text;
-
-                                LogManager.GetCurrentClassLogger().Debug(sql);
-                                using (var reader = command.ExecuteReader())
-                                {
-                                    while (reader.Read())
-                                    {
-                                        ret.Add(ToEntity(reader));
-                                    }
-                                }
-                            }
+                            table.Schema = anotherDatabaseAliasName;
                         }
+
+                        using var query = new Select().Asterisk().From.Table(table);
+                        var sql = query.ToSql();
+                        command.CommandText = sql;
+                        command.CommandType = CommandType.Text;
+
+                        LogManager.GetCurrentClassLogger().Debug(sql);
+                        using var reader = command.ExecuteReader();
+                        while (reader.Read())
+                        {
+                            ret.Add(ToEntity(reader));
+                        }
+
                         return ret;
                     }
                     finally
@@ -1036,10 +932,7 @@ namespace Homura.ORM
 
         public async IAsyncEnumerable<E> FindAllAsync(DbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null)
         {
-            if (timeout == null)
-            {
-                timeout = TimeSpan.FromMinutes(5);
-            }
+            timeout ??= TimeSpan.FromMinutes(5);
 
             var beginTime = DateTime.Now;
 
@@ -1058,29 +951,23 @@ namespace Homura.ORM
                             conn = await GetConnectionAsync().ConfigureAwait(false);
                         }
 
-                        using (var command = conn.CreateCommand())
+                        await using var command = conn.CreateCommand();
+                        var table = (Table<E>)Table.Clone();
+                        if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName))
                         {
-                            var table = (Table<E>)Table.Clone();
-                            if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName))
-                            {
-                                table.Schema = anotherDatabaseAliasName;
-                            }
+                            table.Schema = anotherDatabaseAliasName;
+                        }
 
-                            using (var query = new Select().Asterisk().From.Table(table))
-                            {
-                                var sql = query.ToSql();
-                                command.CommandText = sql;
-                                command.CommandType = CommandType.Text;
+                        using var query = new Select().Asterisk().From.Table(table);
+                        var sql = query.ToSql();
+                        command.CommandText = sql;
+                        command.CommandType = CommandType.Text;
 
-                                LogManager.GetCurrentClassLogger().Debug(sql);
-                                using (var reader = await command.ExecuteReaderAsync().ConfigureAwait(false))
-                                {
-                                    while (await reader.ReadAsync().ConfigureAwait(false))
-                                    {
-                                        ret.Add(ToEntity(reader));
-                                    }
-                                }
-                            }
+                        LogManager.GetCurrentClassLogger().Debug(sql);
+                        await using var reader = await command.ExecuteReaderAsync().ConfigureAwait(false);
+                        while (await reader.ReadAsync().ConfigureAwait(false))
+                        {
+                            ret.Add(ToEntity(reader));
                         }
                     }
                     finally
@@ -1118,10 +1005,7 @@ namespace Homura.ORM
 
         public IEnumerable<E> FindBy(Dictionary<string, object> idDic, DbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null)
         {
-            if (timeout == null)
-            {
-                timeout = TimeSpan.FromMinutes(5);
-            }
+            timeout ??= TimeSpan.FromMinutes(5);
 
             var beginTime = DateTime.Now;
 
@@ -1140,32 +1024,27 @@ namespace Homura.ORM
                             conn = GetConnection();
                         }
 
-                        using (var command = conn.CreateCommand())
+                        using var command = conn.CreateCommand();
+                        var table = (Table<E>)Table.Clone();
+                        if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName))
                         {
-                            var table = (Table<E>)Table.Clone();
-                            if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName))
-                            {
-                                table.Schema = anotherDatabaseAliasName;
-                            }
-
-                            using (var query = new Select().Asterisk().From.Table(table)
-                                                                                       .Where.KeyEqualToValue(idDic))
-                            {
-                                var sql = query.ToSql();
-                                command.CommandText = sql;
-                                command.CommandType = CommandType.Text;
-                                query.SetParameters(command);
-
-                                LogManager.GetCurrentClassLogger().Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
-                                using (var reader = command.ExecuteReader())
-                                {
-                                    while (reader.Read())
-                                    {
-                                        ret.Add(ToEntity(reader));
-                                    }
-                                }
-                            }
+                            table.Schema = anotherDatabaseAliasName;
                         }
+
+                        using var query = new Select().Asterisk().From.Table(table)
+                            .Where.KeyEqualToValue(idDic);
+                        var sql = query.ToSql();
+                        command.CommandText = sql;
+                        command.CommandType = CommandType.Text;
+                        query.SetParameters(command);
+
+                        LogManager.GetCurrentClassLogger().Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
+                        using var reader = command.ExecuteReader();
+                        while (reader.Read())
+                        {
+                            ret.Add(ToEntity(reader));
+                        }
+
                         return ret;
                     }
                     finally
@@ -1196,10 +1075,7 @@ namespace Homura.ORM
 
         public async IAsyncEnumerable<E> FindByAsync(Dictionary<string, object> idDic, DbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null)
         {
-            if (timeout == null)
-            {
-                timeout = TimeSpan.FromMinutes(5);
-            }
+            timeout ??= TimeSpan.FromMinutes(5);
 
             var beginTime = DateTime.Now;
 
@@ -1218,31 +1094,25 @@ namespace Homura.ORM
                             conn = await GetConnectionAsync().ConfigureAwait(false);
                         }
 
-                        using (var command = conn.CreateCommand())
+                        await using var command = conn.CreateCommand();
+                        var table = (Table<E>)Table.Clone();
+                        if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName))
                         {
-                            var table = (Table<E>)Table.Clone();
-                            if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName))
-                            {
-                                table.Schema = anotherDatabaseAliasName;
-                            }
+                            table.Schema = anotherDatabaseAliasName;
+                        }
 
-                            using (var query = new Select().Asterisk().From.Table(table)
-                                                                                       .Where.KeyEqualToValue(idDic))
-                            {
-                                var sql = query.ToSql();
-                                command.CommandText = sql;
-                                command.CommandType = CommandType.Text;
-                                query.SetParameters(command);
+                        using var query = new Select().Asterisk().From.Table(table)
+                            .Where.KeyEqualToValue(idDic);
+                        var sql = query.ToSql();
+                        command.CommandText = sql;
+                        command.CommandType = CommandType.Text;
+                        query.SetParameters(command);
 
-                                LogManager.GetCurrentClassLogger().Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
-                                using (var reader = await command.ExecuteReaderAsync().ConfigureAwait(false))
-                                {
-                                    while (await reader.ReadAsync().ConfigureAwait(false))
-                                    {
-                                        ret.Add(ToEntity(reader));
-                                    }
-                                }
-                            }
+                        LogManager.GetCurrentClassLogger().Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
+                        await using var reader = await command.ExecuteReaderAsync().ConfigureAwait(false);
+                        while (await reader.ReadAsync().ConfigureAwait(false))
+                        {
+                            ret.Add(ToEntity(reader));
                         }
                     }
                     finally
@@ -1284,25 +1154,21 @@ namespace Homura.ORM
             {
                 QueryHelper.ForDao.ConnectionInternal(this, new Action<DbConnection>((connection) =>
                 {
-                    using (var command = connection.CreateCommand())
+                    using var command = connection.CreateCommand();
+                    var table = (Table<E>)Table.Clone();
+                    if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName))
                     {
-                        var table = (Table<E>)Table.Clone();
-                        if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName))
-                        {
-                            table.Schema = anotherDatabaseAliasName;
-                        }
-
-                        using (var query = new Update().Table(table).Set.KeyEqualToValue(table.ColumnsWithoutPrimaryKeys.ToDictionary(c => c.ColumnName, c => c.PropertyGetter(entity)))
-                                                                                     .Where.KeyEqualToValue(table.PrimaryKeyColumns.ToDictionary(c => c.ColumnName, c => c.PropertyGetter(entity))))
-                        {
-                            var sql = query.ToSql();
-                            command.CommandText = sql;
-                            query.SetParameters(command);
-
-                            LogManager.GetCurrentClassLogger().Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
-                            command.ExecuteNonQuery();
-                        }
+                        table.Schema = anotherDatabaseAliasName;
                     }
+
+                    using var query = new Update().Table(table).Set.KeyEqualToValue(table.ColumnsWithoutPrimaryKeys.ToDictionary(c => c.ColumnName, c => c.PropertyGetter(entity)))
+                        .Where.KeyEqualToValue(table.PrimaryKeyColumns.ToDictionary(c => c.ColumnName, c => c.PropertyGetter(entity)));
+                    var sql = query.ToSql();
+                    command.CommandText = sql;
+                    query.SetParameters(command);
+
+                    LogManager.GetCurrentClassLogger().Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
+                    command.ExecuteNonQuery();
                 }), conn);
             }, timeout);
         }
@@ -1313,36 +1179,32 @@ namespace Homura.ORM
             {
                 return await QueryHelper.ForDao.ConnectionInternalAsync(this, async (connection) =>
                 {
-                    using (var command = connection.CreateCommand())
+                    await using var command = connection.CreateCommand();
+                    var table = (Table<E>)Table.Clone();
+                    if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName))
                     {
-                        var table = (Table<E>)Table.Clone();
-                        if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName))
-                        {
-                            table.Schema = anotherDatabaseAliasName;
-                        }
-
-                        var a = table.ColumnsWithoutPrimaryKeys.ToDictionary(c => c.ColumnName, c => c.PropertyGetter(entity));
-                        var b = table.PrimaryKeyColumns.ToDictionary(c => c.ColumnName, c => c.PropertyGetter(entity));
-
-                        using (var query = new Update().Table(table).Set.KeyEqualToValue(table.ColumnsWithoutPrimaryKeys.ToDictionary(c => c.ColumnName, c => c.PropertyGetter(entity)))
-                                                                                     .Where.KeyEqualToValue(table.PrimaryKeyColumns.ToDictionary(c => c.ColumnName, c => c.PropertyGetter(entity))))
-                        {
-                            var sql = query.ToSql();
-                            command.CommandText = sql;
-                            query.SetParameters(command);
-
-                            LogManager.GetCurrentClassLogger().Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
-                            return await command.ExecuteNonQueryAsync().ConfigureAwait(false);
-                        }
+                        table.Schema = anotherDatabaseAliasName;
                     }
+
+                    var a = table.ColumnsWithoutPrimaryKeys.ToDictionary(c => c.ColumnName, c => c.PropertyGetter(entity));
+                    var b = table.PrimaryKeyColumns.ToDictionary(c => c.ColumnName, c => c.PropertyGetter(entity));
+
+                    using var query = new Update().Table(table).Set.KeyEqualToValue(table.ColumnsWithoutPrimaryKeys.ToDictionary(c => c.ColumnName, c => c.PropertyGetter(entity)))
+                        .Where.KeyEqualToValue(table.PrimaryKeyColumns.ToDictionary(c => c.ColumnName, c => c.PropertyGetter(entity)));
+                    var sql = query.ToSql();
+                    command.CommandText = sql;
+                    query.SetParameters(command);
+
+                    LogManager.GetCurrentClassLogger().Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
+                    return await command.ExecuteNonQueryAsync().ConfigureAwait(false);
                 }, conn).ConfigureAwait(false);
             }, timeout).ConfigureAwait(false);
         }
 
-        private static string sqlToDefineColumns(IColumn c)
+        private static string SqlToDefineColumns(IColumn c)
         {
             var r = $"{c.ColumnName} {c.DBDataType}";
-            if (c.Constraints != null && c.Constraints.Count() > 0)
+            if (c.Constraints != null && c.Constraints.Any())
             {
                 r += $" {c.ConstraintsToSql()}";
             }
@@ -1353,7 +1215,7 @@ namespace Homura.ORM
         {
             CheckDelimiter(ref sql);
             sql += "(";
-            EnumerateColumnsIntoSQL(ref sql, (c) => sqlToDefineColumns(c), ", ", columns);
+            EnumerateColumnsIntoSql(ref sql, SqlToDefineColumns, ", ", columns);
 
             //複合主キー
             var primaryKeyConstraintAttributes = typeof(E).GetCustomAttribute<PrimaryKeyAttribute>();
@@ -1374,7 +1236,7 @@ namespace Homura.ORM
             }
         }
 
-        private void EnumerateColumnsIntoSQL(ref string sql, Func<IColumn, string> content, string connection, IEnumerable<IColumn> columns)
+        private static void EnumerateColumnsIntoSql(ref string sql, Func<IColumn, string> content, string connection, IEnumerable<IColumn> columns)
         {
             CheckDelimiter(ref sql);
             Queue<IColumn> queue = new(columns);
@@ -1407,38 +1269,33 @@ namespace Homura.ORM
                         Table<E> newTable = new(upgradePath.To);
                         Table<E> oldTable = new(upgradePath.From);
 
-                        using (var query = new Insert().Into.Table(newTable)
-                                                       .Columns(newTable.Columns.Select(c => c.ColumnName))
-                                                       .Select.Columns(oldTable.Columns.Select(c => c.ColumnName).Union(newTable.NewColumns(oldTable, newTable).Select(v => v.WrapOutput()))).From.Table(oldTable))
-                        {
-                            var sql = query.ToSql();
-                            command.CommandText = sql;
+                        using var query = new Insert().Into.Table(newTable)
+                            .Columns(newTable.Columns.Select(c => c.ColumnName))
+                            .Select.Columns(oldTable.Columns.Select(c => c.ColumnName).Union(newTable.NewColumns(oldTable, newTable).Select(v => v.WrapOutput()))).From.Table(oldTable);
+                        var sql = query.ToSql();
+                        command.CommandText = sql;
 
-                            LogManager.GetCurrentClassLogger().Debug($"{sql}");
-                            command.ExecuteNonQuery();
-                        }
+                        LogManager.GetCurrentClassLogger().Debug($"{sql}");
+                        command.ExecuteNonQuery();
                     }
 
                     if ((mode & VersioningMode.DeleteAllRecordInTableCastedOff) == VersioningMode.DeleteAllRecordInTableCastedOff)
                     {
-                        using (var command = connection.CreateCommand())
-                        {
-                            var sql = $"delete from {new Table<E>(upgradePath.From).Name}";
-                            command.CommandText = sql;
-                            LogManager.GetCurrentClassLogger().Debug($"{sql}");
-                            command.ExecuteNonQuery();
-                        }
+                        using var command = connection.CreateCommand();
+                        var sql = $"delete from {new Table<E>(upgradePath.From).Name}";
+                        command.CommandText = sql;
+                        LogManager.GetCurrentClassLogger().Debug($"{sql}");
+                        command.ExecuteNonQuery();
                     }
 
-                    if ((mode & VersioningMode.DropTableCastedOff) == VersioningMode.DropTableCastedOff)
+                    if ((mode & VersioningMode.DropTableCastedOff) != VersioningMode.DropTableCastedOff) return;
+
                     {
-                        using (var command = connection.CreateCommand())
-                        {
-                            var sql = $"drop table {new Table<E>(upgradePath.From).Name}";
-                            command.CommandText = sql;
-                            LogManager.GetCurrentClassLogger().Debug($"{sql}");
-                            command.ExecuteNonQuery();
-                        }
+                        using var command = connection.CreateCommand();
+                        var sql = $"drop table {new Table<E>(upgradePath.From).Name}";
+                        command.CommandText = sql;
+                        LogManager.GetCurrentClassLogger().Debug($"{sql}");
+                        command.ExecuteNonQuery();
                     }
 
                 }), conn);
@@ -1451,43 +1308,37 @@ namespace Homura.ORM
             {
                 await QueryHelper.ForDao.ConnectionInternalAsync(this, async (connection) =>
                 {
-                    using (var command = connection.CreateCommand())
+                    await using (var command = connection.CreateCommand())
                     {
                         Table<E> newTable = new(upgradePath.To);
                         Table<E> oldTable = new(upgradePath.From);
 
-                        using (var query = new Insert().Into.Table(newTable)
-                                                       .Columns(newTable.Columns.Select(c => c.ColumnName))
-                                                       .Select.Columns(oldTable.Columns.Select(c => c.ColumnName).Union(newTable.NewColumns(oldTable, newTable).Select(v => v.WrapOutput()))).From.Table(oldTable))
-                        {
-                            var sql = query.ToSql();
-                            command.CommandText = sql;
+                        using var query = new Insert().Into.Table(newTable)
+                            .Columns(newTable.Columns.Select(c => c.ColumnName))
+                            .Select.Columns(oldTable.Columns.Select(c => c.ColumnName).Union(newTable.NewColumns(oldTable, newTable).Select(v => v.WrapOutput()))).From.Table(oldTable);
+                        var sql = query.ToSql();
+                        command.CommandText = sql;
 
-                            LogManager.GetCurrentClassLogger().Debug($"{sql}");
-                            await command.ExecuteNonQueryAsync().ConfigureAwait(false);
-                        }
+                        LogManager.GetCurrentClassLogger().Debug($"{sql}");
+                        await command.ExecuteNonQueryAsync().ConfigureAwait(false);
                     }
 
                     if ((mode & VersioningMode.DeleteAllRecordInTableCastedOff) == VersioningMode.DeleteAllRecordInTableCastedOff)
                     {
-                        using (var command = connection.CreateCommand())
-                        {
-                            var sql = $"delete from {new Table<E>(upgradePath.From).Name}";
-                            command.CommandText = sql;
-                            LogManager.GetCurrentClassLogger().Debug($"{sql}");
-                            await command.ExecuteNonQueryAsync().ConfigureAwait(false);
-                        }
+                        await using var command = connection.CreateCommand();
+                        var sql = $"delete from {new Table<E>(upgradePath.From).Name}";
+                        command.CommandText = sql;
+                        LogManager.GetCurrentClassLogger().Debug($"{sql}");
+                        await command.ExecuteNonQueryAsync().ConfigureAwait(false);
                     }
 
                     if ((mode & VersioningMode.DropTableCastedOff) == VersioningMode.DropTableCastedOff)
                     {
-                        using (var command = connection.CreateCommand())
-                        {
-                            var sql = $"drop table {new Table<E>(upgradePath.From).Name}";
-                            command.CommandText = sql;
-                            LogManager.GetCurrentClassLogger().Debug($"{sql}");
-                            await command.ExecuteNonQueryAsync().ConfigureAwait(false);
-                        }
+                        await using var command = connection.CreateCommand();
+                        var sql = $"drop table {new Table<E>(upgradePath.From).Name}";
+                        command.CommandText = sql;
+                        LogManager.GetCurrentClassLogger().Debug($"{sql}");
+                        await command.ExecuteNonQueryAsync().ConfigureAwait(false);
                     }
 
                 }, conn).ConfigureAwait(false);
@@ -1502,7 +1353,7 @@ namespace Homura.ORM
             }
             catch (Exception)
             {
-                return default(T);
+                return default;
             }
         }
 
@@ -1574,7 +1425,7 @@ namespace Homura.ORM
                 {
                     Table<E> newTable = new(versionTo);
                     Table<E> oldTable = new(versionFrom);
-                    using (var command = connection.CreateCommand())
+                    await using (var command = connection.CreateCommand())
                     {
                         //Toテーブル作成
                         var sql = $"create table {newTable.Name}_To(";
@@ -1592,20 +1443,18 @@ namespace Homura.ORM
                         await command.ExecuteNonQueryAsync().ConfigureAwait(false);
                     }
 
-                    using (var command = connection.CreateCommand())
+                    await using (var command = connection.CreateCommand())
                     {
                         //fromテーブルからToテーブルへコピー
-                        using (var query = new Insert().Into.Table(new NeutralTable($"{newTable.Name}_To"))
-                                                        .Columns(newTable.Columns.Select(c => c.ColumnName))
-                                                        .Select.Columns(oldTable.Columns.Select(c => c.ColumnName).Union(newTable.NewColumns(oldTable, newTable).Select(v => v.WrapOutput()))).From.Table(oldTable))
-                        {
-                            command.CommandText = query.ToSql();
-                            LogManager.GetCurrentClassLogger().Debug($"{query.ToSql()}");
-                            await command.ExecuteNonQueryAsync().ConfigureAwait(false);
-                        }
+                        using var query = new Insert().Into.Table(new NeutralTable($"{newTable.Name}_To"))
+                            .Columns(newTable.Columns.Select(c => c.ColumnName))
+                            .Select.Columns(oldTable.Columns.Select(c => c.ColumnName).Union(newTable.NewColumns(oldTable, newTable).Select(v => v.WrapOutput()))).From.Table(oldTable);
+                        command.CommandText = query.ToSql();
+                        LogManager.GetCurrentClassLogger().Debug($"{query.ToSql()}");
+                        await command.ExecuteNonQueryAsync().ConfigureAwait(false);
                     }
 
-                    using (var command = connection.CreateCommand())
+                    await using (var command = connection.CreateCommand())
                     {
                         //Drop fromテーブル
                         var sql = $"drop table {oldTable.Name}";
@@ -1614,7 +1463,7 @@ namespace Homura.ORM
                         await command.ExecuteNonQueryAsync().ConfigureAwait(false);
                     }
 
-                    using (var command = connection.CreateCommand())
+                    await using (var command = connection.CreateCommand())
                     {
                         //ToテーブルをリネームしてFromテーブルに
                         var sql = $"alter table {newTable.Name}_To rename to {oldTable.Name}";
