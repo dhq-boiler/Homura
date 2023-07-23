@@ -182,7 +182,7 @@ namespace Homura.ORM
 
         protected E ToEntityInDefaultWay(IDataRecord reader)
         {
-            var ret = CreateInstance();
+            var ret = Dao<E>.CreateInstance();
             const string VALUE_STR = "Value";
 
             foreach (var column in Columns)
@@ -272,10 +272,9 @@ namespace Homura.ORM
             }
         }
 
-        private E CreateInstance()
+        private static E CreateInstance()
         {
-            //return new E();
-            return InstanceCreator<E>.CreateInstance()();
+            return InstanceCreator<E>.CreateInstance();
         }
 
         public void CreateTableIfNotExists(TimeSpan? timeout = null)
@@ -317,7 +316,7 @@ namespace Homura.ORM
         {
             await QueryHelper.KeepTryingUntilProcessSucceedAsync(new Func<Task>(async () =>
             {
-                using var conn = await GetConnectionAsync().ConfigureAwait(false);
+                await using var conn = await GetConnectionAsync().ConfigureAwait(false);
                 var sql = $"drop table {TableName}";
                 LogManager.GetCurrentClassLogger().Debug(sql);
                 await conn.ExecuteAsync(sql).ConfigureAwait(false);
@@ -371,7 +370,7 @@ namespace Homura.ORM
             foreach (var indexPropertyName in indexPropertyNames)
             {
                 var indexName = $"index_{TableName}_{indexPropertyName}";
-                using var conn = await GetConnectionAsync().ConfigureAwait(false);
+                await using var conn = await GetConnectionAsync().ConfigureAwait(false);
                 var sql = $"create index if not exists {indexName} on {TableName}({indexPropertyName})";
                 LogManager.GetCurrentClassLogger().Debug(sql);
                 var result = await conn.ExecuteAsync(sql).ConfigureAwait(false);
