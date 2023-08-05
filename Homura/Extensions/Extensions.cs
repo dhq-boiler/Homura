@@ -140,6 +140,15 @@ namespace Homura.Extensions
             return isNull ? null : Type.GetType(rdr.GetString(index));
         }
 
+        public static object SafeGetObject(this IDataRecord rdr, string columnName, ITable table)
+        {
+            int index = CheckColumnExists(rdr, columnName, table);
+
+            bool isNull = rdr.IsDBNull(index);
+
+            return isNull ? null : rdr.GetValue(index);
+        }
+
         public static int CheckColumnExists(this IDataRecord rdr, string columnName, ITable table)
         {
             int index = rdr.GetOrdinal(columnName);
