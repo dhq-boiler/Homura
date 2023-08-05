@@ -266,6 +266,10 @@ namespace Homura.ORM
             {
                 return reader.SafeGetNullableBoolean(column.ColumnName, table);
             }
+            else if (column.EntityDataType == typeof(Type) || column.EntityDataType.GetInterfaces().Contains(typeof(IReactiveProperty<Type>)))
+            {
+                return reader.SafeGetType(column.ColumnName, table);
+            }
             else
             {
                 throw new NotSupportedException($"{column.EntityDataType.FullName} is not supported.");
