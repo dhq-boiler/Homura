@@ -1,10 +1,6 @@
 ﻿using Homura.ORM;
 using System;
-using System.Collections.Generic;
 using System.Data;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Homura.Extensions
 {
@@ -137,7 +133,9 @@ namespace Homura.Extensions
 
             bool isNull = rdr.IsDBNull(index);
 
-            return isNull ? null : Type.GetType(rdr.GetString(index));
+            var FQDN = rdr.GetString(index);
+
+            return isNull ? null : Type.GetType(FQDN);
         }
 
         public static object SafeGetObject(this IDataRecord rdr, string columnName, ITable table)
