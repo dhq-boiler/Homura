@@ -1,5 +1,6 @@
 ﻿
 
+using System;
 using Homura.QueryBuilder.Core;
 using Homura.QueryBuilder.Iso.Dml.Syntaxes;
 using System.Collections.Generic;
@@ -47,7 +48,14 @@ namespace Homura.QueryBuilder.Iso.Dml
             {
                 var p = command.CreateParameter();
                 p.ParameterName = parameter.Key.ToString();
-                p.Value = parameter.Value;
+                if (parameter.Value is Type t)
+                {
+                    p.Value = t.AssemblyQualifiedName;
+                }
+                else
+                {
+                    p.Value = parameter.Value;
+                }
                 command.Parameters.Add(p);
             }
         }
