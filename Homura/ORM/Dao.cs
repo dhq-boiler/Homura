@@ -274,6 +274,10 @@ namespace Homura.ORM
             {
                 return reader.SafeGetObject(column.ColumnName, table);
             }
+            else if (column.DBDataType == "INTEGER")
+            {
+                return reader.SafeGetInt(column.ColumnName, table);
+            }
             else
             {
                 throw new NotSupportedException($"{column.EntityDataType.FullName} is not supported.");
