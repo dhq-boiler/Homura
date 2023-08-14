@@ -175,12 +175,12 @@ namespace Homura.ORM
             }
         }
 
-        protected virtual E ToEntity(IDataRecord reader, params Column[] columns)
+        protected virtual E ToEntity(IDataRecord reader, params IColumn[] columns)
         {
             return ToEntityInDefaultWay(reader, columns);
         }
 
-        protected E ToEntityInDefaultWay(IDataRecord reader, params Column[] columns)
+        protected E ToEntityInDefaultWay(IDataRecord reader, params IColumn[] columns)
         {
             var ret = Dao<E>.CreateInstance();
             const string VALUE_STR = "Value";
