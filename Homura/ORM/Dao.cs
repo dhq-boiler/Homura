@@ -1282,7 +1282,7 @@ namespace Homura.ORM
 
                         using var query = new Insert().Into.Table(newTable)
                             .Columns(newTable.Columns.Select(c => c.ColumnName))
-                            .Select.Columns(oldTable.Columns.Select(c => c.ColumnName).Union(newTable.NewColumns(oldTable, newTable).Select(v => v.WrapOutput()))).From.Table(oldTable);
+                            .Select.Columns(oldTable.Columns.Select(c => c.ColumnName).Concat(newTable.NewColumns(oldTable, newTable).Select(v => v.WrapOutput()))).From.Table(oldTable);
                         var sql = query.ToSql();
                         command.CommandText = sql;
 
@@ -1326,7 +1326,7 @@ namespace Homura.ORM
 
                         using var query = new Insert().Into.Table(newTable)
                             .Columns(newTable.Columns.Select(c => c.ColumnName))
-                            .Select.Columns(oldTable.Columns.Select(c => c.ColumnName).Union(newTable.NewColumns(oldTable, newTable).Select(v => v.WrapOutput()))).From.Table(oldTable);
+                            .Select.Columns(oldTable.Columns.Select(c => c.ColumnName).Concat(newTable.NewColumns(oldTable, newTable).Select(v => v.WrapOutput()))).From.Table(oldTable);
                         var sql = query.ToSql();
                         command.CommandText = sql;
 
@@ -1399,7 +1399,7 @@ namespace Homura.ORM
                         //fromテーブルからToテーブルへコピー
                         using (var query = new Insert().Into.Table(new NeutralTable($"{newTable.Name}_To"))
                                                         .Columns(newTable.Columns.Select(c => c.ColumnName))
-                                                        .Select.Columns(oldTable.Columns.Select(c => c.ColumnName).Union(newTable.NewColumns(oldTable, newTable).Select(v => v.WrapOutput()))).From.Table(oldTable))
+                                                        .Select.Columns(oldTable.Columns.Select(c => c.ColumnName).Concat(newTable.NewColumns(oldTable, newTable).Select(v => v.WrapOutput()))).From.Table(oldTable))
                         {
                             command.CommandText = query.ToSql();
                             LogManager.GetCurrentClassLogger().Debug($"{query.ToSql()}");
@@ -1459,7 +1459,7 @@ namespace Homura.ORM
                         //fromテーブルからToテーブルへコピー
                         using var query = new Insert().Into.Table(new NeutralTable($"{newTable.Name}_To"))
                             .Columns(newTable.Columns.Select(c => c.ColumnName))
-                            .Select.Columns(oldTable.Columns.Select(c => c.ColumnName).Union(newTable.NewColumns(oldTable, newTable).Select(v => v.WrapOutput()))).From.Table(oldTable);
+                            .Select.Columns(oldTable.Columns.Select(c => c.ColumnName).Concat(newTable.NewColumns(oldTable, newTable).Select(v => v.WrapOutput()))).From.Table(oldTable);
                         command.CommandText = query.ToSql();
                         LogManager.GetCurrentClassLogger().Debug($"{query.ToSql()}");
                         await command.ExecuteNonQueryAsync().ConfigureAwait(false);
