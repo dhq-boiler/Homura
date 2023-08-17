@@ -73,7 +73,7 @@ namespace Homura.ORM
                     {
                         return "null";
                     }
-                    return $"\"{DefaultValue}\"";
+                    return $"\'{DefaultValue}'";
                 }
                 else
                 {
@@ -84,7 +84,7 @@ namespace Homura.ORM
                     switch (EntityDataType.Name)
                     {
                         case "String":
-                            return $"\"{DefaultValue}\"";
+                            return $"\'{DefaultValue}\'";
                         case "int":
                             return DefaultValue.ToString();
                         case "Boolean":
