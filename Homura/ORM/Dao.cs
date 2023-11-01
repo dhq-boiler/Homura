@@ -311,6 +311,10 @@ namespace Homura.ORM
                     {
                         ((Action<TObj, double?>)_dictionary[type][name])(obj, (double?)parameter);
                     }
+                    else if (objType == typeof(string))
+                    {
+                        ((Action<TObj, string>)_dictionary[type][name])(obj, (string)parameter);
+                    }
                     else if (objType == typeof(DateTime))
                     {
                         ((Action<TObj, DateTime>)_dictionary[type][name])(obj, (DateTime)parameter);
@@ -326,6 +330,14 @@ namespace Homura.ORM
                     else if (objType == typeof(Guid?))
                     {
                         ((Action<TObj, Guid?>)_dictionary[type][name])(obj, (Guid?)parameter);
+                    }
+                    else if (objType == typeof(Type))
+                    {
+                        ((Action<TObj, Type>)_dictionary[type][name])(obj, (Type)parameter);
+                    }
+                    else if (objType == typeof(object))
+                    {
+                        ((Action<TObj, object>)_dictionary[type][name])(obj, (object)parameter);
                     }
 
                     else if (objType == typeof(ReactivePropertySlim<bool>))
@@ -400,6 +412,10 @@ namespace Homura.ORM
                     {
                         ((Action<ReactivePropertySlim<double?>, double?>)_dictionary[type][name])(obj as ReactivePropertySlim<double?>, (double?)parameter);
                     }
+                    else if (objType == typeof(ReactivePropertySlim<string>))
+                    {
+                        ((Action<ReactivePropertySlim<string>, string>)_dictionary[type][name])(obj as ReactivePropertySlim<string>, (string)parameter);
+                    }
                     else if (objType == typeof(ReactivePropertySlim<DateTime>))
                     {
                         ((Action<ReactivePropertySlim<DateTime>, DateTime>)_dictionary[type][name])(obj as ReactivePropertySlim<DateTime>, (DateTime)parameter);
@@ -416,6 +432,15 @@ namespace Homura.ORM
                     {
                         ((Action<ReactivePropertySlim<Guid?>, Guid?>)_dictionary[type][name])(obj as ReactivePropertySlim<Guid?>, (Guid?)parameter);
                     }
+                    else if (objType == typeof(ReactivePropertySlim<Type>))
+                    {
+                        ((Action<ReactivePropertySlim<Type>, Type>)_dictionary[type][name])(obj as ReactivePropertySlim<Type>, (Type)parameter);
+                    }
+                    else if (objType == typeof(ReactivePropertySlim<object>))
+                    {
+                        ((Action<ReactivePropertySlim<object>, object>)_dictionary[type][name])(obj as ReactivePropertySlim<object>, (object)parameter);
+                    }
+
                     else if (objType == typeof(ReactiveProperty<short>))
                     {
                         ((Action<ReactiveProperty<short>, short>)_dictionary[type][name])(obj as ReactiveProperty<short>, (short)parameter);
@@ -480,6 +505,10 @@ namespace Homura.ORM
                     {
                         ((Action<ReactiveProperty<double?>, double?>)_dictionary[type][name])(obj as ReactiveProperty<double?>, (double?)parameter);
                     }
+                    else if (objType == typeof(ReactiveProperty<string>))
+                    {
+                        ((Action<ReactiveProperty<string>, string>)_dictionary[type][name])(obj as ReactiveProperty<string>, (string)parameter);
+                    }
                     else if (objType == typeof(ReactiveProperty<DateTime>))
                     {
                         ((Action<ReactiveProperty<DateTime>, DateTime>)_dictionary[type][name])(obj as ReactiveProperty<DateTime>, (DateTime)parameter);
@@ -496,6 +525,15 @@ namespace Homura.ORM
                     {
                         ((Action<ReactiveProperty<Guid?>, Guid?>)_dictionary[type][name])(obj as ReactiveProperty<Guid?>, (Guid?)parameter);
                     }
+                    else if (objType == typeof(ReactiveProperty<Type>))
+                    {
+                        ((Action<ReactiveProperty<Type>, Type>)_dictionary[type][name])(obj as ReactiveProperty<Type>, (Type)parameter);
+                    }
+                    else if (objType == typeof(ReactiveProperty<object>))
+                    {
+                        ((Action<ReactiveProperty<object>, object>)_dictionary[type][name])(obj as ReactiveProperty<object>, (object)parameter);
+                    }
+
                     return true;
                 }
                 catch (KeyNotFoundException e)
@@ -597,6 +635,11 @@ namespace Homura.ORM
                             _dictionary[type][name] = GetSetter<TObj, double?>(obj.GetType(), name);
                             ((Action<TObj, double?>)_dictionary[type][name])(obj, (double?)parameter);
                         }
+                        else if (objType == typeof(string))
+                        {
+                            _dictionary[type][name] = GetSetter<TObj, string>(obj.GetType(), name);
+                            ((Action<TObj, string>)_dictionary[type][name])(obj, (string)parameter);
+                        }
                         else if (objType == typeof(DateTime))
                         {
                             _dictionary[type][name] = GetSetter<TObj, DateTime>(obj.GetType(), name);
@@ -616,6 +659,16 @@ namespace Homura.ORM
                         {
                             _dictionary[type][name] = GetSetter<TObj, Guid?>(obj.GetType(), name);
                             ((Action<TObj, Guid?>)_dictionary[type][name])(obj, (Guid?)parameter);
+                        }
+                        else if (objType == typeof(Type))
+                        {
+                            _dictionary[type][name] = GetSetter<TObj, Type>(obj.GetType(), name);
+                            ((Action<TObj, Type>)_dictionary[type][name])(obj, (Type)parameter);
+                        }
+                        else if (objType == typeof(object))
+                        {
+                            _dictionary[type][name] = GetSetter<TObj, object>(obj.GetType(), name);
+                            ((Action<TObj, object>)_dictionary[type][name])(obj, (object)parameter);
                         }
                         else if (objType == typeof(ReactivePropertySlim<bool>))
                         {
@@ -707,6 +760,11 @@ namespace Homura.ORM
                             _dictionary[type][name] = GetSetter<ReactivePropertySlim<double?>, double?>(obj.GetType(), name);
                             ((Action<ReactivePropertySlim<double?>, double?>)_dictionary[type][name])(obj as ReactivePropertySlim<double?>, (double?)parameter);
                         }
+                        else if (objType == typeof(ReactivePropertySlim<string>))
+                        {
+                            _dictionary[type][name] = GetSetter<ReactivePropertySlim<string>, string>(obj.GetType(), name);
+                            ((Action<ReactivePropertySlim<string>, string>)_dictionary[type][name])(obj as ReactivePropertySlim<string>, (string)parameter);
+                        }
                         else if (objType == typeof(ReactivePropertySlim<DateTime>))
                         {
                             _dictionary[type][name] = GetSetter<ReactivePropertySlim<DateTime>, DateTime>(obj.GetType(), name);
@@ -726,6 +784,16 @@ namespace Homura.ORM
                         {
                             _dictionary[type][name] = GetSetter<ReactivePropertySlim<Guid?>, Guid?>(obj.GetType(), name);
                             ((Action<ReactivePropertySlim<Guid?>, Guid?>)_dictionary[type][name])(obj as ReactivePropertySlim<Guid?>, (Guid?)parameter);
+                        }
+                        else if (objType == typeof(ReactivePropertySlim<Type>))
+                        {
+                            _dictionary[type][name] = GetSetter<ReactivePropertySlim<Type>, Type>(obj.GetType(), name);
+                            ((Action<ReactivePropertySlim<Type>, Type>)_dictionary[type][name])(obj as ReactivePropertySlim<Type>, (Type)parameter);
+                        }
+                        else if (objType == typeof(ReactivePropertySlim<object>))
+                        {
+                            _dictionary[type][name] = GetSetter<ReactivePropertySlim<object>, object>(obj.GetType(), name);
+                            ((Action<ReactivePropertySlim<object>, object>)_dictionary[type][name])(obj as ReactivePropertySlim<object>, (object)parameter);
                         }
                         else if (objType == typeof(ReactiveProperty<bool>))
                         {
@@ -817,6 +885,11 @@ namespace Homura.ORM
                             _dictionary[type][name] = GetSetter<ReactiveProperty<double?>, double?>(obj.GetType(), name);
                             ((Action<ReactiveProperty<double?>, double?>)_dictionary[type][name])(obj as ReactiveProperty<double?>, (double?)parameter);
                         }
+                        else if (objType == typeof(ReactiveProperty<string>))
+                        {
+                            _dictionary[type][name] = GetSetter<ReactiveProperty<string>, string>(obj.GetType(), name);
+                            ((Action<ReactiveProperty<string>, string>)_dictionary[type][name])(obj as ReactiveProperty<string>, (string)parameter);
+                        }
                         else if (objType == typeof(ReactiveProperty<DateTime>))
                         {
                             _dictionary[type][name] = GetSetter<ReactiveProperty<DateTime>, DateTime>(obj.GetType(), name);
@@ -837,6 +910,16 @@ namespace Homura.ORM
                             _dictionary[type][name] = GetSetter<ReactiveProperty<Guid?>, Guid?>(obj.GetType(), name);
                             ((Action<ReactiveProperty<Guid?>, Guid?>)_dictionary[type][name])(obj as ReactiveProperty<Guid?>, (Guid?)parameter);
                         }
+                        else if (objType == typeof(ReactiveProperty<Type>))
+                        {
+                            _dictionary[type][name] = GetSetter<ReactiveProperty<Type>, Type>(obj.GetType(), name);
+                            ((Action<ReactiveProperty<Type>, Type>)_dictionary[type][name])(obj as ReactiveProperty<Type>, (Type)parameter);
+                        }
+                        else if (objType == typeof(ReactiveProperty<object>))
+                        {
+                            _dictionary[type][name] = GetSetter<ReactiveProperty<object>, object>(obj.GetType(), name);
+                            ((Action<ReactiveProperty<object>, object>)_dictionary[type][name])(obj as ReactiveProperty<object>, (object)parameter);
+                        }
 
                         return true;
                     }
@@ -854,7 +937,15 @@ namespace Homura.ORM
                 }
 
                 // ここで特定の型へのカスタム変換ロジックを実装
-                if (targetType == typeof(ReactivePropertySlim<short>))
+                if (targetType == typeof(ReactivePropertySlim<bool>))
+                {
+                    return (ReactivePropertySlim<bool>)value;
+                }
+                else if (targetType == typeof(ReactivePropertySlim<bool?>))
+                {
+                    return (ReactivePropertySlim<bool?>)value;
+                }
+                else if (targetType == typeof(ReactivePropertySlim<short>))
                 {
                     return (ReactivePropertySlim<short>)value;
                 }
@@ -933,6 +1024,22 @@ namespace Homura.ORM
                 else if (targetType == typeof(ReactivePropertySlim<Guid?>))
                 {
                     return (ReactivePropertySlim<Guid?>)value;
+                }
+                else if (targetType == typeof(ReactivePropertySlim<Type>))
+                {
+                    return (ReactivePropertySlim<Type>)value;
+                }
+                else if (targetType == typeof(ReactivePropertySlim<object>))
+                {
+                    return (ReactivePropertySlim<object>)value;
+                }
+                else if (targetType == typeof(ReactiveProperty<bool>))
+                {
+                    return (ReactiveProperty<bool>)value;
+                }
+                else if (targetType == typeof(ReactiveProperty<bool?>))
+                {
+                    return (ReactiveProperty<bool?>)value;
                 }
                 else if (targetType == typeof(ReactiveProperty<short>))
                 {
@@ -1014,6 +1121,14 @@ namespace Homura.ORM
                 {
                     return (ReactiveProperty<Guid?>)value;
                 }
+                else if (targetType == typeof(ReactiveProperty<Type>))
+                {
+                    return (ReactiveProperty<Type>)value;
+                }
+                else if (targetType == typeof(ReactiveProperty<object>))
+                {
+                    return (ReactiveProperty<object>)value;
+                }
 
                 throw new InvalidOperationException("サポートされていない型への変換");
             }
@@ -1021,12 +1136,12 @@ namespace Homura.ORM
             public static Func<TObj, TProp> GetGetter<TObj, TProp>(string propName)
                 => (Func<TObj, TProp>)
                     System.Delegate.CreateDelegate(typeof(Func<TObj, TProp>),
-                        typeof(TObj).GetProperty(propName).GetGetMethod());
+                        typeof(TObj).GetProperty(propName).GetGetMethod(nonPublic: true));
 
             public static Action<TObj, TProp> GetSetter<TObj, TProp>(Type type, string propName)
                 => (Action<TObj, TProp>)
                     System.Delegate.CreateDelegate(typeof(Action<,>).MakeGenericType(type, typeof(TProp)),
-                        type.GetProperty(propName).GetSetMethod());
+                        type.GetProperty(propName).GetSetMethod(nonPublic: true));
         }
 
         protected object GetColumnValue(IDataRecord reader, IColumn column, ITable table)
