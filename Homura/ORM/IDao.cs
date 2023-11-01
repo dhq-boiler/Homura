@@ -35,7 +35,7 @@ namespace Homura.ORM
 
         void DeleteAll(DbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null);
 
-        void DropTable(TimeSpan? timeout = null);
+        void DropTableIfExists(TimeSpan? timeout = null);
     }
 
     public interface IDao<E> : IDao where E : EntityBaseObject

@@ -25,7 +25,7 @@ namespace Homura.Test.TestFixture.Migration.Plan
         {
             var dao = new RokiDao(TargetVersion.GetType());
             dao.CurrentConnection = connection;
-            await dao.DropTableAsync();
+            await dao.DropTableIfExistsAsync();
             ++ModifiedCount;
         }
 

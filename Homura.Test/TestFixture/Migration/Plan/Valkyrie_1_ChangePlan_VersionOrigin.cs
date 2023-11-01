@@ -30,7 +30,7 @@ namespace Sunctum.Domain.Data.Dao.Migration.Plan
         {
             var dao = new Valkyrie_1_Dao(typeof(VersionOrigin));
             dao.CurrentConnection = connection;
-            await dao.DropTableAsync();
+            await dao.DropTableIfExistsAsync();
             ++ModifiedCount;
         }
 
