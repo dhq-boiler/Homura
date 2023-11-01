@@ -28,7 +28,7 @@ namespace Homura.Test.TestFixture.Migration.Plan
         {
             var dao = new HeaderDao(TargetVersion.GetType());
             dao.CurrentConnection = connection;
-            await dao.DropTableAsync();
+            await dao.DropTableIfExistsAsync();
             ++ModifiedCount;
         }
     }

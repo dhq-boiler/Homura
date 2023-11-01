@@ -30,7 +30,7 @@ namespace Sunctum.Domain.Data.Dao.Migration.Plan
         {
             PageDao dao = new PageDao(typeof(VersionOrigin));
             dao.CurrentConnection = connection;
-            await dao.DropTableAsync();
+            await dao.DropTableIfExistsAsync();
             ++ModifiedCount;
         }
 

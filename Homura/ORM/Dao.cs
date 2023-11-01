@@ -242,299 +242,370 @@ namespace Homura.ORM
                     if (objType == typeof(bool))
                     {
                         ((Action<TObj, bool>)_dictionary[type][name])(obj, (bool)parameter);
+                        return true;
                     }
                     else if (objType == typeof(bool?))
                     {
                         ((Action<TObj, bool?>)_dictionary[type][name])(obj, (bool?)parameter);
+                        return true;
                     }
                     else if (objType == typeof(short))
                     {
                         ((Action<TObj, short>)_dictionary[type][name])(obj, (short)parameter);
+                        return true;
                     }
                     else if (objType == typeof(short?))
                     {
                         ((Action<TObj, short?>)_dictionary[type][name])(obj, (short?)parameter);
+                        return true;
                     }
                     else if (objType == typeof(int))
                     {
                         ((Action<TObj, int>)_dictionary[type][name])(obj, (int)parameter);
+                        return true;
                     }
                     else if (objType == typeof(int?))
                     {
                         ((Action<TObj, int?>)_dictionary[type][name])(obj, (int?)parameter);
+                        return true;
                     }
                     else if (objType == typeof(long))
                     {
                         ((Action<TObj, long>)_dictionary[type][name])(obj, (long)parameter);
+                        return true;
                     }
                     else if (objType == typeof(long?))
                     {
                         ((Action<TObj, long?>)_dictionary[type][name])(obj, (long?)parameter);
+                        return true;
                     }
                     else if (objType == typeof(ushort))
                     {
                         ((Action<TObj, ushort>)_dictionary[type][name])(obj, (ushort)parameter);
+                        return true;
                     }
                     else if (objType == typeof(ushort?))
                     {
                         ((Action<TObj, ushort?>)_dictionary[type][name])(obj, (ushort?)parameter);
+                        return true;
                     }
                     else if (objType == typeof(uint))
                     {
                         ((Action<TObj, uint>)_dictionary[type][name])(obj, (uint)parameter);
+                        return true;
                     }
                     else if (objType == typeof(uint?))
                     {
                         ((Action<TObj, uint?>)_dictionary[type][name])(obj, (uint?)parameter);
+                        return true;
                     }
                     else if (objType == typeof(ulong))
                     {
                         ((Action<TObj, ulong>)_dictionary[type][name])(obj, (ulong)parameter);
+                        return true;
                     }
                     else if (objType == typeof(ulong?))
                     {
                         ((Action<TObj, ulong?>)_dictionary[type][name])(obj, (ulong?)parameter);
+                        return true;
                     }
                     else if (objType == typeof(float))
                     {
                         ((Action<TObj, float>)_dictionary[type][name])(obj, (float)parameter);
+                        return true;
                     }
                     else if (objType == typeof(float?))
                     {
                         ((Action<TObj, float?>)_dictionary[type][name])(obj, (float?)parameter);
+                        return true;
                     }
                     else if (objType == typeof(double))
                     {
                         ((Action<TObj, double>)_dictionary[type][name])(obj, (double)parameter);
+                        return true;
                     }
                     else if (objType == typeof(double?))
                     {
                         ((Action<TObj, double?>)_dictionary[type][name])(obj, (double?)parameter);
+                        return true;
                     }
                     else if (objType == typeof(string))
                     {
                         ((Action<TObj, string>)_dictionary[type][name])(obj, (string)parameter);
+                        return true;
                     }
                     else if (objType == typeof(DateTime))
                     {
                         ((Action<TObj, DateTime>)_dictionary[type][name])(obj, (DateTime)parameter);
+                        return true;
                     }
                     else if (objType == typeof(DateTime?))
                     {
                         ((Action<TObj, DateTime?>)_dictionary[type][name])(obj, (DateTime?)parameter);
+                        return true;
                     }
                     else if (objType == typeof(Guid))
                     {
                         ((Action<TObj, Guid>)_dictionary[type][name])(obj, (Guid)parameter);
+                        return true;
                     }
                     else if (objType == typeof(Guid?))
                     {
                         ((Action<TObj, Guid?>)_dictionary[type][name])(obj, (Guid?)parameter);
+                        return true;
                     }
                     else if (objType == typeof(Type))
                     {
                         ((Action<TObj, Type>)_dictionary[type][name])(obj, (Type)parameter);
+                        return true;
                     }
                     else if (objType == typeof(object))
                     {
                         ((Action<TObj, object>)_dictionary[type][name])(obj, (object)parameter);
+                        return true;
                     }
 
                     else if (objType == typeof(ReactivePropertySlim<bool>))
                     {
                         ((Action<ReactivePropertySlim<bool>, bool>)_dictionary[type][name])(obj as ReactivePropertySlim<bool>, (bool)parameter);
+                        return true;
                     }
                     else if (objType == typeof(ReactivePropertySlim<bool?>))
                     {
                         ((Action<ReactivePropertySlim<bool?>, bool?>)_dictionary[type][name])(obj as ReactivePropertySlim<bool?>, (bool?)parameter);
+                        return true;
                     }
                     else if (objType == typeof(ReactivePropertySlim<short>))
                     {
                         ((Action<ReactivePropertySlim<short>, short>)_dictionary[type][name])(obj as ReactivePropertySlim<short>, (short)parameter);
+                        return true;
                     }
                     else if (objType == typeof(ReactivePropertySlim<short?>))
                     {
                         ((Action<ReactivePropertySlim<short?>, short?>)_dictionary[type][name])(obj as ReactivePropertySlim<short?>, (short?)parameter);
+                        return true;
                     }
                     else if (objType == typeof(ReactivePropertySlim<int>))
                     {
                         ((Action<ReactivePropertySlim<int>, int>)_dictionary[type][name])(obj as ReactivePropertySlim<int>, (int)parameter);
+                        return true;
                     }
                     else if (objType == typeof(ReactivePropertySlim<int?>))
                     {
                         ((Action<ReactivePropertySlim<int?>, int?>)_dictionary[type][name])(obj as ReactivePropertySlim<int?>, (int?)parameter);
+                        return true;
                     }
                     else if (objType == typeof(ReactivePropertySlim<long>))
                     {
                         ((Action<ReactivePropertySlim<long>, long>)_dictionary[type][name])(obj as ReactivePropertySlim<long>, (long)parameter);
+                        return true;
                     }
                     else if (objType == typeof(ReactivePropertySlim<long?>))
                     {
                         ((Action<ReactivePropertySlim<long?>, long?>)_dictionary[type][name])(obj as ReactivePropertySlim<long?>, (long?)parameter);
+                        return true;
                     }
                     else if (objType == typeof(ReactivePropertySlim<ushort>))
                     {
                         ((Action<ReactivePropertySlim<ushort>, ushort>)_dictionary[type][name])(obj as ReactivePropertySlim<ushort>, (ushort)parameter);
+                        return true;
                     }
                     else if (objType == typeof(ReactivePropertySlim<ushort?>))
                     {
                         ((Action<ReactivePropertySlim<ushort?>, ushort?>)_dictionary[type][name])(obj as ReactivePropertySlim<ushort?>, (ushort?)parameter);
+                        return true;
                     }
                     else if (objType == typeof(ReactivePropertySlim<uint>))
                     {
                         ((Action<ReactivePropertySlim<uint>, uint>)_dictionary[type][name])(obj as ReactivePropertySlim<uint>, (uint)parameter);
+                        return true;
                     }
                     else if (objType == typeof(ReactivePropertySlim<uint?>))
                     {
                         ((Action<ReactivePropertySlim<uint?>, uint?>)_dictionary[type][name])(obj as ReactivePropertySlim<uint?>, (uint?)parameter);
+                        return true;
                     }
                     else if (objType == typeof(ReactivePropertySlim<ulong>))
                     {
                         ((Action<ReactivePropertySlim<ulong>, ulong>)_dictionary[type][name])(obj as ReactivePropertySlim<ulong>, (ulong)parameter);
+                        return true;
                     }
                     else if (objType == typeof(ReactivePropertySlim<ulong?>))
                     {
                         ((Action<ReactivePropertySlim<ulong?>, ulong?>)_dictionary[type][name])(obj as ReactivePropertySlim<ulong?>, (ulong?)parameter);
+                        return true;
                     }
                     else if (objType == typeof(ReactivePropertySlim<float>))
                     {
                         ((Action<ReactivePropertySlim<float>, float>)_dictionary[type][name])(obj as ReactivePropertySlim<float>, (float)parameter);
+                        return true;
                     }
                     else if (objType == typeof(ReactivePropertySlim<float?>))
                     {
                         ((Action<ReactivePropertySlim<float?>, float?>)_dictionary[type][name])(obj as ReactivePropertySlim<float?>, (float?)parameter);
+                        return true;
                     }
                     else if (objType == typeof(ReactivePropertySlim<double>))
                     {
                         ((Action<ReactivePropertySlim<double>, double>)_dictionary[type][name])(obj as ReactivePropertySlim<double>, (double)parameter);
+                        return true;
                     }
                     else if (objType == typeof(ReactivePropertySlim<double?>))
                     {
                         ((Action<ReactivePropertySlim<double?>, double?>)_dictionary[type][name])(obj as ReactivePropertySlim<double?>, (double?)parameter);
+                        return true;
                     }
                     else if (objType == typeof(ReactivePropertySlim<string>))
                     {
                         ((Action<ReactivePropertySlim<string>, string>)_dictionary[type][name])(obj as ReactivePropertySlim<string>, (string)parameter);
+                        return true;
                     }
                     else if (objType == typeof(ReactivePropertySlim<DateTime>))
                     {
                         ((Action<ReactivePropertySlim<DateTime>, DateTime>)_dictionary[type][name])(obj as ReactivePropertySlim<DateTime>, (DateTime)parameter);
+                        return true;
                     }
                     else if (objType == typeof(ReactivePropertySlim<DateTime?>))
                     {
                         ((Action<ReactivePropertySlim<DateTime?>, DateTime?>)_dictionary[type][name])(obj as ReactivePropertySlim<DateTime?>, (DateTime?)parameter);
+                        return true;
                     }
                     else if (objType == typeof(ReactivePropertySlim<Guid>))
                     {
                         ((Action<ReactivePropertySlim<Guid>, Guid>)_dictionary[type][name])(obj as ReactivePropertySlim<Guid>, (Guid)parameter);
+                        return true;
                     }
                     else if (objType == typeof(ReactivePropertySlim<Guid?>))
                     {
                         ((Action<ReactivePropertySlim<Guid?>, Guid?>)_dictionary[type][name])(obj as ReactivePropertySlim<Guid?>, (Guid?)parameter);
+                        return true;
                     }
                     else if (objType == typeof(ReactivePropertySlim<Type>))
                     {
                         ((Action<ReactivePropertySlim<Type>, Type>)_dictionary[type][name])(obj as ReactivePropertySlim<Type>, (Type)parameter);
+                        return true;
                     }
                     else if (objType == typeof(ReactivePropertySlim<object>))
                     {
                         ((Action<ReactivePropertySlim<object>, object>)_dictionary[type][name])(obj as ReactivePropertySlim<object>, (object)parameter);
+                        return true;
                     }
 
                     else if (objType == typeof(ReactiveProperty<short>))
                     {
                         ((Action<ReactiveProperty<short>, short>)_dictionary[type][name])(obj as ReactiveProperty<short>, (short)parameter);
+                        return true;
                     }
                     else if (objType == typeof(ReactiveProperty<short?>))
                     {
                         ((Action<ReactiveProperty<short?>, short?>)_dictionary[type][name])(obj as ReactiveProperty<short?>, (short?)parameter);
+                        return true;
                     }
                     else if (objType == typeof(ReactiveProperty<int>))
                     {
                         ((Action<ReactiveProperty<int>, int>)_dictionary[type][name])(obj as ReactiveProperty<int>, (int)parameter);
+                        return true;
                     }
                     else if (objType == typeof(ReactiveProperty<int?>))
                     {
                         ((Action<ReactiveProperty<int?>, int?>)_dictionary[type][name])(obj as ReactiveProperty<int?>, (int?)parameter);
+                        return true;
                     }
                     else if (objType == typeof(ReactiveProperty<long>))
                     {
                         ((Action<ReactiveProperty<long>, long>)_dictionary[type][name])(obj as ReactiveProperty<long>, (long)parameter);
+                        return true;
                     }
                     else if (objType == typeof(ReactiveProperty<long?>))
                     {
                         ((Action<ReactiveProperty<long?>, long?>)_dictionary[type][name])(obj as ReactiveProperty<long?>, (long?)parameter);
+                        return true;
                     }
                     else if (objType == typeof(ReactiveProperty<ushort>))
                     {
                         ((Action<ReactiveProperty<ushort>, ushort>)_dictionary[type][name])(obj as ReactiveProperty<ushort>, (ushort)parameter);
+                        return true;
                     }
                     else if (objType == typeof(ReactiveProperty<ushort?>))
                     {
                         ((Action<ReactiveProperty<ushort?>, ushort?>)_dictionary[type][name])(obj as ReactiveProperty<ushort?>, (ushort?)parameter);
+                        return true;
                     }
                     else if (objType == typeof(ReactiveProperty<uint>))
                     {
                         ((Action<ReactiveProperty<uint>, uint>)_dictionary[type][name])(obj as ReactiveProperty<uint>, (uint)parameter);
+                        return true;
                     }
                     else if (objType == typeof(ReactiveProperty<uint?>))
                     {
                         ((Action<ReactiveProperty<uint?>, uint?>)_dictionary[type][name])(obj as ReactiveProperty<uint?>, (uint?)parameter);
+                        return true;
                     }
                     else if (objType == typeof(ReactiveProperty<ulong>))
                     {
                         ((Action<ReactiveProperty<ulong>, ulong>)_dictionary[type][name])(obj as ReactiveProperty<ulong>, (ulong)parameter);
+                        return true;
                     }
                     else if (objType == typeof(ReactiveProperty<ulong?>))
                     {
                         ((Action<ReactiveProperty<ulong?>, ulong?>)_dictionary[type][name])(obj as ReactiveProperty<ulong?>, (ulong?)parameter);
+                        return true;
                     }
                     else if (objType == typeof(ReactiveProperty<float>))
                     {
                         ((Action<ReactiveProperty<float>, float>)_dictionary[type][name])(obj as ReactiveProperty<float>, (float)parameter);
+                        return true;
                     }
                     else if (objType == typeof(ReactiveProperty<float?>))
                     {
                         ((Action<ReactiveProperty<float?>, float?>)_dictionary[type][name])(obj as ReactiveProperty<float?>, (float?)parameter);
+                        return true;
                     }
                     else if (objType == typeof(ReactiveProperty<double>))
                     {
                         ((Action<ReactiveProperty<double>, double>)_dictionary[type][name])(obj as ReactiveProperty<double>, (double)parameter);
+                        return true;
                     }
                     else if (objType == typeof(ReactiveProperty<double?>))
                     {
                         ((Action<ReactiveProperty<double?>, double?>)_dictionary[type][name])(obj as ReactiveProperty<double?>, (double?)parameter);
+                        return true;
                     }
                     else if (objType == typeof(ReactiveProperty<string>))
                     {
                         ((Action<ReactiveProperty<string>, string>)_dictionary[type][name])(obj as ReactiveProperty<string>, (string)parameter);
+                        return true;
                     }
                     else if (objType == typeof(ReactiveProperty<DateTime>))
                     {
                         ((Action<ReactiveProperty<DateTime>, DateTime>)_dictionary[type][name])(obj as ReactiveProperty<DateTime>, (DateTime)parameter);
+                        return true;
                     }
                     else if (objType == typeof(ReactiveProperty<DateTime?>))
                     {
                         ((Action<ReactiveProperty<DateTime?>, DateTime?>)_dictionary[type][name])(obj as ReactiveProperty<DateTime?>, (DateTime?)parameter);
+                        return true;
                     }
                     else if (objType == typeof(ReactiveProperty<Guid>))
                     {
                         ((Action<ReactiveProperty<Guid>, Guid>)_dictionary[type][name])(obj as ReactiveProperty<Guid>, (Guid)parameter);
+                        return true;
                     }
                     else if (objType == typeof(ReactiveProperty<Guid?>))
                     {
                         ((Action<ReactiveProperty<Guid?>, Guid?>)_dictionary[type][name])(obj as ReactiveProperty<Guid?>, (Guid?)parameter);
+                        return true;
                     }
                     else if (objType == typeof(ReactiveProperty<Type>))
                     {
                         ((Action<ReactiveProperty<Type>, Type>)_dictionary[type][name])(obj as ReactiveProperty<Type>, (Type)parameter);
+                        return true;
                     }
                     else if (objType == typeof(ReactiveProperty<object>))
                     {
                         ((Action<ReactiveProperty<object>, object>)_dictionary[type][name])(obj as ReactiveProperty<object>, (object)parameter);
+                        return true;
                     }
-
-                    return true;
                 }
                 catch (KeyNotFoundException e)
                 {
@@ -549,379 +620,452 @@ namespace Homura.ORM
                         {
                             _dictionary[type][name] = GetSetter<TObj, bool>(obj.GetType(), name);
                             ((Action<TObj, bool>)_dictionary[type][name])(obj, (bool)parameter);
+                            return true;
                         }
                         else if (objType == typeof(bool?))
                         {
                             _dictionary[type][name] = GetSetter<TObj, bool?>(obj.GetType(), name);
                             ((Action<TObj, bool?>)_dictionary[type][name])(obj, (bool?)parameter);
+                            return true;
                         }
                         else if (objType == typeof(short))
                         {
                             _dictionary[type][name] = GetSetter<TObj, short>(obj.GetType(), name);
                             ((Action<TObj, short>)_dictionary[type][name])(obj, (short)parameter);
+                            return true;
                         }
                         else if (objType == typeof(short?))
                         {
                             _dictionary[type][name] = GetSetter<TObj, short?>(obj.GetType(), name);
                             ((Action<TObj, short?>)_dictionary[type][name])(obj, (short?)parameter);
+                            return true;
                         }
                         else if (objType == typeof(int))
                         {
                             _dictionary[type][name] = GetSetter<TObj, int>(obj.GetType(), name);
                             ((Action<TObj, int>)_dictionary[type][name])(obj, (int)parameter);
+                            return true;
                         }
                         else if (objType == typeof(int?))
                         {
                             _dictionary[type][name] = GetSetter<TObj, int?>(obj.GetType(), name);
                             ((Action<TObj, int?>)_dictionary[type][name])(obj, (int?)parameter);
+                            return true;
                         }
                         else if (objType == typeof(long))
                         {
                             _dictionary[type][name] = GetSetter<TObj, long>(obj.GetType(), name);
                             ((Action<TObj, long>)_dictionary[type][name])(obj, (long)parameter);
+                            return true;
                         }
                         else if (objType == typeof(long?))
                         {
                             _dictionary[type][name] = GetSetter<TObj, long?>(obj.GetType(), name);
                             ((Action<TObj, long?>)_dictionary[type][name])(obj, (long?)parameter);
+                            return true;
                         }
                         else if (objType == typeof(ushort))
                         {
                             _dictionary[type][name] = GetSetter<TObj, ushort>(obj.GetType(), name);
                             ((Action<TObj, ushort>)_dictionary[type][name])(obj, (ushort)parameter);
+                            return true;
                         }
                         else if (objType == typeof(ushort?))
                         {
                             _dictionary[type][name] = GetSetter<TObj, ushort?>(obj.GetType(), name);
                             ((Action<TObj, ushort?>)_dictionary[type][name])(obj, (ushort?)parameter);
+                            return true;
                         }
                         else if (objType == typeof(uint))
                         {
                             _dictionary[type][name] = GetSetter<TObj, uint>(obj.GetType(), name);
                             ((Action<TObj, uint>)_dictionary[type][name])(obj, (uint)parameter);
+                            return true;
                         }
                         else if (objType == typeof(uint?))
                         {
                             _dictionary[type][name] = GetSetter<TObj, uint?>(obj.GetType(), name);
                             ((Action<TObj, uint?>)_dictionary[type][name])(obj, (uint?)parameter);
+                            return true;
                         }
                         else if (objType == typeof(ulong))
                         {
                             _dictionary[type][name] = GetSetter<TObj, ulong>(obj.GetType(), name);
                             ((Action<TObj, ulong>)_dictionary[type][name])(obj, (ulong)parameter);
+                            return true;
                         }
                         else if (objType == typeof(ulong?))
                         {
                             _dictionary[type][name] = GetSetter<TObj, ulong?>(obj.GetType(), name);
                             ((Action<TObj, ulong?>)_dictionary[type][name])(obj, (ulong?)parameter);
+                            return true;
                         }
                         else if (objType == typeof(float))
                         {
                             _dictionary[type][name] = GetSetter<TObj, float>(obj.GetType(), name);
                             ((Action<TObj, float>)_dictionary[type][name])(obj, (float)parameter);
+                            return true;
                         }
                         else if (objType == typeof(float?))
                         {
                             _dictionary[type][name] = GetSetter<TObj, float?>(obj.GetType(), name);
                             ((Action<TObj, float?>)_dictionary[type][name])(obj, (float?)parameter);
+                            return true;
                         }
                         else if (objType == typeof(double))
                         {
                             _dictionary[type][name] = GetSetter<TObj, double>(obj.GetType(), name);
                             ((Action<TObj, double>)_dictionary[type][name])(obj, (double)parameter);
+                            return true;
                         }
                         else if (objType == typeof(double?))
                         {
                             _dictionary[type][name] = GetSetter<TObj, double?>(obj.GetType(), name);
                             ((Action<TObj, double?>)_dictionary[type][name])(obj, (double?)parameter);
+                            return true;
                         }
                         else if (objType == typeof(string))
                         {
                             _dictionary[type][name] = GetSetter<TObj, string>(obj.GetType(), name);
                             ((Action<TObj, string>)_dictionary[type][name])(obj, (string)parameter);
+                            return true;
                         }
                         else if (objType == typeof(DateTime))
                         {
                             _dictionary[type][name] = GetSetter<TObj, DateTime>(obj.GetType(), name);
                             ((Action<TObj, DateTime>)_dictionary[type][name])(obj, (DateTime)parameter);
+                            return true;
                         }
                         else if (objType == typeof(DateTime?))
                         {
                             _dictionary[type][name] = GetSetter<TObj, DateTime?>(obj.GetType(), name);
                             ((Action<TObj, DateTime?>)_dictionary[type][name])(obj, (DateTime?)parameter);
+                            return true;
                         }
                         else if (objType == typeof(Guid))
                         {
                             _dictionary[type][name] = GetSetter<TObj, Guid>(obj.GetType(), name);
                             ((Action<TObj, Guid>)_dictionary[type][name])(obj, (Guid)parameter);
+                            return true;
                         }
                         else if (objType == typeof(Guid?))
                         {
                             _dictionary[type][name] = GetSetter<TObj, Guid?>(obj.GetType(), name);
                             ((Action<TObj, Guid?>)_dictionary[type][name])(obj, (Guid?)parameter);
+                            return true;
                         }
                         else if (objType == typeof(Type))
                         {
                             _dictionary[type][name] = GetSetter<TObj, Type>(obj.GetType(), name);
                             ((Action<TObj, Type>)_dictionary[type][name])(obj, (Type)parameter);
+                            return true;
                         }
                         else if (objType == typeof(object))
                         {
                             _dictionary[type][name] = GetSetter<TObj, object>(obj.GetType(), name);
                             ((Action<TObj, object>)_dictionary[type][name])(obj, (object)parameter);
+                            return true;
                         }
                         else if (objType == typeof(ReactivePropertySlim<bool>))
                         {
                             _dictionary[type][name] = GetSetter<ReactivePropertySlim<bool>, bool>(obj.GetType(), name);
                             ((Action<ReactivePropertySlim<bool>, bool>)_dictionary[type][name])(obj as ReactivePropertySlim<bool>, (bool)parameter);
+                            return true;
                         }
                         else if (objType == typeof(ReactivePropertySlim<bool?>))
                         {
                             _dictionary[type][name] = GetSetter<ReactivePropertySlim<bool?>, bool?>(obj.GetType(), name);
                             ((Action<ReactivePropertySlim<bool?>, bool?>)_dictionary[type][name])(obj as ReactivePropertySlim<bool?>, (bool?)parameter);
+                            return true;
                         }
                         else if (objType == typeof(ReactivePropertySlim<short>))
                         {
                             _dictionary[type][name] = GetSetter<ReactivePropertySlim<short>, short>(obj.GetType(), name);
                             ((Action<ReactivePropertySlim<short>, short>)_dictionary[type][name])(obj as ReactivePropertySlim<short>, (short)parameter);
+                            return true;
                         }
                         else if (objType == typeof(ReactivePropertySlim<short?>))
                         {
                             _dictionary[type][name] = GetSetter<ReactivePropertySlim<short?>, short?>(obj.GetType(), name);
                             ((Action<ReactivePropertySlim<short?>, short?>)_dictionary[type][name])(obj as ReactivePropertySlim<short?>, (short?)parameter);
+                            return true;
                         }
                         else if (objType == typeof(ReactivePropertySlim<int>))
                         {
                             _dictionary[type][name] = GetSetter<ReactivePropertySlim<int>, int>(obj.GetType(), name);
                             ((Action<ReactivePropertySlim<int>, int>)_dictionary[type][name])(obj as ReactivePropertySlim<int>, (int)parameter);
+                            return true;
                         }
                         else if (objType == typeof(ReactivePropertySlim<int?>))
                         {
                             _dictionary[type][name] = GetSetter<ReactivePropertySlim<int?>, int?>(obj.GetType(), name);
                             ((Action<ReactivePropertySlim<int?>, int?>)_dictionary[type][name])(obj as ReactivePropertySlim<int?>, (int?)parameter);
+                            return true;
                         }
                         else if (objType == typeof(ReactivePropertySlim<long>))
                         {
                             _dictionary[type][name] = GetSetter<ReactivePropertySlim<long>, long>(obj.GetType(), name);
                             ((Action<ReactivePropertySlim<long>, long>)_dictionary[type][name])(obj as ReactivePropertySlim<long>, (long)parameter);
+                            return true;
                         }
                         else if (objType == typeof(ReactivePropertySlim<long?>))
                         {
                             _dictionary[type][name] = GetSetter<ReactivePropertySlim<long?>, long?>(obj.GetType(), name);
                             ((Action<ReactivePropertySlim<long?>, long?>)_dictionary[type][name])(obj as ReactivePropertySlim<long?>, (long?)parameter);
+                            return true;
                         }
                         else if (objType == typeof(ReactivePropertySlim<ushort>))
                         {
                             _dictionary[type][name] = GetSetter<ReactivePropertySlim<ushort>, ushort>(obj.GetType(), name);
                             ((Action<ReactivePropertySlim<ushort>, ushort>)_dictionary[type][name])(obj as ReactivePropertySlim<ushort>, (ushort)parameter);
+                            return true;
                         }
                         else if (objType == typeof(ReactivePropertySlim<ushort?>))
                         {
                             _dictionary[type][name] = GetSetter<ReactivePropertySlim<ushort?>, ushort?>(obj.GetType(), name);
                             ((Action<ReactivePropertySlim<ushort?>, ushort?>)_dictionary[type][name])(obj as ReactivePropertySlim<ushort?>, (ushort?)parameter);
+                            return true;
                         }
                         else if (objType == typeof(ReactivePropertySlim<uint>))
                         {
                             _dictionary[type][name] = GetSetter<ReactivePropertySlim<uint>, uint>(obj.GetType(), name);
                             ((Action<ReactivePropertySlim<uint>, uint>)_dictionary[type][name])(obj as ReactivePropertySlim<uint>, (uint)parameter);
+                            return true;
                         }
                         else if (objType == typeof(ReactivePropertySlim<uint?>))
                         {
                             _dictionary[type][name] = GetSetter<ReactivePropertySlim<uint?>, uint?>(obj.GetType(), name);
                             ((Action<ReactivePropertySlim<uint?>, uint?>)_dictionary[type][name])(obj as ReactivePropertySlim<uint?>, (uint?)parameter);
+                            return true;
                         }
                         else if (objType == typeof(ReactivePropertySlim<ulong>))
                         {
                             _dictionary[type][name] = GetSetter<ReactivePropertySlim<ulong>, ulong>(obj.GetType(), name);
                             ((Action<ReactivePropertySlim<ulong>, ulong>)_dictionary[type][name])(obj as ReactivePropertySlim<ulong>, (ulong)parameter);
+                            return true;
                         }
                         else if (objType == typeof(ReactivePropertySlim<ulong?>))
                         {
                             _dictionary[type][name] = GetSetter<ReactivePropertySlim<ulong?>, ulong?>(obj.GetType(), name);
                             ((Action<ReactivePropertySlim<ulong?>, ulong?>)_dictionary[type][name])(obj as ReactivePropertySlim<ulong?>, (ulong?)parameter);
+                            return true;
                         }
                         else if (objType == typeof(ReactivePropertySlim<float>))
                         {
                             _dictionary[type][name] = GetSetter<ReactivePropertySlim<float>, float>(obj.GetType(), name);
                             ((Action<ReactivePropertySlim<float>, float>)_dictionary[type][name])(obj as ReactivePropertySlim<float>, (float)parameter);
+                            return true;
                         }
                         else if (objType == typeof(ReactivePropertySlim<float?>))
                         {
                             _dictionary[type][name] = GetSetter<ReactivePropertySlim<float?>, float?>(obj.GetType(), name);
                             ((Action<ReactivePropertySlim<float?>, float?>)_dictionary[type][name])(obj as ReactivePropertySlim<float?>, (float?)parameter);
+                            return true;
                         }
                         else if (objType == typeof(ReactivePropertySlim<double>))
                         {
                             _dictionary[type][name] = GetSetter<ReactivePropertySlim<double>, double>(obj.GetType(), name);
                             ((Action<ReactivePropertySlim<double>, double>)_dictionary[type][name])(obj as ReactivePropertySlim<double>, (double)parameter);
+                            return true;
                         }
                         else if (objType == typeof(ReactivePropertySlim<double?>))
                         {
                             _dictionary[type][name] = GetSetter<ReactivePropertySlim<double?>, double?>(obj.GetType(), name);
                             ((Action<ReactivePropertySlim<double?>, double?>)_dictionary[type][name])(obj as ReactivePropertySlim<double?>, (double?)parameter);
+                            return true;
                         }
                         else if (objType == typeof(ReactivePropertySlim<string>))
                         {
                             _dictionary[type][name] = GetSetter<ReactivePropertySlim<string>, string>(obj.GetType(), name);
                             ((Action<ReactivePropertySlim<string>, string>)_dictionary[type][name])(obj as ReactivePropertySlim<string>, (string)parameter);
+                            return true;
                         }
                         else if (objType == typeof(ReactivePropertySlim<DateTime>))
                         {
                             _dictionary[type][name] = GetSetter<ReactivePropertySlim<DateTime>, DateTime>(obj.GetType(), name);
                             ((Action<ReactivePropertySlim<DateTime>, DateTime>)_dictionary[type][name])(obj as ReactivePropertySlim<DateTime>, (DateTime)parameter);
+                            return true;
                         }
                         else if (objType == typeof(ReactivePropertySlim<DateTime?>))
                         {
                             _dictionary[type][name] = GetSetter<ReactivePropertySlim<DateTime?>, DateTime?>(obj.GetType(), name);
                             ((Action<ReactivePropertySlim<DateTime?>, DateTime?>)_dictionary[type][name])(obj as ReactivePropertySlim<DateTime?>, (DateTime?)parameter);
+                            return true;
                         }
                         else if (objType == typeof(ReactivePropertySlim<Guid>))
                         {
                             _dictionary[type][name] = GetSetter<ReactivePropertySlim<Guid>, Guid>(obj.GetType(), name);
                             ((Action<ReactivePropertySlim<Guid>, Guid>)_dictionary[type][name])(obj as ReactivePropertySlim<Guid>, (Guid)parameter);
+                            return true;
                         }
                         else if (objType == typeof(ReactivePropertySlim<Guid?>))
                         {
                             _dictionary[type][name] = GetSetter<ReactivePropertySlim<Guid?>, Guid?>(obj.GetType(), name);
                             ((Action<ReactivePropertySlim<Guid?>, Guid?>)_dictionary[type][name])(obj as ReactivePropertySlim<Guid?>, (Guid?)parameter);
+                            return true;
                         }
                         else if (objType == typeof(ReactivePropertySlim<Type>))
                         {
                             _dictionary[type][name] = GetSetter<ReactivePropertySlim<Type>, Type>(obj.GetType(), name);
                             ((Action<ReactivePropertySlim<Type>, Type>)_dictionary[type][name])(obj as ReactivePropertySlim<Type>, (Type)parameter);
+                            return true;
                         }
                         else if (objType == typeof(ReactivePropertySlim<object>))
                         {
                             _dictionary[type][name] = GetSetter<ReactivePropertySlim<object>, object>(obj.GetType(), name);
                             ((Action<ReactivePropertySlim<object>, object>)_dictionary[type][name])(obj as ReactivePropertySlim<object>, (object)parameter);
+                            return true;
                         }
                         else if (objType == typeof(ReactiveProperty<bool>))
                         {
                             _dictionary[type][name] = GetSetter<ReactiveProperty<bool>, bool>(obj.GetType(), name);
                             ((Action<ReactiveProperty<bool>, bool>)_dictionary[type][name])(obj as ReactiveProperty<bool>, (bool)parameter);
+                            return true;
                         }
                         else if (objType == typeof(ReactiveProperty<bool?>))
                         {
                             _dictionary[type][name] = GetSetter<ReactiveProperty<bool?>, bool?>(obj.GetType(), name);
                             ((Action<ReactiveProperty<bool?>, bool?>)_dictionary[type][name])(obj as ReactiveProperty<bool?>, (bool?)parameter);
+                            return true;
                         }
                         else if (objType == typeof(ReactiveProperty<short>))
                         {
                             _dictionary[type][name] = GetSetter<ReactiveProperty<short>, short>(obj.GetType(), name);
                             ((Action<ReactiveProperty<short>, short>)_dictionary[type][name])(obj as ReactiveProperty<short>, (short)parameter);
+                            return true;
                         }
                         else if (objType == typeof(ReactiveProperty<short?>))
                         {
                             _dictionary[type][name] = GetSetter<ReactiveProperty<short?>, short?>(obj.GetType(), name);
                             ((Action<ReactiveProperty<short?>, short?>)_dictionary[type][name])(obj as ReactiveProperty<short?>, (short?)parameter);
+                            return true;
                         }
                         else if (objType == typeof(ReactiveProperty<int>))
                         {
                             _dictionary[type][name] = GetSetter<ReactiveProperty<int>, int>(obj.GetType(), name);
                             ((Action<ReactiveProperty<int>, int>)_dictionary[type][name])(obj as ReactiveProperty<int>, (int)parameter);
+                            return true;
                         }
                         else if (objType == typeof(ReactiveProperty<int?>))
                         {
                             _dictionary[type][name] = GetSetter<ReactiveProperty<int?>, int?>(obj.GetType(), name);
                             ((Action<ReactiveProperty<int?>, int?>)_dictionary[type][name])(obj as ReactiveProperty<int?>, (int?)parameter);
+                            return true;
                         }
                         else if (objType == typeof(ReactiveProperty<long>))
                         {
                             _dictionary[type][name] = GetSetter<ReactiveProperty<long>, long>(obj.GetType(), name);
                             ((Action<ReactiveProperty<long>, long>)_dictionary[type][name])(obj as ReactiveProperty<long>, (long)parameter);
+                            return true;
                         }
                         else if (objType == typeof(ReactiveProperty<long?>))
                         {
                             _dictionary[type][name] = GetSetter<ReactiveProperty<long?>, long?>(obj.GetType(), name);
                             ((Action<ReactiveProperty<long?>, long?>)_dictionary[type][name])(obj as ReactiveProperty<long?>, (long?)parameter);
+                            return true;
                         }
                         else if (objType == typeof(ReactiveProperty<ushort>))
                         {
                             _dictionary[type][name] = GetSetter<ReactiveProperty<ushort>, ushort>(obj.GetType(), name);
                             ((Action<ReactiveProperty<ushort>, ushort>)_dictionary[type][name])(obj as ReactiveProperty<ushort>, (ushort)parameter);
+                            return true;
                         }
                         else if (objType == typeof(ReactiveProperty<ushort?>))
                         {
                             _dictionary[type][name] = GetSetter<ReactiveProperty<ushort?>, ushort?>(obj.GetType(), name);
                             ((Action<ReactiveProperty<ushort?>, ushort?>)_dictionary[type][name])(obj as ReactiveProperty<ushort?>, (ushort?)parameter);
+                            return true;
                         }
                         else if (objType == typeof(ReactiveProperty<uint>))
                         {
                             _dictionary[type][name] = GetSetter<ReactiveProperty<uint>, uint>(obj.GetType(), name);
                             ((Action<ReactiveProperty<uint>, uint>)_dictionary[type][name])(obj as ReactiveProperty<uint>, (uint)parameter);
+                            return true;
                         }
                         else if (objType == typeof(ReactiveProperty<uint?>))
                         {
                             _dictionary[type][name] = GetSetter<ReactiveProperty<uint?>, uint?>(obj.GetType(), name);
                             ((Action<ReactiveProperty<uint?>, uint?>)_dictionary[type][name])(obj as ReactiveProperty<uint?>, (uint?)parameter);
+                            return true;
                         }
                         else if (objType == typeof(ReactiveProperty<ulong>))
                         {
                             _dictionary[type][name] = GetSetter<ReactiveProperty<ulong>, ulong>(obj.GetType(), name);
                             ((Action<ReactiveProperty<ulong>, ulong>)_dictionary[type][name])(obj as ReactiveProperty<ulong>, (ulong)parameter);
+                            return true;
                         }
                         else if (objType == typeof(ReactiveProperty<ulong?>))
                         {
                             _dictionary[type][name] = GetSetter<ReactiveProperty<ulong?>, ulong?>(obj.GetType(), name);
                             ((Action<ReactiveProperty<ulong?>, ulong?>)_dictionary[type][name])(obj as ReactiveProperty<ulong?>, (ulong?)parameter);
+                            return true;
                         }
                         else if (objType == typeof(ReactiveProperty<float>))
                         {
                             _dictionary[type][name] = GetSetter<ReactiveProperty<float>, float>(obj.GetType(), name);
                             ((Action<ReactiveProperty<float>, float>)_dictionary[type][name])(obj as ReactiveProperty<float>, (float)parameter);
+                            return true;
                         }
                         else if (objType == typeof(ReactiveProperty<float?>))
                         {
                             _dictionary[type][name] = GetSetter<ReactiveProperty<float?>, float?>(obj.GetType(), name);
                             ((Action<ReactiveProperty<float?>, float?>)_dictionary[type][name])(obj as ReactiveProperty<float?>, (float?)parameter);
+                            return true;
                         }
                         else if (objType == typeof(ReactiveProperty<double>))
                         {
                             _dictionary[type][name] = GetSetter<ReactiveProperty<double>, double>(obj.GetType(), name);
                             ((Action<ReactiveProperty<double>, double>)_dictionary[type][name])(obj as ReactiveProperty<double>, (double)parameter);
+                            return true;
                         }
                         else if (objType == typeof(ReactiveProperty<double?>))
                         {
                             _dictionary[type][name] = GetSetter<ReactiveProperty<double?>, double?>(obj.GetType(), name);
                             ((Action<ReactiveProperty<double?>, double?>)_dictionary[type][name])(obj as ReactiveProperty<double?>, (double?)parameter);
+                            return true;
                         }
                         else if (objType == typeof(ReactiveProperty<string>))
                         {
                             _dictionary[type][name] = GetSetter<ReactiveProperty<string>, string>(obj.GetType(), name);
                             ((Action<ReactiveProperty<string>, string>)_dictionary[type][name])(obj as ReactiveProperty<string>, (string)parameter);
+                            return true;
                         }
                         else if (objType == typeof(ReactiveProperty<DateTime>))
                         {
                             _dictionary[type][name] = GetSetter<ReactiveProperty<DateTime>, DateTime>(obj.GetType(), name);
                             ((Action<ReactiveProperty<DateTime>, DateTime>)_dictionary[type][name])(obj as ReactiveProperty<DateTime>, (DateTime)parameter);
+                            return true;
                         }
                         else if (objType == typeof(ReactiveProperty<DateTime?>))
                         {
                             _dictionary[type][name] = GetSetter<ReactiveProperty<DateTime?>, DateTime?>(obj.GetType(), name);
                             ((Action<ReactiveProperty<DateTime?>, DateTime?>)_dictionary[type][name])(obj as ReactiveProperty<DateTime?>, (DateTime?)parameter);
+                            return true;
                         }
                         else if (objType == typeof(ReactiveProperty<Guid>))
                         {
                             _dictionary[type][name] = GetSetter<ReactiveProperty<Guid>, Guid>(obj.GetType(), name);
                             ((Action<ReactiveProperty<Guid>, Guid>)_dictionary[type][name])(obj as ReactiveProperty<Guid>, (Guid)parameter);
+                            return true;
                         }
                         else if (objType == typeof(ReactiveProperty<Guid?>))
                         {
                             _dictionary[type][name] = GetSetter<ReactiveProperty<Guid?>, Guid?>(obj.GetType(), name);
                             ((Action<ReactiveProperty<Guid?>, Guid?>)_dictionary[type][name])(obj as ReactiveProperty<Guid?>, (Guid?)parameter);
+                            return true;
                         }
                         else if (objType == typeof(ReactiveProperty<Type>))
                         {
                             _dictionary[type][name] = GetSetter<ReactiveProperty<Type>, Type>(obj.GetType(), name);
                             ((Action<ReactiveProperty<Type>, Type>)_dictionary[type][name])(obj as ReactiveProperty<Type>, (Type)parameter);
+                            return true;
                         }
                         else if (objType == typeof(ReactiveProperty<object>))
                         {
                             _dictionary[type][name] = GetSetter<ReactiveProperty<object>, object>(obj.GetType(), name);
                             ((Action<ReactiveProperty<object>, object>)_dictionary[type][name])(obj as ReactiveProperty<object>, (object)parameter);
+                            return true;
                         }
-
-                        return true;
                     }
                 }
 
@@ -1253,23 +1397,23 @@ namespace Homura.ORM
             }), timeout);
         }
 
-        public void DropTable(TimeSpan? timeout = null)
+        public void DropTableIfExists(TimeSpan? timeout = null)
         {
             QueryHelper.KeepTryingUntilProcessSucceed(() =>
             {
                 using var conn = GetConnection();
-                var sql = $"drop table {TableName}";
+                var sql = $"drop table if exists {TableName}";
                 LogManager.GetCurrentClassLogger().Debug(sql);
                 conn.Execute(sql);
             }, timeout);
         }
 
-        public async Task DropTableAsync(TimeSpan? timeout = null)
+        public async Task DropTableIfExistsAsync(TimeSpan? timeout = null)
         {
             await QueryHelper.KeepTryingUntilProcessSucceedAsync(new Func<Task>(async () =>
             {
                 await using var conn = await GetConnectionAsync().ConfigureAwait(false);
-                var sql = $"drop table {TableName}";
+                var sql = $"drop table if exists {TableName}";
                 LogManager.GetCurrentClassLogger().Debug(sql);
                 await conn.ExecuteAsync(sql).ConfigureAwait(false);
             }), timeout).ConfigureAwait(false);
