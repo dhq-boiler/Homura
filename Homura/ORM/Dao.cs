@@ -187,10 +187,10 @@ namespace Homura.ORM
 
         protected E ToEntityInDefaultWay(IDataRecord reader, params IColumn[] columns)
         {
-            var ret = Dao<E>.CreateInstance();
+            var ret = CreateInstance();
             const string VALUE_STR = "Value";
 
-            Parallel.ForEach(Columns.Except(columns), column =>
+            Columns.Except(columns).AsParallel().ToList().ForEach(column =>
             {
                 if (column.EntityDataType.GetInterfaces().Contains(typeof(IReactiveProperty)))
                 {
@@ -318,279 +318,279 @@ namespace Homura.ORM
                     switch (objType)
                     {
                         case not null when objType == _typeOfBool:
-                            ((Action<TObj, bool>)_dictionary[type][name])(obj, (bool)parameter);
+                            ((Action<TObj, bool>)_dictionary[type][name])(obj, parameter is not null ? (bool)parameter : default(bool));
                             return true;
                         case not null when objType == _typeOfNullableBool:
-                            ((Action<TObj, bool?>)_dictionary[type][name])(obj, (bool?)parameter);
+                            ((Action<TObj, bool?>)_dictionary[type][name])(obj, parameter is not null ? (bool?)parameter : default(bool?));
                             return true;
                         case not null when objType == _typeOfShort:
-                            ((Action<TObj, short>)_dictionary[type][name])(obj, (short)parameter);
+                            ((Action<TObj, short>)_dictionary[type][name])(obj, parameter is not null ? (short)parameter : default(short));
                             return true;
                         case not null when objType == _typeOfNullableShort:
-                            ((Action<TObj, short?>)_dictionary[type][name])(obj, (short?)parameter);
+                            ((Action<TObj, short?>)_dictionary[type][name])(obj, parameter is not null ? (short?)parameter : default(short?));
                             return true;
                         case not null when objType == _typeOfInt:
-                            ((Action<TObj, int>)_dictionary[type][name])(obj, (int)parameter);
+                            ((Action<TObj, int>)_dictionary[type][name])(obj, parameter is not null ? (int)parameter : default(int));
                             return true;
                         case not null when objType == _typeOfNullableInt:
-                            ((Action<TObj, int?>)_dictionary[type][name])(obj, (int?)parameter);
+                            ((Action<TObj, int?>)_dictionary[type][name])(obj, parameter is not null ? (int?)parameter : default(int?));
                             return true;
                         case not null when objType == _typeOfLong:
-                            ((Action<TObj, long>)_dictionary[type][name])(obj, (long)parameter);
+                            ((Action<TObj, long>)_dictionary[type][name])(obj, parameter is not null ? (long)parameter : default(long));
                             return true;
                         case not null when objType == _typeOfNullableLong:
-                            ((Action<TObj, long?>)_dictionary[type][name])(obj, (long?)parameter);
+                            ((Action<TObj, long?>)_dictionary[type][name])(obj, parameter is not null ? (long?)parameter : default(long?));
                             return true;
                         case not null when objType == _typeOfUshort:
-                            ((Action<TObj, ushort>)_dictionary[type][name])(obj, (ushort)parameter);
+                            ((Action<TObj, ushort>)_dictionary[type][name])(obj, parameter is not null ? (ushort)parameter : default(ushort));
                             return true;
                         case not null when objType == _typeOfNullableUshort:
-                            ((Action<TObj, ushort?>)_dictionary[type][name])(obj, (ushort?)parameter);
+                            ((Action<TObj, ushort?>)_dictionary[type][name])(obj, parameter is not null ? (ushort?)parameter : default(ushort?));
                             return true;
                         case not null when objType == _typeOfUint:
-                            ((Action<TObj, uint>)_dictionary[type][name])(obj, (uint)parameter);
+                            ((Action<TObj, uint>)_dictionary[type][name])(obj, parameter is not null ? (uint)parameter : default(uint));
                             return true;
                         case not null when objType == _typeOfNullableUint:
-                            ((Action<TObj, uint?>)_dictionary[type][name])(obj, (uint?)parameter);
+                            ((Action<TObj, uint?>)_dictionary[type][name])(obj, parameter is not null ? (uint?)parameter : default(uint?));
                             return true;
                         case not null when objType == _typeOfUlong:
-                            ((Action<TObj, ulong>)_dictionary[type][name])(obj, (ulong)parameter);
+                            ((Action<TObj, ulong>)_dictionary[type][name])(obj, parameter is not null ? (ulong)parameter : default(ulong));
                             return true;
                         case not null when objType == _typeNullableUlong:
-                            ((Action<TObj, ulong?>)_dictionary[type][name])(obj, (ulong?)parameter);
+                            ((Action<TObj, ulong?>)_dictionary[type][name])(obj, parameter is not null ? (ulong?)parameter : default(ulong?));
                             return true;
                         case not null when objType == _typeOfFloat:
-                            ((Action<TObj, float>)_dictionary[type][name])(obj, (float)parameter);
+                            ((Action<TObj, float>)_dictionary[type][name])(obj, parameter is not null ? (float)parameter : default(float));
                             return true;
                         case not null when objType == _typeOfNullableFloat:
-                            ((Action<TObj, float?>)_dictionary[type][name])(obj, (float?)parameter);
+                            ((Action<TObj, float?>)_dictionary[type][name])(obj, parameter is not null ? (float?)parameter : default(float?));
                             return true;
                         case not null when objType == _typeOfDouble:
-                            ((Action<TObj, double>)_dictionary[type][name])(obj, (double)parameter);
+                            ((Action<TObj, double>)_dictionary[type][name])(obj, parameter is not null ? (double)parameter : default(double));
                             return true;
                         case not null when objType == _typeOfNullableDouble:
-                            ((Action<TObj, double?>)_dictionary[type][name])(obj, (double?)parameter);
+                            ((Action<TObj, double?>)_dictionary[type][name])(obj, parameter is not null ? (double?)parameter : default(double?));
                             return true;
                         case not null when objType == _typeOfString:
-                            ((Action<TObj, string>)_dictionary[type][name])(obj, (string)parameter);
+                            ((Action<TObj, string>)_dictionary[type][name])(obj, parameter is not null ? (string)parameter : default(string));
                             return true;
                         case not null when objType == _typeOfDateTime:
-                            ((Action<TObj, DateTime>)_dictionary[type][name])(obj, (DateTime)parameter);
+                            ((Action<TObj, DateTime>)_dictionary[type][name])(obj, parameter is not null ? (DateTime)parameter : default(DateTime));
                             return true;
                         case not null when objType == _typeOfNullableDateTime:
-                            ((Action<TObj, DateTime?>)_dictionary[type][name])(obj, (DateTime?)parameter);
+                            ((Action<TObj, DateTime?>)_dictionary[type][name])(obj, parameter is not null ? (DateTime?)parameter : default(DateTime?));
                             return true;
                         case not null when objType == _typeOfGuid:
-                            ((Action<TObj, Guid>)_dictionary[type][name])(obj, (Guid)parameter);
+                            ((Action<TObj, Guid>)_dictionary[type][name])(obj, parameter is not null ? (Guid)parameter : default(Guid));
                             return true;
                         case not null when objType == _typeOfNullableGuid:
-                            ((Action<TObj, Guid?>)_dictionary[type][name])(obj, (Guid?)parameter);
+                            ((Action<TObj, Guid?>)_dictionary[type][name])(obj, parameter is not null ? (Guid?)parameter : default(Guid?));
                             return true;
                         case not null when objType == _typeOfType:
-                            ((Action<TObj, Type>)_dictionary[type][name])(obj, (Type)parameter);
+                            ((Action<TObj, Type>)_dictionary[type][name])(obj, parameter is not null ? (Type)parameter : default(Type));
                             return true;
                         case not null when objType == _typeOfObject:
-                            ((Action<TObj, object>)_dictionary[type][name])(obj, (object)parameter);
+                            ((Action<TObj, object>)_dictionary[type][name])(obj, parameter is not null ? (object)parameter : default(object));
                             return true;
                         case not null when objType == _typeOfRSBool:
                             ((Action<ReactivePropertySlim<bool>, bool>)_dictionary[type][name])(
-                                obj as ReactivePropertySlim<bool>, (bool)parameter);
+                                obj as ReactivePropertySlim<bool>, parameter is not null ? (bool)parameter : default(bool));
                             return true;
                         case not null when objType == _typeOfRSNullableBool:
                             ((Action<ReactivePropertySlim<bool?>, bool?>)_dictionary[type][name])(
-                                obj as ReactivePropertySlim<bool?>, (bool?)parameter);
+                                obj as ReactivePropertySlim<bool?>, parameter is not null ? (bool?)parameter : default(bool?));
                             return true;
                         case not null when objType == _typeOfRSShort:
                             ((Action<ReactivePropertySlim<short>, short>)_dictionary[type][name])(
-                                obj as ReactivePropertySlim<short>, (short)parameter);
+                                obj as ReactivePropertySlim<short>, parameter is not null ? (short)parameter : default(short));
                             return true;
                         case not null when objType == _typeOfRSNullableShort:
                             ((Action<ReactivePropertySlim<short?>, short?>)_dictionary[type][name])(
-                                obj as ReactivePropertySlim<short?>, (short?)parameter);
+                                obj as ReactivePropertySlim<short?>, parameter is not null ? (short?)parameter : default(short?));
                             return true;
                         case not null when objType == _typeOfRSInt:
                             ((Action<ReactivePropertySlim<int>, int>)_dictionary[type][name])(
-                                obj as ReactivePropertySlim<int>, (int)parameter);
+                                obj as ReactivePropertySlim<int>, parameter is not null ? (int)parameter : default(int));
                             return true;
                         case not null when objType == _typeOfRSNullableInt:
                             ((Action<ReactivePropertySlim<int?>, int?>)_dictionary[type][name])(
-                                obj as ReactivePropertySlim<int?>, (int?)parameter);
+                                obj as ReactivePropertySlim<int?>, parameter is not null ? (int?)parameter : default(int?));
                             return true;
                         case not null when objType == _typeOfRSLong:
                             ((Action<ReactivePropertySlim<long>, long>)_dictionary[type][name])(
-                                obj as ReactivePropertySlim<long>, (long)parameter);
+                                obj as ReactivePropertySlim<long>, parameter is not null ? (long)parameter : default(long));
                             return true;
                         case not null when objType == _typeOfRSNullableLong:
                             ((Action<ReactivePropertySlim<long?>, long?>)_dictionary[type][name])(
-                                obj as ReactivePropertySlim<long?>, (long?)parameter);
+                                obj as ReactivePropertySlim<long?>, parameter is not null ? (long?)parameter : default(long?));
                             return true;
                         case not null when objType == _typeOfRSUshort:
                             ((Action<ReactivePropertySlim<ushort>, ushort>)_dictionary[type][name])(
-                                obj as ReactivePropertySlim<ushort>, (ushort)parameter);
+                                obj as ReactivePropertySlim<ushort>, parameter is not null ? (ushort)parameter : default(ushort));
                             return true;
                         case not null when objType == _typeOfRSNullableUshort:
                             ((Action<ReactivePropertySlim<ushort?>, ushort?>)_dictionary[type][name])(
-                                obj as ReactivePropertySlim<ushort?>, (ushort?)parameter);
+                                obj as ReactivePropertySlim<ushort?>, parameter is not null ? (ushort?)parameter : default(ushort?));
                             return true;
                         case not null when objType == _typeOfRSUint:
                             ((Action<ReactivePropertySlim<uint>, uint>)_dictionary[type][name])(
-                                obj as ReactivePropertySlim<uint>, (uint)parameter);
+                                obj as ReactivePropertySlim<uint>, parameter is not null ? (uint)parameter : default(uint));
                             return true;
                         case not null when objType == _typeOfRSNullableUint:
                             ((Action<ReactivePropertySlim<uint?>, uint?>)_dictionary[type][name])(
-                                obj as ReactivePropertySlim<uint?>, (uint?)parameter);
+                                obj as ReactivePropertySlim<uint?>, parameter is not null ? (uint?)parameter : default(uint?));
                             return true;
                         case not null when objType == _typeOfRSUlong:
                             ((Action<ReactivePropertySlim<ulong>, ulong>)_dictionary[type][name])(
-                                obj as ReactivePropertySlim<ulong>, (ulong)parameter);
+                                obj as ReactivePropertySlim<ulong>, parameter is not null ? (ulong)parameter : default(ulong));
                             return true;
                         case not null when objType == _typeOfRSNullableUlong:
                             ((Action<ReactivePropertySlim<ulong?>, ulong?>)_dictionary[type][name])(
-                                obj as ReactivePropertySlim<ulong?>, (ulong?)parameter);
+                                obj as ReactivePropertySlim<ulong?>, parameter is not null ? (ulong?)parameter : default(ulong?));
                             return true;
                         case not null when objType == _typeOfRSFloat:
                             ((Action<ReactivePropertySlim<float>, float>)_dictionary[type][name])(
-                                obj as ReactivePropertySlim<float>, (float)parameter);
+                                obj as ReactivePropertySlim<float>, parameter is not null ? (float)parameter : default(float));
                             return true;
                         case not null when objType == _typeOfRSNullableFloat:
                             ((Action<ReactivePropertySlim<float?>, float?>)_dictionary[type][name])(
-                                obj as ReactivePropertySlim<float?>, (float?)parameter);
+                                obj as ReactivePropertySlim<float?>, parameter is not null ? (float?)parameter : default(float?));
                             return true;
                         case not null when objType == _typeOfRSDouble:
                             ((Action<ReactivePropertySlim<double>, double>)_dictionary[type][name])(
-                                obj as ReactivePropertySlim<double>, (double)parameter);
+                                obj as ReactivePropertySlim<double>, parameter is not null ? (double)parameter : default(double));
                             return true;
                         case not null when objType == _typeOfRSNullableDouble:
                             ((Action<ReactivePropertySlim<double?>, double?>)_dictionary[type][name])(
-                                obj as ReactivePropertySlim<double?>, (double?)parameter);
+                                obj as ReactivePropertySlim<double?>, parameter is not null ? (double?)parameter : default(double?));
                             return true;
                         case not null when objType == _typeOfRSString:
                             ((Action<ReactivePropertySlim<string>, string>)_dictionary[type][name])(
-                                obj as ReactivePropertySlim<string>, (string)parameter);
+                                obj as ReactivePropertySlim<string>, parameter is not null ? (string)parameter : default(string));
                             return true;
                         case not null when objType == _typeOfRSDateTime:
                             ((Action<ReactivePropertySlim<DateTime>, DateTime>)_dictionary[type][name])(
-                                obj as ReactivePropertySlim<DateTime>, (DateTime)parameter);
+                                obj as ReactivePropertySlim<DateTime>, parameter is not null ? (DateTime)parameter : default(DateTime));
                             return true;
                         case not null when objType == _typeOfRSNullableDateTime:
                             ((Action<ReactivePropertySlim<DateTime?>, DateTime?>)_dictionary[type][name])(
-                                obj as ReactivePropertySlim<DateTime?>, (DateTime?)parameter);
+                                obj as ReactivePropertySlim<DateTime?>, parameter is not null ? (DateTime?)parameter : default(DateTime?));
                             return true;
                         case not null when objType == _typeOfRSGuid:
                             ((Action<ReactivePropertySlim<Guid>, Guid>)_dictionary[type][name])(
-                                obj as ReactivePropertySlim<Guid>, (Guid)parameter);
+                                obj as ReactivePropertySlim<Guid>, parameter is not null ? (Guid)parameter : default(Guid));
                             return true;
                         case not null when objType == _typeOfRSNullableGuid:
                             ((Action<ReactivePropertySlim<Guid?>, Guid?>)_dictionary[type][name])(
-                                obj as ReactivePropertySlim<Guid?>, (Guid?)parameter);
+                                obj as ReactivePropertySlim<Guid?>, parameter is not null ? (Guid?)parameter : default(Guid?));
                             return true;
                         case not null when objType == _typeOfRSType:
                             ((Action<ReactivePropertySlim<Type>, Type>)_dictionary[type][name])(
-                                obj as ReactivePropertySlim<Type>, (Type)parameter);
+                                obj as ReactivePropertySlim<Type>, parameter is not null ? (Type)parameter : default(Type));
                             return true;
                         case not null when objType == _typeOfRSObject:
                             ((Action<ReactivePropertySlim<object>, object>)_dictionary[type][name])(
-                                obj as ReactivePropertySlim<object>, (object)parameter);
+                                obj as ReactivePropertySlim<object>, parameter is not null ? (object)parameter : default(object));
                             return true;
                         case not null when objType == _typeOfRBool:
                             ((Action<ReactiveProperty<bool>, bool>)_dictionary[type][name])(
-                                obj as ReactiveProperty<bool>, (bool)parameter);
+                                obj as ReactiveProperty<bool>, parameter is not null ? (bool)parameter : default(bool));
                             return true;
                         case not null when objType == _typeOfRNullableBool:
                             ((Action<ReactiveProperty<bool?>, bool?>)_dictionary[type][name])(
-                                obj as ReactiveProperty<bool?>, (bool?)parameter);
+                                obj as ReactiveProperty<bool?>, parameter is not null ? (bool?)parameter : default(bool?));
                             return true;
                         case not null when objType == _typeOfRShort:
                             ((Action<ReactiveProperty<short>, short>)_dictionary[type][name])(
-                                obj as ReactiveProperty<short>, (short)parameter);
+                                obj as ReactiveProperty<short>, parameter is not null ? (short)parameter : default(short));
                             return true;
                         case not null when objType == _typeOfRNullableShort:
                             ((Action<ReactiveProperty<short?>, short?>)_dictionary[type][name])(
-                                obj as ReactiveProperty<short?>, (short?)parameter);
+                                obj as ReactiveProperty<short?>, parameter is not null ? (short?)parameter : default(short?));
                             return true;
                         case not null when objType == _typeOfRInt:
                             ((Action<ReactiveProperty<int>, int>)_dictionary[type][name])(
-                                obj as ReactiveProperty<int>, (int)parameter);
+                                obj as ReactiveProperty<int>, parameter is not null ? (int)parameter : default(int));
                             return true;
                         case not null when objType == _typeOfRNullableInt:
                             ((Action<ReactiveProperty<int?>, int?>)_dictionary[type][name])(
-                                obj as ReactiveProperty<int?>, (int?)parameter);
+                                obj as ReactiveProperty<int?>, parameter is not null ? (int?)parameter : default(int?));
                             return true;
                         case not null when objType == _typeOfRLong:
                             ((Action<ReactiveProperty<long>, long>)_dictionary[type][name])(
-                                obj as ReactiveProperty<long>, (long)parameter);
+                                obj as ReactiveProperty<long>, parameter is not null ? (long)parameter : default(long));
                             return true;
                         case not null when objType == _typeOfRNullableLong:
                             ((Action<ReactiveProperty<long?>, long?>)_dictionary[type][name])(
-                                obj as ReactiveProperty<long?>, (long?)parameter);
+                                obj as ReactiveProperty<long?>, parameter is not null ? (long?)parameter : default(long?));
                             return true;
                         case not null when objType == _typeOfRUshort:
                             ((Action<ReactiveProperty<ushort>, ushort>)_dictionary[type][name])(
-                                obj as ReactiveProperty<ushort>, (ushort)parameter);
+                                obj as ReactiveProperty<ushort>, parameter is not null ? (ushort)parameter : default(ushort));
                             return true;
                         case not null when objType == _typeOfRNullableUshort:
                             ((Action<ReactiveProperty<ushort?>, ushort?>)_dictionary[type][name])(
-                                obj as ReactiveProperty<ushort?>, (ushort?)parameter);
+                                obj as ReactiveProperty<ushort?>, parameter is not null ? (ushort?)parameter : default(ushort?));
                             return true;
                         case not null when objType == _typeOfRUint:
                             ((Action<ReactiveProperty<uint>, uint>)_dictionary[type][name])(
-                                obj as ReactiveProperty<uint>, (uint)parameter);
+                                obj as ReactiveProperty<uint>, parameter is not null ? (uint)parameter : default(uint));
                             return true;
                         case not null when objType == _typeOfRNullableUint:
                             ((Action<ReactiveProperty<uint?>, uint?>)_dictionary[type][name])(
-                                obj as ReactiveProperty<uint?>, (uint?)parameter);
+                                obj as ReactiveProperty<uint?>, parameter is not null ? (uint?)parameter : default(uint?));
                             return true;
                         case not null when objType == _typeOfRUlong:
                             ((Action<ReactiveProperty<ulong>, ulong>)_dictionary[type][name])(
-                                obj as ReactiveProperty<ulong>, (ulong)parameter);
+                                obj as ReactiveProperty<ulong>, parameter is not null ? (ulong)parameter : default(ulong));
                             return true;
                         case not null when objType == _typeOfRNullableUlong:
                             ((Action<ReactiveProperty<ulong?>, ulong?>)_dictionary[type][name])(
-                                obj as ReactiveProperty<ulong?>, (ulong?)parameter);
+                                obj as ReactiveProperty<ulong?>, parameter is not null ? (ulong?)parameter : default(ulong?));
                             return true;
                         case not null when objType == _typeOfRFloat:
                             ((Action<ReactiveProperty<float>, float>)_dictionary[type][name])(
-                                obj as ReactiveProperty<float>, (float)parameter);
+                                obj as ReactiveProperty<float>, parameter is not null ? (float)parameter : default(float));
                             return true;
                         case not null when objType == _typeOfRNullableFloat:
                             ((Action<ReactiveProperty<float?>, float?>)_dictionary[type][name])(
-                                obj as ReactiveProperty<float?>, (float?)parameter);
+                                obj as ReactiveProperty<float?>, parameter is not null ? (float?)parameter : default(float?));
                             return true;
                         case not null when objType == _typeOfRDouble:
                             ((Action<ReactiveProperty<double>, double>)_dictionary[type][name])(
-                                obj as ReactiveProperty<double>, (double)parameter);
+                                obj as ReactiveProperty<double>, parameter is not null ? (double)parameter : default(double));
                             return true;
                         case not null when objType == _typeOfRNullableDouble:
                             ((Action<ReactiveProperty<double?>, double?>)_dictionary[type][name])(
-                                obj as ReactiveProperty<double?>, (double?)parameter);
+                                obj as ReactiveProperty<double?>, parameter is not null ? (double?)parameter : default(double?));
                             return true;
                         case not null when objType == _typeOfRString:
                             ((Action<ReactiveProperty<string>, string>)_dictionary[type][name])(
-                                obj as ReactiveProperty<string>, (string)parameter);
+                                obj as ReactiveProperty<string>, parameter is not null ? (string)parameter : default(string));
                             return true;
                         case not null when objType == _typeOfRDateTime:
                             ((Action<ReactiveProperty<DateTime>, DateTime>)_dictionary[type][name])(
-                                obj as ReactiveProperty<DateTime>, (DateTime)parameter);
+                                obj as ReactiveProperty<DateTime>, parameter is not null ? (DateTime)parameter : default(DateTime));
                             return true;
                         case not null when objType == _typeOfRNullableDateTime:
                             ((Action<ReactiveProperty<DateTime?>, DateTime?>)_dictionary[type][name])(
-                                obj as ReactiveProperty<DateTime?>, (DateTime?)parameter);
+                                obj as ReactiveProperty<DateTime?>, parameter is not null ? (DateTime?)parameter : default(DateTime?));
                             return true;
                         case not null when objType == _typeOfRGuid:
                             ((Action<ReactiveProperty<Guid>, Guid>)_dictionary[type][name])(
-                                obj as ReactiveProperty<Guid>, (Guid)parameter);
+                                obj as ReactiveProperty<Guid>, parameter is not null ? (Guid)parameter : default(Guid));
                             return true;
                         case not null when objType == _typeOfRNullableGuid:
                             ((Action<ReactiveProperty<Guid?>, Guid?>)_dictionary[type][name])(
-                                obj as ReactiveProperty<Guid?>, (Guid?)parameter);
+                                obj as ReactiveProperty<Guid?>, parameter is not null ? (Guid?)parameter : default(Guid?));
                             return true;
                         case not null when objType == _typeOfRType:
                             ((Action<ReactiveProperty<Type>, Type>)_dictionary[type][name])(
-                                obj as ReactiveProperty<Type>, (Type)parameter);
+                                obj as ReactiveProperty<Type>, parameter is not null ? (Type)parameter : default(Type));
                             return true;
                         case not null when objType == _typeOfRObject:
                             ((Action<ReactiveProperty<object>, object>)_dictionary[type][name])(
-                                obj as ReactiveProperty<object>, (object)parameter);
+                                obj as ReactiveProperty<object>, parameter is not null ? (object)parameter : default(object));
                             return true;
                         default:
                             return false;
@@ -606,303 +606,303 @@ namespace Homura.ORM
                 {
                     case not null when objType == _typeOfBool:
                         _dictionary[type][name] = GetSetter<TObj, bool>(obj.GetType(), name);
-                        ((Action<TObj, bool>)_dictionary[type][name])(obj, (bool)parameter);
+                        ((Action<TObj, bool>)_dictionary[type][name])(obj, parameter is not null ? (bool)parameter : default(bool));
                         return true;
                     case not null when objType == _typeOfNullableBool:
                         _dictionary[type][name] = GetSetter<TObj, bool?>(obj.GetType(), name);
-                        ((Action<TObj, bool?>)_dictionary[type][name])(obj, (bool?)parameter);
+                        ((Action<TObj, bool?>)_dictionary[type][name])(obj, parameter is not null ? (bool?)parameter : default(bool?));
                         return true;
                     case not null when objType == _typeOfShort:
                         _dictionary[type][name] = GetSetter<TObj, short>(obj.GetType(), name);
-                        ((Action<TObj, short>)_dictionary[type][name])(obj, (short)parameter);
+                        ((Action<TObj, short>)_dictionary[type][name])(obj, parameter is not null ? (short)parameter : default(short));
                         return true;
                     case not null when objType == _typeOfNullableShort:
                         _dictionary[type][name] = GetSetter<TObj, short?>(obj.GetType(), name);
-                        ((Action<TObj, short?>)_dictionary[type][name])(obj, (short?)parameter);
+                        ((Action<TObj, short?>)_dictionary[type][name])(obj, parameter is not null ? (short?)parameter : default(short?));
                         return true;
                     case not null when objType == _typeOfInt:
                         _dictionary[type][name] = GetSetter<TObj, int>(obj.GetType(), name);
-                        ((Action<TObj, int>)_dictionary[type][name])(obj, (int)parameter);
+                        ((Action<TObj, int>)_dictionary[type][name])(obj, parameter is not null ? (int)parameter : default(int));
                         return true;
                     case not null when objType == _typeOfNullableInt:
                         _dictionary[type][name] = GetSetter<TObj, int?>(obj.GetType(), name);
-                        ((Action<TObj, int?>)_dictionary[type][name])(obj, (int?)parameter);
+                        ((Action<TObj, int?>)_dictionary[type][name])(obj, parameter is not null ? (int?)parameter : default(int?));
                         return true;
                     case not null when objType == _typeOfLong:
                         _dictionary[type][name] = GetSetter<TObj, long>(obj.GetType(), name);
-                        ((Action<TObj, long>)_dictionary[type][name])(obj, (long)parameter);
+                        ((Action<TObj, long>)_dictionary[type][name])(obj, parameter is not null ? (long)parameter : default(long));
                         return true;
                     case not null when objType == _typeOfNullableLong:
                         _dictionary[type][name] = GetSetter<TObj, long?>(obj.GetType(), name);
-                        ((Action<TObj, long?>)_dictionary[type][name])(obj, (long?)parameter);
+                        ((Action<TObj, long?>)_dictionary[type][name])(obj, parameter is not null ? (long?)parameter : default(long?));
                         return true;
                     case not null when objType == _typeOfUshort:
                         _dictionary[type][name] = GetSetter<TObj, ushort>(obj.GetType(), name);
-                        ((Action<TObj, ushort>)_dictionary[type][name])(obj, (ushort)parameter);
+                        ((Action<TObj, ushort>)_dictionary[type][name])(obj, parameter is not null ? (ushort)parameter : default(ushort));
                         return true;
                     case not null when objType == _typeOfNullableUshort:
                         _dictionary[type][name] = GetSetter<TObj, ushort?>(obj.GetType(), name);
-                        ((Action<TObj, ushort?>)_dictionary[type][name])(obj, (ushort?)parameter);
+                        ((Action<TObj, ushort?>)_dictionary[type][name])(obj, parameter is not null ? (ushort?)parameter : default(ushort?));
                         return true;
                     case not null when objType == _typeOfUint:
                         _dictionary[type][name] = GetSetter<TObj, uint>(obj.GetType(), name);
-                        ((Action<TObj, uint>)_dictionary[type][name])(obj, (uint)parameter);
+                        ((Action<TObj, uint>)_dictionary[type][name])(obj, parameter is not null ? (uint)parameter : default(uint));
                         return true;
                     case not null when objType == _typeOfNullableUint:
                         _dictionary[type][name] = GetSetter<TObj, uint?>(obj.GetType(), name);
-                        ((Action<TObj, uint?>)_dictionary[type][name])(obj, (uint?)parameter);
+                        ((Action<TObj, uint?>)_dictionary[type][name])(obj, parameter is not null ? (uint?)parameter : default(uint?));
                         return true;
                     case not null when objType == _typeOfUlong:
                         _dictionary[type][name] = GetSetter<TObj, ulong>(obj.GetType(), name);
-                        ((Action<TObj, ulong>)_dictionary[type][name])(obj, (ulong)parameter);
+                        ((Action<TObj, ulong>)_dictionary[type][name])(obj, parameter is not null ? (ulong)parameter : default(ulong));
                         return true;
                     case not null when objType == _typeNullableUlong:
                         _dictionary[type][name] = GetSetter<TObj, ulong?>(obj.GetType(), name);
-                        ((Action<TObj, ulong?>)_dictionary[type][name])(obj, (ulong?)parameter);
+                        ((Action<TObj, ulong?>)_dictionary[type][name])(obj, parameter is not null ? (ulong?)parameter : default(ulong?));
                         return true;
                     case not null when objType == _typeOfFloat:
                         _dictionary[type][name] = GetSetter<TObj, float>(obj.GetType(), name);
-                        ((Action<TObj, float>)_dictionary[type][name])(obj, (float)parameter);
+                        ((Action<TObj, float>)_dictionary[type][name])(obj, parameter is not null ? (float)parameter : default(float));
                         return true;
                     case not null when objType == _typeOfNullableFloat:
                         _dictionary[type][name] = GetSetter<TObj, float?>(obj.GetType(), name);
-                        ((Action<TObj, float?>)_dictionary[type][name])(obj, (float?)parameter);
+                        ((Action<TObj, float?>)_dictionary[type][name])(obj, parameter is not null ? (float?)parameter : default(float?));
                         return true;
                     case not null when objType == _typeOfDouble:
                         _dictionary[type][name] = GetSetter<TObj, double>(obj.GetType(), name);
-                        ((Action<TObj, double>)_dictionary[type][name])(obj, (double)parameter);
+                        ((Action<TObj, double>)_dictionary[type][name])(obj, parameter is not null ? (double)parameter : default(double));
                         return true;
                     case not null when objType == _typeOfNullableDouble:
                         _dictionary[type][name] = GetSetter<TObj, double?>(obj.GetType(), name);
-                        ((Action<TObj, double?>)_dictionary[type][name])(obj, (double?)parameter);
+                        ((Action<TObj, double?>)_dictionary[type][name])(obj, parameter is not null ? (double?)parameter : default(double?));
                         return true;
                     case not null when objType == _typeOfString:
                         _dictionary[type][name] = GetSetter<TObj, string>(obj.GetType(), name);
-                        ((Action<TObj, string>)_dictionary[type][name])(obj, (string)parameter);
+                        ((Action<TObj, string>)_dictionary[type][name])(obj, parameter is not null ? (string)parameter : default(string));
                         return true;
                     case not null when objType == _typeOfDateTime:
                         _dictionary[type][name] = GetSetter<TObj, DateTime>(obj.GetType(), name);
-                        ((Action<TObj, DateTime>)_dictionary[type][name])(obj, (DateTime)parameter);
+                        ((Action<TObj, DateTime>)_dictionary[type][name])(obj, parameter is not null ? (DateTime)parameter : default(DateTime));
                         return true;
                     case not null when objType == _typeOfNullableDateTime:
                         _dictionary[type][name] = GetSetter<TObj, DateTime?>(obj.GetType(), name);
-                        ((Action<TObj, DateTime?>)_dictionary[type][name])(obj, (DateTime?)parameter);
+                        ((Action<TObj, DateTime?>)_dictionary[type][name])(obj, parameter is not null ? (DateTime?)parameter : default(DateTime?));
                         return true;
                     case not null when objType == _typeOfGuid:
                         _dictionary[type][name] = GetSetter<TObj, Guid>(obj.GetType(), name);
-                        ((Action<TObj, Guid>)_dictionary[type][name])(obj, (Guid)parameter);
+                        ((Action<TObj, Guid>)_dictionary[type][name])(obj, parameter is not null ? (Guid)parameter : default(Guid));
                         return true;
                     case not null when objType == _typeOfNullableGuid:
                         _dictionary[type][name] = GetSetter<TObj, Guid?>(obj.GetType(), name);
-                        ((Action<TObj, Guid?>)_dictionary[type][name])(obj, (Guid?)parameter);
+                        ((Action<TObj, Guid?>)_dictionary[type][name])(obj, parameter is not null ? (Guid?)parameter : default(Guid?));
                         return true;
                     case not null when objType == _typeOfType:
                         _dictionary[type][name] = GetSetter<TObj, Type>(obj.GetType(), name);
-                        ((Action<TObj, Type>)_dictionary[type][name])(obj, (Type)parameter);
+                        ((Action<TObj, Type>)_dictionary[type][name])(obj, parameter is not null ? (Type)parameter : default(Type));
                         return true;
                     case not null when objType == _typeOfObject:
                         _dictionary[type][name] = GetSetter<TObj, object>(obj.GetType(), name);
-                        ((Action<TObj, object>)_dictionary[type][name])(obj, (object)parameter);
+                        ((Action<TObj, object>)_dictionary[type][name])(obj, parameter is not null ? (object)parameter : default(object));
                         return true;
                     case not null when objType == _typeOfRSBool:
                         _dictionary[type][name] = GetSetter<ReactivePropertySlim<bool>, bool>(obj.GetType(), name);
-                        ((Action<ReactivePropertySlim<bool>, bool>)_dictionary[type][name])(obj as ReactivePropertySlim<bool>, (bool)parameter);
+                        ((Action<ReactivePropertySlim<bool>, bool>)_dictionary[type][name])(obj as ReactivePropertySlim<bool>, parameter is not null ? (bool)parameter : default(bool));
                         return true;
                     case not null when objType == _typeOfRSNullableBool:
                         _dictionary[type][name] = GetSetter<ReactivePropertySlim<bool?>, bool?>(obj.GetType(), name);
-                        ((Action<ReactivePropertySlim<bool?>, bool?>)_dictionary[type][name])(obj as ReactivePropertySlim<bool?>, (bool?)parameter);
+                        ((Action<ReactivePropertySlim<bool?>, bool?>)_dictionary[type][name])(obj as ReactivePropertySlim<bool?>, parameter is not null ? (bool?)parameter : default(bool?));
                         return true;
                     case not null when objType == _typeOfRSShort:
                         _dictionary[type][name] = GetSetter<ReactivePropertySlim<short>, short>(obj.GetType(), name);
-                        ((Action<ReactivePropertySlim<short>, short>)_dictionary[type][name])(obj as ReactivePropertySlim<short>, (short)parameter);
+                        ((Action<ReactivePropertySlim<short>, short>)_dictionary[type][name])(obj as ReactivePropertySlim<short>, parameter is not null ? (short)parameter : default(short));
                         return true;
                     case not null when objType == _typeOfRSNullableShort:
                         _dictionary[type][name] = GetSetter<ReactivePropertySlim<short?>, short?>(obj.GetType(), name);
-                        ((Action<ReactivePropertySlim<short?>, short?>)_dictionary[type][name])(obj as ReactivePropertySlim<short?>, (short?)parameter);
+                        ((Action<ReactivePropertySlim<short?>, short?>)_dictionary[type][name])(obj as ReactivePropertySlim<short?>, parameter is not null ? (short?)parameter : default(short?));
                         return true;
                     case not null when objType == _typeOfRSInt:
                         _dictionary[type][name] = GetSetter<ReactivePropertySlim<int>, int>(obj.GetType(), name);
-                        ((Action<ReactivePropertySlim<int>, int>)_dictionary[type][name])(obj as ReactivePropertySlim<int>, (int)parameter);
+                        ((Action<ReactivePropertySlim<int>, int>)_dictionary[type][name])(obj as ReactivePropertySlim<int>, parameter is not null ? (int)parameter : default(int));
                         return true;
                     case not null when objType == _typeOfRSNullableInt:
                         _dictionary[type][name] = GetSetter<ReactivePropertySlim<int?>, int?>(obj.GetType(), name);
-                        ((Action<ReactivePropertySlim<int?>, int?>)_dictionary[type][name])(obj as ReactivePropertySlim<int?>, (int?)parameter);
+                        ((Action<ReactivePropertySlim<int?>, int?>)_dictionary[type][name])(obj as ReactivePropertySlim<int?>, parameter is not null ? (int?)parameter : default(int?));
                         return true;
                     case not null when objType == _typeOfRSLong:
                         _dictionary[type][name] = GetSetter<ReactivePropertySlim<long>, long>(obj.GetType(), name);
-                        ((Action<ReactivePropertySlim<long>, long>)_dictionary[type][name])(obj as ReactivePropertySlim<long>, (long)parameter);
+                        ((Action<ReactivePropertySlim<long>, long>)_dictionary[type][name])(obj as ReactivePropertySlim<long>, parameter is not null ? (long)parameter : default(long));
                         return true;
                     case not null when objType == _typeOfRSNullableLong:
                         _dictionary[type][name] = GetSetter<ReactivePropertySlim<long?>, long?>(obj.GetType(), name);
-                        ((Action<ReactivePropertySlim<long?>, long?>)_dictionary[type][name])(obj as ReactivePropertySlim<long?>, (long?)parameter);
+                        ((Action<ReactivePropertySlim<long?>, long?>)_dictionary[type][name])(obj as ReactivePropertySlim<long?>, parameter is not null ? (long?)parameter : default(long?));
                         return true;
                     case not null when objType == _typeOfRSUshort:
                         _dictionary[type][name] = GetSetter<ReactivePropertySlim<ushort>, ushort>(obj.GetType(), name);
-                        ((Action<ReactivePropertySlim<ushort>, ushort>)_dictionary[type][name])(obj as ReactivePropertySlim<ushort>, (ushort)parameter);
+                        ((Action<ReactivePropertySlim<ushort>, ushort>)_dictionary[type][name])(obj as ReactivePropertySlim<ushort>, parameter is not null ? (ushort)parameter : default(ushort));
                         return true;
                     case not null when objType == _typeOfRSNullableUshort:
                         _dictionary[type][name] = GetSetter<ReactivePropertySlim<ushort?>, ushort?>(obj.GetType(), name);
-                        ((Action<ReactivePropertySlim<ushort?>, ushort?>)_dictionary[type][name])(obj as ReactivePropertySlim<ushort?>, (ushort?)parameter);
+                        ((Action<ReactivePropertySlim<ushort?>, ushort?>)_dictionary[type][name])(obj as ReactivePropertySlim<ushort?>, parameter is not null ? (ushort?)parameter : default(ushort?));
                         return true;
                     case not null when objType == _typeOfRSUint:
                         _dictionary[type][name] = GetSetter<ReactivePropertySlim<uint>, uint>(obj.GetType(), name);
-                        ((Action<ReactivePropertySlim<uint>, uint>)_dictionary[type][name])(obj as ReactivePropertySlim<uint>, (uint)parameter);
+                        ((Action<ReactivePropertySlim<uint>, uint>)_dictionary[type][name])(obj as ReactivePropertySlim<uint>, parameter is not null ? (uint)parameter : default(uint));
                         return true;
                     case not null when objType == _typeOfRSNullableUint:
                         _dictionary[type][name] = GetSetter<ReactivePropertySlim<uint?>, uint?>(obj.GetType(), name);
-                        ((Action<ReactivePropertySlim<uint?>, uint?>)_dictionary[type][name])(obj as ReactivePropertySlim<uint?>, (uint?)parameter);
+                        ((Action<ReactivePropertySlim<uint?>, uint?>)_dictionary[type][name])(obj as ReactivePropertySlim<uint?>, parameter is not null ? (uint?)parameter : default(uint?));
                         return true;
                     case not null when objType == _typeOfRSUlong:
                         _dictionary[type][name] = GetSetter<ReactivePropertySlim<ulong>, ulong>(obj.GetType(), name);
-                        ((Action<ReactivePropertySlim<ulong>, ulong>)_dictionary[type][name])(obj as ReactivePropertySlim<ulong>, (ulong)parameter);
+                        ((Action<ReactivePropertySlim<ulong>, ulong>)_dictionary[type][name])(obj as ReactivePropertySlim<ulong>, parameter is not null ? (ulong)parameter : default(ulong));
                         return true;
                     case not null when objType == _typeOfRSNullableUlong:
                         _dictionary[type][name] = GetSetter<ReactivePropertySlim<ulong?>, ulong?>(obj.GetType(), name);
-                        ((Action<ReactivePropertySlim<ulong?>, ulong?>)_dictionary[type][name])(obj as ReactivePropertySlim<ulong?>, (ulong?)parameter);
+                        ((Action<ReactivePropertySlim<ulong?>, ulong?>)_dictionary[type][name])(obj as ReactivePropertySlim<ulong?>, parameter is not null ? (ulong?)parameter : default(ulong?));
                         return true;
                     case not null when objType == _typeOfRSFloat:
                         _dictionary[type][name] = GetSetter<ReactivePropertySlim<float>, float>(obj.GetType(), name);
-                        ((Action<ReactivePropertySlim<float>, float>)_dictionary[type][name])(obj as ReactivePropertySlim<float>, (float)parameter);
+                        ((Action<ReactivePropertySlim<float>, float>)_dictionary[type][name])(obj as ReactivePropertySlim<float>, parameter is not null ? (float)parameter : default(float));
                         return true;
                     case not null when objType == _typeOfRSNullableFloat:
                         _dictionary[type][name] = GetSetter<ReactivePropertySlim<float?>, float?>(obj.GetType(), name);
-                        ((Action<ReactivePropertySlim<float?>, float?>)_dictionary[type][name])(obj as ReactivePropertySlim<float?>, (float?)parameter);
+                        ((Action<ReactivePropertySlim<float?>, float?>)_dictionary[type][name])(obj as ReactivePropertySlim<float?>, parameter is not null ? (float?)parameter : default(float?));
                         return true;
                     case not null when objType == _typeOfRSDouble:
                         _dictionary[type][name] = GetSetter<ReactivePropertySlim<double>, double>(obj.GetType(), name);
-                        ((Action<ReactivePropertySlim<double>, double>)_dictionary[type][name])(obj as ReactivePropertySlim<double>, (double)parameter);
+                        ((Action<ReactivePropertySlim<double>, double>)_dictionary[type][name])(obj as ReactivePropertySlim<double>, parameter is not null ? (double)parameter : default(double));
                         return true;
                     case not null when objType == _typeOfRSNullableDouble:
                         _dictionary[type][name] = GetSetter<ReactivePropertySlim<double?>, double?>(obj.GetType(), name);
-                        ((Action<ReactivePropertySlim<double?>, double?>)_dictionary[type][name])(obj as ReactivePropertySlim<double?>, (double?)parameter);
+                        ((Action<ReactivePropertySlim<double?>, double?>)_dictionary[type][name])(obj as ReactivePropertySlim<double?>, parameter is not null ? (double?)parameter : default(double?));
                         return true;
                     case not null when objType == _typeOfRSString:
                         _dictionary[type][name] = GetSetter<ReactivePropertySlim<string>, string>(obj.GetType(), name);
-                        ((Action<ReactivePropertySlim<string>, string>)_dictionary[type][name])(obj as ReactivePropertySlim<string>, (string)parameter);
+                        ((Action<ReactivePropertySlim<string>, string>)_dictionary[type][name])(obj as ReactivePropertySlim<string>, parameter is not null ? (string)parameter : default(string));
                         return true;
                     case not null when objType == _typeOfRSDateTime:
                         _dictionary[type][name] = GetSetter<ReactivePropertySlim<DateTime>, DateTime>(obj.GetType(), name);
-                        ((Action<ReactivePropertySlim<DateTime>, DateTime>)_dictionary[type][name])(obj as ReactivePropertySlim<DateTime>, (DateTime)parameter);
+                        ((Action<ReactivePropertySlim<DateTime>, DateTime>)_dictionary[type][name])(obj as ReactivePropertySlim<DateTime>, parameter is not null ? (DateTime)parameter : default(DateTime));
                         return true;
                     case not null when objType == _typeOfRSNullableDateTime:
                         _dictionary[type][name] = GetSetter<ReactivePropertySlim<DateTime?>, DateTime?>(obj.GetType(), name);
-                        ((Action<ReactivePropertySlim<DateTime?>, DateTime?>)_dictionary[type][name])(obj as ReactivePropertySlim<DateTime?>, (DateTime?)parameter);
+                        ((Action<ReactivePropertySlim<DateTime?>, DateTime?>)_dictionary[type][name])(obj as ReactivePropertySlim<DateTime?>, parameter is not null ? (DateTime?)parameter : default(DateTime?));
                         return true;
                     case not null when objType == _typeOfRSGuid:
                         _dictionary[type][name] = GetSetter<ReactivePropertySlim<Guid>, Guid>(obj.GetType(), name);
-                        ((Action<ReactivePropertySlim<Guid>, Guid>)_dictionary[type][name])(obj as ReactivePropertySlim<Guid>, (Guid)parameter);
+                        ((Action<ReactivePropertySlim<Guid>, Guid>)_dictionary[type][name])(obj as ReactivePropertySlim<Guid>, parameter is not null ? (Guid)parameter : default(Guid));
                         return true;
                     case not null when objType == _typeOfRSNullableGuid:
                         _dictionary[type][name] = GetSetter<ReactivePropertySlim<Guid?>, Guid?>(obj.GetType(), name);
-                        ((Action<ReactivePropertySlim<Guid?>, Guid?>)_dictionary[type][name])(obj as ReactivePropertySlim<Guid?>, (Guid?)parameter);
+                        ((Action<ReactivePropertySlim<Guid?>, Guid?>)_dictionary[type][name])(obj as ReactivePropertySlim<Guid?>, parameter is not null ? (Guid?)parameter : default(Guid?));
                         return true;
                     case not null when objType == _typeOfRSType:
                         _dictionary[type][name] = GetSetter<ReactivePropertySlim<Type>, Type>(obj.GetType(), name);
-                        ((Action<ReactivePropertySlim<Type>, Type>)_dictionary[type][name])(obj as ReactivePropertySlim<Type>, (Type)parameter);
+                        ((Action<ReactivePropertySlim<Type>, Type>)_dictionary[type][name])(obj as ReactivePropertySlim<Type>, parameter is not null ? (Type)parameter : default(Type));
                         return true;
                     case not null when objType == _typeOfRSObject:
                         _dictionary[type][name] = GetSetter<ReactivePropertySlim<object>, object>(obj.GetType(), name);
-                        ((Action<ReactivePropertySlim<object>, object>)_dictionary[type][name])(obj as ReactivePropertySlim<object>, (object)parameter);
+                        ((Action<ReactivePropertySlim<object>, object>)_dictionary[type][name])(obj as ReactivePropertySlim<object>, parameter is not null ? (object)parameter : default(object));
                         return true;
                     case not null when objType == _typeOfRBool:
                         _dictionary[type][name] = GetSetter<ReactiveProperty<bool>, bool>(obj.GetType(), name);
-                        ((Action<ReactiveProperty<bool>, bool>)_dictionary[type][name])(obj as ReactiveProperty<bool>, (bool)parameter);
+                        ((Action<ReactiveProperty<bool>, bool>)_dictionary[type][name])(obj as ReactiveProperty<bool>, parameter is not null ? (bool)parameter : default(bool));
                         return true;
                     case not null when objType == _typeOfRNullableBool:
                         _dictionary[type][name] = GetSetter<ReactiveProperty<bool?>, bool?>(obj.GetType(), name);
-                        ((Action<ReactiveProperty<bool?>, bool?>)_dictionary[type][name])(obj as ReactiveProperty<bool?>, (bool?)parameter);
+                        ((Action<ReactiveProperty<bool?>, bool?>)_dictionary[type][name])(obj as ReactiveProperty<bool?>, parameter is not null ? (bool?)parameter : default(bool?));
                         return true;
                     case not null when objType == _typeOfRShort:
                         _dictionary[type][name] = GetSetter<ReactiveProperty<short>, short>(obj.GetType(), name);
-                        ((Action<ReactiveProperty<short>, short>)_dictionary[type][name])(obj as ReactiveProperty<short>, (short)parameter);
+                        ((Action<ReactiveProperty<short>, short>)_dictionary[type][name])(obj as ReactiveProperty<short>, parameter is not null ? (short)parameter : default(short));
                         return true;
                     case not null when objType == _typeOfRNullableShort:
                         _dictionary[type][name] = GetSetter<ReactiveProperty<short?>, short?>(obj.GetType(), name);
-                        ((Action<ReactiveProperty<short?>, short?>)_dictionary[type][name])(obj as ReactiveProperty<short?>, (short?)parameter);
+                        ((Action<ReactiveProperty<short?>, short?>)_dictionary[type][name])(obj as ReactiveProperty<short?>, parameter is not null ? (short?)parameter : default(short?));
                         return true;
                     case not null when objType == _typeOfRInt:
                         _dictionary[type][name] = GetSetter<ReactiveProperty<int>, int>(obj.GetType(), name);
-                        ((Action<ReactiveProperty<int>, int>)_dictionary[type][name])(obj as ReactiveProperty<int>, (int)parameter);
+                        ((Action<ReactiveProperty<int>, int>)_dictionary[type][name])(obj as ReactiveProperty<int>, parameter is not null ? (int)parameter : default(int));
                         return true;
                     case not null when objType == _typeOfRNullableInt:
                         _dictionary[type][name] = GetSetter<ReactiveProperty<int?>, int?>(obj.GetType(), name);
-                        ((Action<ReactiveProperty<int?>, int?>)_dictionary[type][name])(obj as ReactiveProperty<int?>, (int?)parameter);
+                        ((Action<ReactiveProperty<int?>, int?>)_dictionary[type][name])(obj as ReactiveProperty<int?>, parameter is not null ? (int?)parameter : default(int?));
                         return true;
                     case not null when objType == _typeOfRLong:
                         _dictionary[type][name] = GetSetter<ReactiveProperty<long>, long>(obj.GetType(), name);
-                        ((Action<ReactiveProperty<long>, long>)_dictionary[type][name])(obj as ReactiveProperty<long>, (long)parameter);
+                        ((Action<ReactiveProperty<long>, long>)_dictionary[type][name])(obj as ReactiveProperty<long>, parameter is not null ? (long)parameter : default(long));
                         return true;
                     case not null when objType == _typeOfRNullableLong:
                         _dictionary[type][name] = GetSetter<ReactiveProperty<long?>, long?>(obj.GetType(), name);
-                        ((Action<ReactiveProperty<long?>, long?>)_dictionary[type][name])(obj as ReactiveProperty<long?>, (long?)parameter);
+                        ((Action<ReactiveProperty<long?>, long?>)_dictionary[type][name])(obj as ReactiveProperty<long?>, parameter is not null ? (long?)parameter : default(long?));
                         return true;
                     case not null when objType == _typeOfRUshort:
                         _dictionary[type][name] = GetSetter<ReactiveProperty<ushort>, ushort>(obj.GetType(), name);
-                        ((Action<ReactiveProperty<ushort>, ushort>)_dictionary[type][name])(obj as ReactiveProperty<ushort>, (ushort)parameter);
+                        ((Action<ReactiveProperty<ushort>, ushort>)_dictionary[type][name])(obj as ReactiveProperty<ushort>, parameter is not null ? (ushort)parameter : default(ushort));
                         return true;
                     case not null when objType == _typeOfRNullableUshort:
                         _dictionary[type][name] = GetSetter<ReactiveProperty<ushort?>, ushort?>(obj.GetType(), name);
-                        ((Action<ReactiveProperty<ushort?>, ushort?>)_dictionary[type][name])(obj as ReactiveProperty<ushort?>, (ushort?)parameter);
+                        ((Action<ReactiveProperty<ushort?>, ushort?>)_dictionary[type][name])(obj as ReactiveProperty<ushort?>, parameter is not null ? (ushort?)parameter : default(ushort?));
                         return true;
                     case not null when objType == _typeOfRUint:
                         _dictionary[type][name] = GetSetter<ReactiveProperty<uint>, uint>(obj.GetType(), name);
-                        ((Action<ReactiveProperty<uint>, uint>)_dictionary[type][name])(obj as ReactiveProperty<uint>, (uint)parameter);
+                        ((Action<ReactiveProperty<uint>, uint>)_dictionary[type][name])(obj as ReactiveProperty<uint>, parameter is not null ? (uint)parameter : default(uint));
                         return true;
                     case not null when objType == _typeOfRNullableUint:
                         _dictionary[type][name] = GetSetter<ReactiveProperty<uint?>, uint?>(obj.GetType(), name);
-                        ((Action<ReactiveProperty<uint?>, uint?>)_dictionary[type][name])(obj as ReactiveProperty<uint?>, (uint?)parameter);
+                        ((Action<ReactiveProperty<uint?>, uint?>)_dictionary[type][name])(obj as ReactiveProperty<uint?>, parameter is not null ? (uint?)parameter : default(uint?));
                         return true;
                     case not null when objType == _typeOfRUlong:
                         _dictionary[type][name] = GetSetter<ReactiveProperty<ulong>, ulong>(obj.GetType(), name);
-                        ((Action<ReactiveProperty<ulong>, ulong>)_dictionary[type][name])(obj as ReactiveProperty<ulong>, (ulong)parameter);
+                        ((Action<ReactiveProperty<ulong>, ulong>)_dictionary[type][name])(obj as ReactiveProperty<ulong>, parameter is not null ? (ulong)parameter : default(ulong));
                         return true;
                     case not null when objType == _typeOfRNullableUlong:
                         _dictionary[type][name] = GetSetter<ReactiveProperty<ulong?>, ulong?>(obj.GetType(), name);
-                        ((Action<ReactiveProperty<ulong?>, ulong?>)_dictionary[type][name])(obj as ReactiveProperty<ulong?>, (ulong?)parameter);
+                        ((Action<ReactiveProperty<ulong?>, ulong?>)_dictionary[type][name])(obj as ReactiveProperty<ulong?>, parameter is not null ? (ulong?)parameter : default(ulong?));
                         return true;
                     case not null when objType == _typeOfRFloat:
                         _dictionary[type][name] = GetSetter<ReactiveProperty<float>, float>(obj.GetType(), name);
-                        ((Action<ReactiveProperty<float>, float>)_dictionary[type][name])(obj as ReactiveProperty<float>, (float)parameter);
+                        ((Action<ReactiveProperty<float>, float>)_dictionary[type][name])(obj as ReactiveProperty<float>, parameter is not null ? (float)parameter : default(float));
                         return true;
                     case not null when objType == _typeOfRNullableFloat:
                         _dictionary[type][name] = GetSetter<ReactiveProperty<float?>, float?>(obj.GetType(), name);
-                        ((Action<ReactiveProperty<float?>, float?>)_dictionary[type][name])(obj as ReactiveProperty<float?>, (float?)parameter);
+                        ((Action<ReactiveProperty<float?>, float?>)_dictionary[type][name])(obj as ReactiveProperty<float?>, parameter is not null ? (float?)parameter : default(float?));
                         return true;
                     case not null when objType == _typeOfRDouble:
                         _dictionary[type][name] = GetSetter<ReactiveProperty<double>, double>(obj.GetType(), name);
-                        ((Action<ReactiveProperty<double>, double>)_dictionary[type][name])(obj as ReactiveProperty<double>, (double)parameter);
+                        ((Action<ReactiveProperty<double>, double>)_dictionary[type][name])(obj as ReactiveProperty<double>, parameter is not null ? (double)parameter : default(double));
                         return true;
                     case not null when objType == _typeOfRNullableDouble:
                         _dictionary[type][name] = GetSetter<ReactiveProperty<double?>, double?>(obj.GetType(), name);
-                        ((Action<ReactiveProperty<double?>, double?>)_dictionary[type][name])(obj as ReactiveProperty<double?>, (double?)parameter);
+                        ((Action<ReactiveProperty<double?>, double?>)_dictionary[type][name])(obj as ReactiveProperty<double?>, parameter is not null ? (double?)parameter : default(double?));
                         return true;
                     case not null when objType == _typeOfRString:
                         _dictionary[type][name] = GetSetter<ReactiveProperty<string>, string>(obj.GetType(), name);
-                        ((Action<ReactiveProperty<string>, string>)_dictionary[type][name])(obj as ReactiveProperty<string>, (string)parameter);
+                        ((Action<ReactiveProperty<string>, string>)_dictionary[type][name])(obj as ReactiveProperty<string>, parameter is not null ? (string)parameter : default(string));
                         return true;
                     case not null when objType == _typeOfRDateTime:
                         _dictionary[type][name] = GetSetter<ReactiveProperty<DateTime>, DateTime>(obj.GetType(), name);
-                        ((Action<ReactiveProperty<DateTime>, DateTime>)_dictionary[type][name])(obj as ReactiveProperty<DateTime>, (DateTime)parameter);
+                        ((Action<ReactiveProperty<DateTime>, DateTime>)_dictionary[type][name])(obj as ReactiveProperty<DateTime>, parameter is not null ? (DateTime)parameter : default(DateTime));
                         return true;
                     case not null when objType == _typeOfRNullableDateTime:
                         _dictionary[type][name] = GetSetter<ReactiveProperty<DateTime?>, DateTime?>(obj.GetType(), name);
-                        ((Action<ReactiveProperty<DateTime?>, DateTime?>)_dictionary[type][name])(obj as ReactiveProperty<DateTime?>, (DateTime?)parameter);
+                        ((Action<ReactiveProperty<DateTime?>, DateTime?>)_dictionary[type][name])(obj as ReactiveProperty<DateTime?>, parameter is not null ? (DateTime?)parameter : default(DateTime?));
                         return true;
                     case not null when objType == _typeOfRGuid:
                         _dictionary[type][name] = GetSetter<ReactiveProperty<Guid>, Guid>(obj.GetType(), name);
-                        ((Action<ReactiveProperty<Guid>, Guid>)_dictionary[type][name])(obj as ReactiveProperty<Guid>, (Guid)parameter);
+                        ((Action<ReactiveProperty<Guid>, Guid>)_dictionary[type][name])(obj as ReactiveProperty<Guid>, parameter is not null ? (Guid)parameter : default(Guid));
                         return true;
                     case not null when objType == _typeOfRNullableGuid:
                         _dictionary[type][name] = GetSetter<ReactiveProperty<Guid?>, Guid?>(obj.GetType(), name);
-                        ((Action<ReactiveProperty<Guid?>, Guid?>)_dictionary[type][name])(obj as ReactiveProperty<Guid?>, (Guid?)parameter);
+                        ((Action<ReactiveProperty<Guid?>, Guid?>)_dictionary[type][name])(obj as ReactiveProperty<Guid?>, parameter is not null ? (Guid?)parameter : default(Guid?));
                         return true;
                     case not null when objType == _typeOfRType:
                         _dictionary[type][name] = GetSetter<ReactiveProperty<Type>, Type>(obj.GetType(), name);
-                        ((Action<ReactiveProperty<Type>, Type>)_dictionary[type][name])(obj as ReactiveProperty<Type>, (Type)parameter);
+                        ((Action<ReactiveProperty<Type>, Type>)_dictionary[type][name])(obj as ReactiveProperty<Type>, parameter is not null ? (Type)parameter : default(Type));
                         return true;
                     case not null when objType == _typeOfRObject:
                         _dictionary[type][name] = GetSetter<ReactiveProperty<object>, object>(obj.GetType(), name);
-                        ((Action<ReactiveProperty<object>, object>)_dictionary[type][name])(obj as ReactiveProperty<object>, (object)parameter);
+                        ((Action<ReactiveProperty<object>, object>)_dictionary[type][name])(obj as ReactiveProperty<object>, parameter is not null ? (object)parameter : default(object));
                         return true;
                     default:
                         return false;
@@ -980,9 +980,16 @@ namespace Homura.ORM
                         typeof(TObj).GetProperty(propName).GetGetMethod(nonPublic: true));
 
             public static Action<TObj, TProp> GetSetter<TObj, TProp>(Type type, string propName)
-                => (Action<TObj, TProp>)
+            {
+                var ret = (Action<TObj, TProp>)
                     System.Delegate.CreateDelegate(typeof(Action<,>).MakeGenericType(type, typeof(TProp)),
                         type.GetProperty(propName).GetSetMethod(nonPublic: true));
+                if (ret is null)
+                {
+
+                }
+                return ret;
+            }
         }
 
         protected object GetColumnValue(IDataRecord reader, IColumn column, ITable table)
