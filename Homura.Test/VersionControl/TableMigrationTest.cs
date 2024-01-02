@@ -48,7 +48,7 @@ namespace Sunctum.Infrastructure.Test.IntegrationTest.Data.Rdbms.VersionControl
             svManager.RegisterChangePlan(registeringPlan);
             svManager.SetDefault();
 
-            await svManager.UpgradeToTargetVersion();
+            svManager.UpgradeToTargetVersion();
 
             var dao = new OriginDao();
             dao.CurrentConnection = ConnectionManager.DefaultConnection;
@@ -60,28 +60,28 @@ namespace Sunctum.Infrastructure.Test.IntegrationTest.Data.Rdbms.VersionControl
                 Item2 = "org_item2",
             });
 
-            Assert.That(await dao.CountAllAsync(), Is.EqualTo(1));
+            Assert.That(dao.CountAll(), Is.EqualTo(1));
 
             using (var conn = new SQLiteConnection($"Data Source={_filePath}"))
             {
                 await conn.OpenAsync();
 
-                Assert.That(await conn.GetTableNames(), Has.One.EqualTo("Origin"));
-                Assert.That(await conn.GetTableNames(), Has.None.EqualTo("Origin_1"));
+                Assert.That(conn.GetTableNames(), Has.One.EqualTo("Origin"));
+                Assert.That(conn.GetTableNames(), Has.None.EqualTo("Origin_1"));
             }
 
             var registeringPlan1 = new ChangePlan<Version_1>(VersioningMode.ByTick);
             registeringPlan1.AddVersionChangePlan(new OriginChangePlan_Version_1(VersioningMode.ByTick));
             svManager.RegisterChangePlan(registeringPlan1);
 
-            await svManager.UpgradeToTargetVersion();
+            svManager.UpgradeToTargetVersion();
 
             using (var conn = new SQLiteConnection($"Data Source={_filePath}"))
             {
                 await conn.OpenAsync();
 
-                Assert.That(await conn.GetTableNames(), Has.One.EqualTo("Origin"));
-                Assert.That(await conn.GetTableNames(), Has.One.EqualTo("Origin_1"));
+                Assert.That(conn.GetTableNames(), Has.One.EqualTo("Origin"));
+                Assert.That(conn.GetTableNames(), Has.One.EqualTo("Origin_1"));
 
                 var items = await dao.FindAllAsync().ToListAsync();
                 Assert.That(items.Count(), Is.EqualTo(1)); //default version:Version_1
@@ -104,13 +104,13 @@ namespace Sunctum.Infrastructure.Test.IntegrationTest.Data.Rdbms.VersionControl
             registeringPlan.AddVersionChangePlan(new GammaChangePlan_VersionOrigin(VersioningMode.ByTick));
             svManager.RegisterChangePlan(registeringPlan);
             svManager.SetDefault();
-            await svManager.UpgradeToTargetVersion();
+            svManager.UpgradeToTargetVersion();
 
             using (var conn = new SQLiteConnection($"Data Source={_filePath}"))
             {
                 await conn.OpenAsync();
 
-                var tablenames = await conn.GetTableNames();
+                var tablenames = conn.GetTableNames();
 
                 Assert.That(tablenames, Has.One.EqualTo("Alpha"));
                 Assert.That(tablenames, Has.None.EqualTo("Alpha_1"));
@@ -128,13 +128,13 @@ namespace Sunctum.Infrastructure.Test.IntegrationTest.Data.Rdbms.VersionControl
             var registeringPlan1 = new ChangePlan<Version_1>(VersioningMode.ByTick);
             registeringPlan1.AddVersionChangePlan(new AlphaChangePlan_Version_1(VersioningMode.ByTick));
             svManager.RegisterChangePlan(registeringPlan1);
-            await svManager.UpgradeToTargetVersion();
+            svManager.UpgradeToTargetVersion();
 
             using (var conn = new SQLiteConnection($"Data Source={_filePath}"))
             {
                 await conn.OpenAsync();
 
-                var tablenames = await conn.GetTableNames();
+                var tablenames = conn.GetTableNames();
 
                 Assert.That(tablenames, Has.One.EqualTo("Alpha"));
                 Assert.That(tablenames, Has.One.EqualTo("Alpha_1"));
@@ -153,13 +153,13 @@ namespace Sunctum.Infrastructure.Test.IntegrationTest.Data.Rdbms.VersionControl
             registeringPlan2.AddVersionChangePlan(new AlphaChangePlan_Version_2(VersioningMode.ByTick));
             registeringPlan2.AddVersionChangePlan(new BetaChangePlan_Version_1(VersioningMode.ByTick));
             svManager.RegisterChangePlan(registeringPlan2);
-            await svManager.UpgradeToTargetVersion();
+            svManager.UpgradeToTargetVersion();
 
             using (var conn = new SQLiteConnection($"Data Source={_filePath}"))
             {
                 await conn.OpenAsync();
 
-                var tablenames = await conn.GetTableNames();
+                var tablenames = conn.GetTableNames();
 
                 Assert.That(tablenames, Has.One.EqualTo("Alpha"));
                 Assert.That(tablenames, Has.One.EqualTo("Alpha_1"));
@@ -178,13 +178,13 @@ namespace Sunctum.Infrastructure.Test.IntegrationTest.Data.Rdbms.VersionControl
             registeringPlan3.AddVersionChangePlan(new BetaChangePlan_Version_2(VersioningMode.ByTick));
             registeringPlan3.AddVersionChangePlan(new GammaChangePlan_Version_1(VersioningMode.ByTick));
             svManager.RegisterChangePlan(registeringPlan3);
-            await svManager.UpgradeToTargetVersion();
+            svManager.UpgradeToTargetVersion();
 
             using (var conn = new SQLiteConnection($"Data Source={_filePath}"))
             {
                 await conn.OpenAsync();
 
-                var tablenames = await conn.GetTableNames();
+                var tablenames = conn.GetTableNames();
 
                 Assert.That(tablenames, Has.One.EqualTo("Alpha"));
                 Assert.That(tablenames, Has.One.EqualTo("Alpha_1"));
@@ -220,13 +220,13 @@ namespace Sunctum.Infrastructure.Test.IntegrationTest.Data.Rdbms.VersionControl
                 Item9 = true,
             });
 
-            await svManager.UpgradeToTargetVersion();
+            svManager.UpgradeToTargetVersion();
 
             using (var conn = new SQLiteConnection($"Data Source={_filePath}"))
             {
                 await conn.OpenAsync();
 
-                var tablenames = await conn.GetTableNames();
+                var tablenames = conn.GetTableNames();
 
                 Assert.That(tablenames, Has.One.EqualTo("Alpha"));
                 Assert.That(tablenames, Has.One.EqualTo("Alpha_1"));
@@ -301,13 +301,13 @@ namespace Sunctum.Infrastructure.Test.IntegrationTest.Data.Rdbms.VersionControl
             registeringPlan.AddVersionChangePlan(new GammaChangePlan_VersionOrigin(VersioningMode.ByTick));
             svManager.RegisterChangePlan(registeringPlan);
             svManager.SetDefault();
-            await svManager.UpgradeToTargetVersion();
+            svManager.UpgradeToTargetVersion();
 
             using (var conn = new SQLiteConnection($"Data Source={_filePath}"))
             {
                 await conn.OpenAsync();
 
-                var tablenames = await conn.GetTableNames();
+                var tablenames = conn.GetTableNames();
 
                 Assert.That(tablenames, Has.One.EqualTo("Alpha"));
                 Assert.That(tablenames, Has.None.EqualTo("Alpha_1"));
@@ -330,13 +330,13 @@ namespace Sunctum.Infrastructure.Test.IntegrationTest.Data.Rdbms.VersionControl
             registeringPlan.AddVersionChangePlan(new GammaChangePlan_VersionOrigin(VersioningMode.ByTick));
             svManager.RegisterChangePlan(registeringPlan);
             svManager.SetDefault();
-            await svManager.UpgradeToTargetVersion();
+            svManager.UpgradeToTargetVersion();
 
             using (var conn = new SQLiteConnection($"Data Source={_filePath}"))
             {
                 await conn.OpenAsync();
 
-                var tablenames = await conn.GetTableNames();
+                var tablenames = conn.GetTableNames();
 
                 Assert.That(tablenames, Has.One.EqualTo("Alpha"));
                 Assert.That(tablenames, Has.None.EqualTo("Alpha_1"));
@@ -362,7 +362,7 @@ namespace Sunctum.Infrastructure.Test.IntegrationTest.Data.Rdbms.VersionControl
             registeringPlan.AddVersionChangePlan(new BookChangePlan_VersionOrigin(VersioningMode.ByTick));
             svManager.RegisterChangePlan(registeringPlan);
             svManager.SetDefault();
-            await svManager.UpgradeToTargetVersion();
+            svManager.UpgradeToTargetVersion();
 
             using (var conn = new SQLiteConnection($"Data Source={_filePath}"))
             {
@@ -383,7 +383,7 @@ namespace Sunctum.Infrastructure.Test.IntegrationTest.Data.Rdbms.VersionControl
             var registeringPlan1 = new ChangePlan<Version_1>(VersioningMode.ByTick);
             registeringPlan1.AddVersionChangePlan(new BookChangePlan_Version_1(VersioningMode.ByTick));
             svManager.RegisterChangePlan(registeringPlan1);
-            await svManager.UpgradeToTargetVersion();
+            svManager.UpgradeToTargetVersion();
 
             using (var conn = new SQLiteConnection($"Data Source={_filePath}"))
             {
@@ -411,7 +411,7 @@ namespace Sunctum.Infrastructure.Test.IntegrationTest.Data.Rdbms.VersionControl
             registeringPlan.AddVersionChangePlan(new PageChangePlan_VersionOrigin(VersioningMode.ByTick));
             svManager.RegisterChangePlan(registeringPlan);
             svManager.SetDefault();
-            await svManager.UpgradeToTargetVersion();
+            svManager.UpgradeToTargetVersion();
 
             using (var conn = new SQLiteConnection($"Data Source={_filePath}"))
             {

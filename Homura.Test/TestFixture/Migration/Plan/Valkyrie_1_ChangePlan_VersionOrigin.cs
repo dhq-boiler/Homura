@@ -16,27 +16,27 @@ namespace Sunctum.Domain.Data.Dao.Migration.Plan
         {
         }
 
-        public override async Task CreateTable(IConnection connection)
+        public override void CreateTable(IConnection connection)
         {
             var dao = new Valkyrie_1_Dao(typeof(VersionOrigin));
             dao.CurrentConnection = connection;
-            await dao.CreateTableIfNotExistsAsync();
+            dao.CreateTableIfNotExists();
             ++ModifiedCount;
-            await dao.CreateIndexIfNotExistsAsync();
+            dao.CreateIndexIfNotExists();
             ++ModifiedCount;
         }
 
-        public override async Task DropTable(IConnection connection)
+        public override void DropTable(IConnection connection)
         {
             var dao = new Valkyrie_1_Dao(typeof(VersionOrigin));
             dao.CurrentConnection = connection;
-            await dao.DropTableIfExistsAsync();
+            dao.DropTableIfExists();
             ++ModifiedCount;
         }
 
-        public override async Task UpgradeToTargetVersion(IConnection connection)
+        public override void UpgradeToTargetVersion(IConnection connection)
         {
-            await CreateTable(connection);
+            CreateTable(connection);
         }
     }
 }

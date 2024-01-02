@@ -38,7 +38,7 @@ namespace Homura.ORM.Setup
 
         internal abstract void Reset();
 
-        internal abstract Task UpgradeToTargetVersion(IConnection connection);
+        internal abstract void UpgradeToTargetVersion(IConnection connection);
 
         internal abstract bool ExistsPlan(VersionOrigin targetVersion);
 

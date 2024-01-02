@@ -45,7 +45,7 @@ namespace Homura.Test.UnitTest
             var registeringPlan4 = new ChangePlan<Version_4>(VersioningMode.ByTick);
             registeringPlan4.AddVersionChangePlan(new AlphaChangePlan_Version_3(VersioningMode.ByTick));
             svManager.RegisterChangePlan(registeringPlan4);
-            await svManager.UpgradeToTargetVersion();
+            svManager.UpgradeToTargetVersion();
         }
 
         [Test]

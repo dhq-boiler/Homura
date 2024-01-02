@@ -111,22 +111,22 @@ namespace Homura.ORM.Migration
 
         public int ModifiedCount {[DebuggerStepThrough] get; set; }
 
-        public virtual async Task CreateTable(IConnection connection)
+        public virtual void CreateTable(IConnection connection)
         {
             throw new NotImplementedException();
         }
 
-        public virtual async Task DropTable(IConnection connection)
+        public virtual void DropTable(IConnection connection)
         {
             throw new NotImplementedException();
         }
 
-        public virtual async Task UpgradeToTargetVersion(IConnection connection)
+        public virtual void UpgradeToTargetVersion(IConnection connection)
         {
             throw new NotImplementedException();
         }
 
-        public virtual async Task DowngradeToTargetVersion(IConnection connection)
+        public virtual void DowngradeToTargetVersion(IConnection connection)
         {
             throw new NotImplementedException();
         }
@@ -234,7 +234,7 @@ namespace Homura.ORM.Migration
             VersionChangePlanList = list;
         }
 
-        public async Task DowngradeToTargetVersion(IConnection connection)
+        public void DowngradeToTargetVersion(IConnection connection)
         {
             if (VersionChangePlanList.Any())
             {
@@ -245,7 +245,7 @@ namespace Homura.ORM.Migration
             foreach (var vcp in VersionChangePlanList)
             {
                 vcp.Mode = Mode;
-                await vcp.DowngradeToTargetVersion(connection);
+                vcp.DowngradeToTargetVersion(connection);
                 ModifiedCount += vcp.ModifiedCount;
             }
 
@@ -256,7 +256,7 @@ namespace Homura.ORM.Migration
             }
         }
 
-        public async Task UpgradeToTargetVersion(IConnection connection)
+        public void UpgradeToTargetVersion(IConnection connection)
         {
             if (VersionChangePlanList.Any())
             {
@@ -267,7 +267,7 @@ namespace Homura.ORM.Migration
             foreach (var vcp in VersionChangePlanList)
             {
                 vcp.Mode = Mode;
-                await vcp.UpgradeToTargetVersion(connection);
+                vcp.UpgradeToTargetVersion(connection);
                 ModifiedCount += vcp.ModifiedCount;
             }
 

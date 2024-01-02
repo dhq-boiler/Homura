@@ -47,25 +47,25 @@ namespace Homura.ORM
             }
         }
 
-        public static async Task<IEnumerable<string>> GetTableNames(this DbConnection conn)
+        public static IEnumerable<string> GetTableNames(this DbConnection conn)
         {
             if (conn.State == ConnectionState.Closed)
             {
                 conn.Open();
             }
 
-            var tables = await conn.GetSchemaAsync("Tables");
+            var tables = conn.GetSchemaAsync("Tables").Result;
             return tables.Rows.OfType<DataRow>().Select(r => r[2] as string);
         }
 
-        public static async Task<IEnumerable<string>> GetColumnNames(this DbConnection conn, string tableName)
+        public static IEnumerable<string> GetColumnNames(this DbConnection conn, string tableName)
         {
             if (conn.State == ConnectionState.Closed)
             {
                 conn.Open();
             }
 
-            var tables = await conn.GetSchemaAsync("Columns");
+            var tables = conn.GetSchemaAsync("Columns").Result;
             return tables.Rows.OfType<DataRow>().Where(r => r[2].ToString() == tableName).Select(r => r[3].ToString());
         }
     }

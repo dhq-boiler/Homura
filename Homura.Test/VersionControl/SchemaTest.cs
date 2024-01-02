@@ -37,15 +37,15 @@ namespace Homura.Test.VersionControl
             //Create VersionOrigin
             var dao = new OriginDao(typeof(VersionOrigin));
             dao.CurrentConnection = ConnectionManager.DefaultConnection;
-            await dao.CreateTableIfNotExistsAsync();
+            dao.CreateTableIfNotExists();
 
             using (var conn = new SQLiteConnection($"Data Source={_filePath}"))
             {
                 await conn.OpenAsync();
 
-                Assert.That(await conn.GetTableNames(), Has.Exactly(1).EqualTo(dao.TableName));
+                Assert.That(conn.GetTableNames(), Has.Exactly(1).EqualTo(dao.TableName));
 
-                var columnNames = await conn.GetColumnNames(dao.TableName);
+                var columnNames = conn.GetColumnNames(dao.TableName);
                 Assert.That(columnNames.Count(), Is.EqualTo(3));
                 Assert.That(columnNames, Has.Exactly(1).EqualTo("Id"));
                 Assert.That(columnNames, Has.Exactly(1).EqualTo("Item1"));
@@ -62,15 +62,15 @@ namespace Homura.Test.VersionControl
             //Create VersionOrigin
             var dao = new OriginDao();
             dao.CurrentConnection = ConnectionManager.DefaultConnection;
-            await dao.CreateTableIfNotExistsAsync();
+            dao.CreateTableIfNotExists();
 
             using (var conn = new SQLiteConnection($"Data Source={_filePath}"))
             {
                 await conn.OpenAsync();
 
-                Assert.That(await conn.GetTableNames(), Has.Exactly(1).EqualTo(dao.TableName));
+                Assert.That(conn.GetTableNames(), Has.Exactly(1).EqualTo(dao.TableName));
 
-                var columnNames = await conn.GetColumnNames(dao.TableName);
+                var columnNames = conn.GetColumnNames(dao.TableName);
                 Assert.That(columnNames.Count(), Is.EqualTo(3));
                 Assert.That(columnNames, Has.Exactly(1).EqualTo("Id"));
                 Assert.That(columnNames, Has.Exactly(1).EqualTo("Item1"));
@@ -87,15 +87,15 @@ namespace Homura.Test.VersionControl
             //Create Version_1
             var dao = new OriginDao(typeof(Version_1));
             dao.CurrentConnection = ConnectionManager.DefaultConnection;
-            await dao.CreateTableIfNotExistsAsync();
+            dao.CreateTableIfNotExists();
 
             using (var conn = new SQLiteConnection($"Data Source={_filePath}"))
             {
                 await conn.OpenAsync();
 
-                Assert.That(await conn.GetTableNames(), Has.Exactly(1).EqualTo(dao.TableName));
+                Assert.That(conn.GetTableNames(), Has.Exactly(1).EqualTo(dao.TableName));
 
-                var columnNames = await conn.GetColumnNames(dao.TableName);
+                var columnNames = conn.GetColumnNames(dao.TableName);
                 Assert.That(columnNames.Count(), Is.EqualTo(4));
                 Assert.That(columnNames, Has.Exactly(1).EqualTo("Id"));
                 Assert.That(columnNames, Has.Exactly(1).EqualTo("Item1"));
@@ -113,16 +113,16 @@ namespace Homura.Test.VersionControl
             //1. Create VersionOrigin
             var dao = new OriginDao(typeof(VersionOrigin));
             dao.CurrentConnection = ConnectionManager.DefaultConnection;
-            await dao.CreateTableIfNotExistsAsync();
+            dao.CreateTableIfNotExists();
 
             //check Header(VersionOrigin)
             using (var conn = new SQLiteConnection($"Data Source={_filePath}"))
             {
                 await conn.OpenAsync();
 
-                Assert.That(await conn.GetTableNames(), Has.Exactly(1).EqualTo(dao.TableName));
+                Assert.That(conn.GetTableNames(), Has.Exactly(1).EqualTo(dao.TableName));
 
-                var columnNames = await conn.GetColumnNames(dao.TableName);
+                var columnNames = conn.GetColumnNames(dao.TableName);
                 Assert.That(columnNames.Count(), Is.EqualTo(3));
                 Assert.That(columnNames, Has.Exactly(1).EqualTo("Id"));
                 Assert.That(columnNames, Has.Exactly(1).EqualTo("Item1"));
@@ -132,7 +132,7 @@ namespace Homura.Test.VersionControl
             //Create Version_1
             dao = new OriginDao(typeof(Version_1));
             dao.CurrentConnection = ConnectionManager.DefaultConnection;
-            await dao.CreateTableIfNotExistsAsync();
+            dao.CreateTableIfNotExists();
 
             //check Header(VersionOrigin)
             dao = new OriginDao(typeof(VersionOrigin));
@@ -141,9 +141,9 @@ namespace Homura.Test.VersionControl
             {
                 await conn.OpenAsync();
 
-                Assert.That(await conn.GetTableNames(), Has.Exactly(1).EqualTo(dao.TableName));
+                Assert.That(conn.GetTableNames(), Has.Exactly(1).EqualTo(dao.TableName));
 
-                var columnNames = await conn.GetColumnNames(dao.TableName);
+                var columnNames = conn.GetColumnNames(dao.TableName);
                 Assert.That(columnNames.Count(), Is.EqualTo(3));
                 Assert.That(columnNames, Has.Exactly(1).EqualTo("Id"));
                 Assert.That(columnNames, Has.Exactly(1).EqualTo("Item1"));
@@ -157,9 +157,9 @@ namespace Homura.Test.VersionControl
             {
                 await conn.OpenAsync();
 
-                Assert.That(await conn.GetTableNames(), Has.Exactly(1).EqualTo(dao.TableName));
+                Assert.That(conn.GetTableNames(), Has.Exactly(1).EqualTo(dao.TableName));
 
-                var columnNames = await conn.GetColumnNames(dao.TableName);
+                var columnNames = conn.GetColumnNames(dao.TableName);
                 Assert.That(columnNames.Count(), Is.EqualTo(4));
                 Assert.That(columnNames, Has.Exactly(1).EqualTo("Id"));
                 Assert.That(columnNames, Has.Exactly(1).EqualTo("Item1"));

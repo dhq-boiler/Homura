@@ -16,19 +16,19 @@ namespace Homura.Test.TestFixture.Migration.Plan
         {
         }
 
-        public override async Task UpgradeToTargetVersion(IConnection connection)
+        public override void UpgradeToTargetVersion(IConnection connection)
         {
             var dao = new OriginDao(TargetVersion.GetType());
             dao.CurrentConnection = connection;
 
-            await dao.CreateTableIfNotExistsAsync();
+            dao.CreateTableIfNotExists();
 
-            if (await dao.CountAllAsync() > 0)
+            if (dao.CountAll() > 0)
             {
-                await dao.DeleteAsync(new Dictionary<string, object>());
+                dao.Delete(new Dictionary<string, object>());
             }
 
-            await dao.UpgradeTableAsync(new VersionChangeUnit(typeof(VersionOrigin), TargetVersion.GetType()), Mode);
+            dao.UpgradeTable(new VersionChangeUnit(typeof(VersionOrigin), TargetVersion.GetType()), Mode);
         }
     }
 }

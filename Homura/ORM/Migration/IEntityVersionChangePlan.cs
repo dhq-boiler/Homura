@@ -14,14 +14,14 @@ namespace Homura.ORM.Migration
 
         VersioningMode Mode { get; set; }
 
-        Task UpgradeToTargetVersion(IConnection connection);
+        void UpgradeToTargetVersion(IConnection connection);
 
-        Task DowngradeToTargetVersion(IConnection connection);
+        void DowngradeToTargetVersion(IConnection connection);
 
         Type TargetEntityType { get; set; }
 
-        Task CreateTable(IConnection connection);
+        void CreateTable(IConnection connection);
 
-        Task DropTable(IConnection connection);
+        void DropTable(IConnection connection);
     }
 }

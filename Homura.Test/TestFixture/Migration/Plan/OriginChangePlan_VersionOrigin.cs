@@ -14,14 +14,14 @@ namespace Homura.Test.TestFixture.Migration.Plan
         {
         }
 
-        public override async Task UpgradeToTargetVersion(IConnection connection)
+        public override void UpgradeToTargetVersion(IConnection connection)
         {
-            await CreateTable(connection);
+            CreateTable(connection);
         }
 
-        public override async Task DowngradeToTargetVersion(IConnection connection)
+        public override void DowngradeToTargetVersion(IConnection connection)
         {
-            await base.DowngradeToTargetVersion(connection);
+            base.DowngradeToTargetVersion(connection);
         }
     }
 }

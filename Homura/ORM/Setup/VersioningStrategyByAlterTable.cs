@@ -66,10 +66,10 @@ namespace Homura.ORM.Setup
             throw new NotSupportedException();
         }
 
-        internal override async Task UpgradeToTargetVersion(IConnection connection)
+        internal override void UpgradeToTargetVersion(IConnection connection)
         {
             //DBに存在するテーブル名を取得
-            IEnumerable<string> existingTableNames = await DbInfoRetriever.GetTableNames(connection).ToListAsync();
+            IEnumerable<string> existingTableNames = DbInfoRetriever.GetTableNames(connection);
 
             //テーブル名をキーに変換
             var existingTableKey = UpgradeHelper.ConvertTablenameToKey(_planMap, existingTableNames);
@@ -79,7 +79,7 @@ namespace Homura.ORM.Setup
 
             foreach (var plan in plans)
             {
-                await plan.UpgradeToTargetVersion(connection);
+                plan.UpgradeToTargetVersion(connection);
                 ModifiedCount += plan.ModifiedCount;
             }
         }

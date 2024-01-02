@@ -46,14 +46,14 @@ namespace Homura.Test.UnitTest
             var registeringPlan4 = new ChangePlan<Version_4>(VersioningMode.ByTick);
             registeringPlan4.AddVersionChangePlan(new AlphaChangePlan_Version_3(VersioningMode.ByTick));
             svManager.RegisterChangePlan(registeringPlan4);
-            await svManager.UpgradeToTargetVersion();
+            svManager.UpgradeToTargetVersion();
         }
 
         [Test]
         public async Task Image_3テーブルを全削除()
         {
             var dao = new AlphaDao(typeof(Version_3));
-            await dao.DeleteAsync(new Dictionary<string, object>());
+            dao.Delete(new Dictionary<string, object>());
         }
 
         [TearDown]

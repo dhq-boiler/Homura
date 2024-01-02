@@ -15,33 +15,33 @@ namespace Homura.Test.TestFixture.Migration.Plan
         {
         }
 
-        public override async Task CreateTable(IConnection connection)
+        public override void CreateTable(IConnection connection)
         {
             var dao = new RokiDao(TargetVersion.GetType());
             dao.CurrentConnection = connection;
-            await dao.CreateTableIfNotExistsAsync();
+            dao.CreateTableIfNotExists();
             ++ModifiedCount;
         }
 
-        public override async Task DropTable(IConnection connection)
+        public override void DropTable(IConnection connection)
         {
             var dao = new RokiDao(TargetVersion.GetType());
             dao.CurrentConnection = connection;
-            await dao.DropTableIfExistsAsync();
+            dao.DropTableIfExists();
             ++ModifiedCount;
         }
 
-        public override async Task UpgradeToTargetVersion(IConnection connection)
+        public override void UpgradeToTargetVersion(IConnection connection)
         {
-            await CreateTable(connection);
+            CreateTable(connection);
 
             var dao = new RokiDao(TargetVersion.GetType());
-            if (await dao.CountAllAsync() > 0)
+            if (dao.CountAll() > 0)
             {
-                await dao.DeleteAsync(new Dictionary<string, object>());
+                dao.Delete(new Dictionary<string, object>());
             }
 
-            await dao.UpgradeTableAsync(new VersionChangeUnit(typeof(VersionOrigin), TargetVersion.GetType()), Mode);
+            dao.UpgradeTable(new VersionChangeUnit(typeof(VersionOrigin), TargetVersion.GetType()), Mode);
         }
     }
 }

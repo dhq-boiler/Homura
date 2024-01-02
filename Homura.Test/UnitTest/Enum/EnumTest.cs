@@ -20,8 +20,8 @@ namespace Homura.Test.UnitTest.Enum
                 $"Data Source={_filePath}", typeof(SQLiteConnection));
 
             var dao = new SettingEntryDao();
-            await dao.DropTableIfExistsAsync();
-            await dao.CreateTableIfNotExistsAsync();
+            dao.DropTableIfExists();
+            dao.CreateTableIfNotExists();
             await Task.Delay(100);
         }
 

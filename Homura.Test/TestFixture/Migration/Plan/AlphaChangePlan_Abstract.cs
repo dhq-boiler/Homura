@@ -16,11 +16,11 @@ namespace Homura.Test.TestFixture.Migration.Plan
         {
         }
 
-        public override async Task CreateTable(IConnection connection)
+        public override void CreateTable(IConnection connection)
         {
             var dao = new AlphaDao(TargetVersion.GetType());
             dao.CurrentConnection = connection;
-            await dao.CreateTableIfNotExistsAsync();
+            dao.CreateTableIfNotExists();
             ++ModifiedCount;
         }
     }
