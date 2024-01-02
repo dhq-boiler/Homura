@@ -57,7 +57,7 @@ namespace Homura.ORM.Setup
             throw new NotSupportedException();
         }
 
-        internal override async Task UpgradeToTargetVersion(IConnection connection)
+        internal override void UpgradeToTargetVersion(IConnection connection)
         {
             throw new NotSupportedException();
         }

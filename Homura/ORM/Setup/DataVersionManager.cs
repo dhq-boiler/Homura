@@ -100,12 +100,12 @@ namespace Homura.ORM.Setup
             return a.GetPlan(entityType, targetVersion);
         }
 
-        public async Task UpgradeToTargetVersion()
+        public void UpgradeToTargetVersion()
         {
             var processed = false;
             foreach (var strategy in Strategies.Where(x => x.State == VersionStrategyState.Ready))
             {
-                await strategy.UpgradeToTargetVersion(CurrentConnection);
+                strategy.UpgradeToTargetVersion(CurrentConnection);
                 strategy.State = VersionStrategyState.Processed;
                 processed = true;
             }

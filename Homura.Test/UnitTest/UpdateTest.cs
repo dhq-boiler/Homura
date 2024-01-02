@@ -39,7 +39,7 @@ namespace Homura.Test.UnitTest
             registeringPlan.AddVersionChangePlan(new PageChangePlan_VersionOrigin(VersioningMode.ByTick));
             svManager.RegisterChangePlan(registeringPlan);
             svManager.SetDefault();
-            await svManager.UpgradeToTargetVersion();
+            svManager.UpgradeToTargetVersion();
 
             using (var conn = new SQLiteConnection($"Data Source={_filePath}"))
             {

@@ -21,9 +21,9 @@ namespace Homura.ORM.Migration
 
         void RemoveVersionChangePlan(IEntityVersionChangePlan plan);
 
-        Task UpgradeToTargetVersion(IConnection connection);
+        void UpgradeToTargetVersion(IConnection connection);
 
-        Task DowngradeToTargetVersion(IConnection connection);
+        void DowngradeToTargetVersion(IConnection connection);
 
         event BeginToUpgradeToEventHandler BeginToUpgradeTo;
         event FinishedToUpgradeToEventHandler FinishedToUpgradeTo;
