@@ -1755,19 +1755,20 @@ namespace Homura.ORM
             var beginTime = DateTime.Now;
 
             List<E> ret = new();
+            var isTransaction = conn != null;
 
-            while ((DateTime.Now - beginTime) <= timeout)
+            try
             {
-                try
+                if (!isTransaction)
                 {
-                    var isTransaction = conn != null;
+                    conn = GetConnection();
+                }
+
+                while ((DateTime.Now - beginTime) <= timeout)
+                {
 
                     try
                     {
-                        if (!isTransaction)
-                        {
-                            conn = GetConnection();
-                        }
 
                         using var command = conn.CreateCommand();
                         var table = (Table<E>)Table.Clone();
@@ -1792,26 +1793,26 @@ namespace Homura.ORM
 
                         return ret;
                     }
-                    finally
+                    catch (Exception ex)
                     {
-                        if (!isTransaction)
+                        if (ex.Message.Contains("database is lock"))
                         {
-                            conn.Dispose();
+                            LogManager.GetCurrentClassLogger().Warn("database is lock");
+                            continue;
+                        }
+                        else
+                        {
+                            LogManager.GetCurrentClassLogger().Error(ex);
+                            throw;
                         }
                     }
                 }
-                catch (Exception ex)
+            }
+            finally
+            {
+                if (!isTransaction)
                 {
-                    if (ex.Message.Contains("database is lock"))
-                    {
-                        LogManager.GetCurrentClassLogger().Warn("database is lock");
-                        continue;
-                    }
-                    else
-                    {
-                        LogManager.GetCurrentClassLogger().Error(ex);
-                        throw;
-                    }
+                    conn.Dispose();
                 }
             }
 
@@ -1825,72 +1826,76 @@ namespace Homura.ORM
             var beginTime = DateTime.Now;
 
             List<E> ret = new();
-
-            while ((DateTime.Now - beginTime) <= timeout)
+            var isTransaction = conn != null;
+            try
             {
-                try
+                if (!isTransaction)
                 {
-                    var isTransaction = conn != null;
-
-                    try
-                    {
-                        if (!isTransaction)
-                        {
-                            conn = await GetConnectionAsync().ConfigureAwait(false);
-                        }
-
-                        await using var command = conn.CreateCommand();
-                        var table = (Table<E>)Table.Clone();
-                        if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName))
-                        {
-                            table.Schema = anotherDatabaseAliasName;
-                        }
-
-                        using var query = new Select().Asterisk().From.Table(table)
-                            .Where.KeyEqualToValue(idDic);
-                        var sql = query.ToSql();
-                        command.CommandText = sql;
-                        command.CommandType = CommandType.Text;
-                        query.SetParameters(command);
-
-                        LogManager.GetCurrentClassLogger().Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
-                        await using var reader = await command.ExecuteReaderAsync().ConfigureAwait(false);
-                        while (await reader.ReadAsync().ConfigureAwait(false))
-                        {
-                            ret.Add(ToEntity(reader));
-                        }
-                    }
-                    finally
-                    {
-                        if (!isTransaction)
-                        {
-                            await conn.DisposeAsync().ConfigureAwait(false);
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    if (ex.Message.Contains("database is lock"))
-                    {
-                        LogManager.GetCurrentClassLogger().Warn("database is lock");
-                        continue;
-                    }
-                    else
-                    {
-                        LogManager.GetCurrentClassLogger().Error(ex);
-                        throw;
-                    }
+                    conn = await GetConnectionAsync().ConfigureAwait(false);
                 }
 
-                foreach (var item in ret)
+                async Task LocalFunction()
                 {
-                    yield return item;
+                    while ((DateTime.Now - beginTime) <= timeout)
+                    {
+                        ret.Clear();
+                        try
+                        {
+                            await using var command = conn.CreateCommand();
+                            var table = (Table<E>)Table.Clone();
+                            if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName))
+                            {
+                                table.Schema = anotherDatabaseAliasName;
+                            }
+
+                            using var query = new Select().Asterisk().From.Table(table)
+                                .Where.KeyEqualToValue(idDic);
+                            var sql = query.ToSql();
+                            command.CommandText = sql;
+                            command.CommandType = CommandType.Text;
+                            query.SetParameters(command);
+
+                            LogManager.GetCurrentClassLogger().Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
+                            await using var reader = await command.ExecuteReaderAsync().ConfigureAwait(false);
+                            while (await reader.ReadAsync().ConfigureAwait(false))
+                            {
+                                ret.Add(ToEntity(reader));
+                            }
+
+                            return;
+                        }
+                        catch (Exception ex)
+                        {
+                            if (ex.Message.Contains("database is lock"))
+                            {
+                                LogManager.GetCurrentClassLogger().Warn("database is lock");
+                                continue;
+                            }
+                            else
+                            {
+                                LogManager.GetCurrentClassLogger().Error(ex);
+                                throw;
+                            }
+                        }
+                    }
+
+                    throw new TimeoutException();
                 }
 
-                yield break;
+                await LocalFunction();
+            }
+            finally
+            {
+                if (!isTransaction)
+                {
+                    await conn.DisposeAsync().ConfigureAwait(false);
+                }
             }
 
-            throw new TimeoutException();
+            foreach (var item in ret)
+            {
+                yield return item;
+            }
         }
 
         public void Update(E entity, DbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null)
