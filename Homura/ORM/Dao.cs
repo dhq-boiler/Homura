@@ -160,7 +160,7 @@ namespace Homura.ORM
             {
                 if (!isTransaction)
                 {
-                    conn.Dispose();
+                    conn?.Dispose();
                 }
             }
         }
@@ -1655,7 +1655,7 @@ namespace Homura.ORM
                     {
                         if (!isTransaction)
                         {
-                            conn.Dispose();
+                            conn?.Dispose();
                         }
                     }
                 }
@@ -1814,7 +1814,7 @@ namespace Homura.ORM
             {
                 if (!isTransaction)
                 {
-                    conn.Dispose();
+                    conn?.Dispose();
                 }
             }
 
