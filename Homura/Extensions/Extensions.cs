@@ -24,6 +24,24 @@ namespace Homura.Extensions
             return isNull ? null : rdr.GetGuid(index);
         }
 
+        public static char? SafeGetNullableChar(this IDataRecord rdr, string columnName, ITable table)
+        {
+            int index = CheckColumnExists(rdr, columnName, table);
+
+            bool isNull = rdr.IsDBNull(index);
+
+            return isNull ? null : rdr.GetChar(index);
+        }
+
+        public static char SafeGetChar(this IDataRecord rdr, string columnName, ITable table)
+        {
+            int index = CheckColumnExists(rdr, columnName, table);
+
+            bool isNull = rdr.IsDBNull(index);
+
+            return isNull ? char.MinValue : rdr.GetChar(index);
+        }
+
         public static string SafeGetString(this IDataRecord rdr, string columnName, ITable table)
         {
             int index = CheckColumnExists(rdr, columnName, table);
