@@ -998,6 +998,8 @@ namespace Homura.ORM
             {
                 not null when column.EntityDataType == typeof(bool) || column.EntityDataType.GetInterfaces().Contains(typeof(IReactiveProperty<bool>)) => reader.SafeGetBoolean(column.ColumnName, table),
                 not null when column.EntityDataType == typeof(bool?) || column.EntityDataType.GetInterfaces().Contains(typeof(IReactiveProperty<bool?>)) => reader.SafeGetNullableBoolean(column.ColumnName, table),
+                not null when column.EntityDataType == typeof(char) || column.EntityDataType.GetInterfaces().Contains(typeof(IReactiveProperty<char>)) => reader.SafeGetChar(column.ColumnName, table),
+                not null when column.EntityDataType == typeof(char?) || column.EntityDataType.GetInterfaces().Contains(typeof(IReactiveProperty<char?>)) => reader.SafeGetNullableChar(column.ColumnName, table),
                 not null when column.EntityDataType == typeof(string) || column.EntityDataType.GetInterfaces().Contains(typeof(IReactiveProperty<string>)) => reader.SafeGetString(column.ColumnName, table),
                 not null when column.EntityDataType == typeof(int) || column.EntityDataType.GetInterfaces().Contains(typeof(IReactiveProperty<int>)) => reader.SafeGetInt(column.ColumnName, table),
                 not null when column.EntityDataType == typeof(int?) || column.EntityDataType.GetInterfaces().Contains(typeof(IReactiveProperty<int?>)) => reader.SafeGetNullableInt(column.ColumnName, table),
