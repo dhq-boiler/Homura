@@ -10,15 +10,13 @@ using Homura.QueryBuilder.Iso.Dml;
 using NLog;
 using Reactive.Bindings;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
-using Microsoft.Extensions.ObjectPool;
-using System.Collections;
-using System.Collections.Concurrent;
 
 namespace Homura.ORM
 {
