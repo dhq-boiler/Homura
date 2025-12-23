@@ -188,7 +188,7 @@ namespace Homura.ORM
             var ret = CreateInstance();
             const string VALUE_STR = "Value";
 
-            Columns.Except(columns).AsParallel().ToList().ForEach(column =>
+            foreach (var column in Columns.Except(columns))
             {
                 if (column.EntityDataType.GetInterfaces().Contains(typeof(IReactiveProperty)))
                 {
@@ -196,12 +196,12 @@ namespace Homura.ORM
                     _dcache.TrySet(column.EntityDataType, VALUE_STR, column.EntityDataType,
                         DelegateCache.ConvertTo(column.EntityDataType, rp),
                         CatchThrow(() => GetColumnValue(reader, column, Table)));
-                    return;
+                    continue;
                 }
 
                 _dcache.TrySet<E>(ret.GetType(), column.ColumnName, column.EntityDataType, ret,
                     CatchThrow(() => GetColumnValue(reader, column, Table)));
-            });
+            }
 
             return ret;
         }
@@ -1588,15 +1588,101 @@ namespace Homura.ORM
             }, timeout).ConfigureAwait(false);
         }
 
+        public async Task InsertBulkAsync(IEnumerable<E> entities, DbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null)
+        {
+            InitializeColumnDefinitions();
+            try
+            {
+                VerifyColumnDefinitions(conn);
+            }
+            catch (NotMatchColumnException e)
+            {
+                throw new DatabaseSchemaException($"Didn't insert because mismatch definition of table:{TableName}", e);
+            }
+
+            var entityList = entities.ToList();
+            if (!entityList.Any())
+            {
+                return;
+            }
+
+            await QueryHelper.KeepTryingUntilProcessSucceedAsync(async () =>
+            {
+                await QueryHelper.ForDao.ConnectionInternalAsync(this, async (connection) =>
+                {
+                    var isTransaction = conn != null;
+                    DbTransaction transaction = null;
+
+                    try
+                    {
+                        if (!isTransaction)
+                        {
+                            transaction = await connection.BeginTransactionAsync().ConfigureAwait(false);
+                        }
+
+                        var overrideColumns = SwapIfOverrided(Columns);
+                        var table = (Table<E>)Table.Clone();
+                        if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName))
+                        {
+                            table.Schema = anotherDatabaseAliasName;
+                        }
+
+                        foreach (var entity in entityList)
+                        {
+                            await using var command = connection.CreateCommand();
+                            if (transaction != null)
+                            {
+                                command.Transaction = transaction;
+                            }
+
+                            using var query = new Insert().Into.Table(table).Columns(overrideColumns.Select(c => c.ColumnName))
+                                .Values.Value(overrideColumns.Select(c => c.PropertyGetter(entity)));
+                            var sql = query.ToSql();
+                            command.CommandText = sql;
+                            query.SetParameters(command);
+
+                            LogManager.GetCurrentClassLogger().Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
+                            var inserted = await command.ExecuteNonQueryAsync().ConfigureAwait(false);
+                            if (inserted == 0)
+                            {
+                                throw new NoEntityInsertedException($"Failed:{sql} {query.GetParameters().ToStringKeyIsValue()}");
+                            }
+                        }
+
+                        if (transaction != null)
+                        {
+                            await transaction.CommitAsync().ConfigureAwait(false);
+                        }
+                    }
+                    catch
+                    {
+                        if (transaction != null)
+                        {
+                            await transaction.RollbackAsync().ConfigureAwait(false);
+                        }
+                        throw;
+                    }
+                    finally
+                    {
+                        if (transaction != null)
+                        {
+                            await transaction.DisposeAsync().ConfigureAwait(false);
+                        }
+                    }
+                }, conn).ConfigureAwait(false);
+            }, timeout).ConfigureAwait(false);
+        }
+
         protected IEnumerable<IColumn> SwapIfOverrided(IEnumerable<IColumn> columns)
         {
             List<IColumn> ret = new();
 
             foreach (var column in columns)
             {
-                if (OverridedColumns != null && OverridedColumns.Count(oc => oc.ColumnName == column.ColumnName) == 1)
+                var overridedColumn = OverridedColumns?.FirstOrDefault(oc => oc.ColumnName == column.ColumnName);
+                if (overridedColumn != null)
                 {
-                    ret.Add(OverridedColumns.Single(oc => oc.ColumnName == column.ColumnName));
+                    ret.Add(overridedColumn);
                 }
                 else
                 {
@@ -1675,7 +1761,7 @@ namespace Homura.ORM
             throw new TimeoutException();
         }
 
-        public async IAsyncEnumerable<E> FindAllAsync(DbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null)
+        public async Task<List<E>> FindAllAsync(DbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null)
         {
             timeout ??= TimeSpan.FromMinutes(5);
 
@@ -1714,6 +1800,8 @@ namespace Homura.ORM
                         {
                             ret.Add(ToEntity(reader));
                         }
+
+                        return ret;
                     }
                     finally
                     {
@@ -1736,13 +1824,6 @@ namespace Homura.ORM
                         throw;
                     }
                 }
-
-                foreach (var item in ret)
-                {
-                    yield return item;
-                }
-
-                yield break;
             }
 
             throw new TimeoutException();
@@ -1936,17 +2017,94 @@ namespace Homura.ORM
                         table.Schema = anotherDatabaseAliasName;
                     }
 
-                    var a = table.ColumnsWithoutPrimaryKeys.ToDictionary(c => c.ColumnName, c => c.PropertyGetter(entity));
-                    var b = table.PrimaryKeyColumns.ToDictionary(c => c.ColumnName, c => c.PropertyGetter(entity));
+                    var columnsDict = table.ColumnsWithoutPrimaryKeys.ToDictionary(c => c.ColumnName, c => c.PropertyGetter(entity));
+                    var primaryKeysDict = table.PrimaryKeyColumns.ToDictionary(c => c.ColumnName, c => c.PropertyGetter(entity));
 
-                    using var query = new Update().Table(table).Set.KeyEqualToValue(table.ColumnsWithoutPrimaryKeys.ToDictionary(c => c.ColumnName, c => c.PropertyGetter(entity)))
-                        .Where.KeyEqualToValue(table.PrimaryKeyColumns.ToDictionary(c => c.ColumnName, c => c.PropertyGetter(entity)));
+                    using var query = new Update().Table(table).Set.KeyEqualToValue(columnsDict)
+                        .Where.KeyEqualToValue(primaryKeysDict);
                     var sql = query.ToSql();
                     command.CommandText = sql;
                     query.SetParameters(command);
 
                     LogManager.GetCurrentClassLogger().Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
                     return await command.ExecuteNonQueryAsync().ConfigureAwait(false);
+                }, conn).ConfigureAwait(false);
+            }, timeout).ConfigureAwait(false);
+        }
+
+        public async Task<int> UpdateBulkAsync(IEnumerable<E> entities, DbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null)
+        {
+            var entityList = entities.ToList();
+            if (!entityList.Any())
+            {
+                return 0;
+            }
+
+            return await QueryHelper.KeepTryingUntilProcessSucceedAsync(async () =>
+            {
+                return await QueryHelper.ForDao.ConnectionInternalAsync(this, async (connection) =>
+                {
+                    var isTransaction = conn != null;
+                    DbTransaction transaction = null;
+                    var totalUpdated = 0;
+
+                    try
+                    {
+                        if (!isTransaction)
+                        {
+                            transaction = await connection.BeginTransactionAsync().ConfigureAwait(false);
+                        }
+
+                        var table = (Table<E>)Table.Clone();
+                        if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName))
+                        {
+                            table.Schema = anotherDatabaseAliasName;
+                        }
+
+                        foreach (var entity in entityList)
+                        {
+                            await using var command = connection.CreateCommand();
+                            if (transaction != null)
+                            {
+                                command.Transaction = transaction;
+                            }
+
+                            var columnsDict = table.ColumnsWithoutPrimaryKeys.ToDictionary(c => c.ColumnName, c => c.PropertyGetter(entity));
+                            var primaryKeysDict = table.PrimaryKeyColumns.ToDictionary(c => c.ColumnName, c => c.PropertyGetter(entity));
+
+                            using var query = new Update().Table(table).Set.KeyEqualToValue(columnsDict)
+                                .Where.KeyEqualToValue(primaryKeysDict);
+                            var sql = query.ToSql();
+                            command.CommandText = sql;
+                            query.SetParameters(command);
+
+                            LogManager.GetCurrentClassLogger().Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
+                            var updated = await command.ExecuteNonQueryAsync().ConfigureAwait(false);
+                            totalUpdated += updated;
+                        }
+
+                        if (transaction != null)
+                        {
+                            await transaction.CommitAsync().ConfigureAwait(false);
+                        }
+
+                        return totalUpdated;
+                    }
+                    catch
+                    {
+                        if (transaction != null)
+                        {
+                            await transaction.RollbackAsync().ConfigureAwait(false);
+                        }
+                        throw;
+                    }
+                    finally
+                    {
+                        if (transaction != null)
+                        {
+                            await transaction.DisposeAsync().ConfigureAwait(false);
+                        }
+                    }
                 }, conn).ConfigureAwait(false);
             }, timeout).ConfigureAwait(false);
         }

@@ -4,3 +4,4 @@ Homura.Test/obj/
 Homura/bin/
 Homura/obj/
 packages/
+.claude/settings.local.json

@@ -41,7 +41,7 @@ namespace Homura.Test.UnitTest
             record.Item3.Value = false;
             await dao.InsertAsync(record);
 
-            var records = await dao.FindAllAsync().ToListAsync();
+            var records = await dao.FindAllAsync();
             Assert.That(records, Has.Count.EqualTo(1));
             Assert.That(records[0], Has.Property("Id").Property("Value").EqualTo(Guid.Parse("C10F1D49-1C4B-437E-B293-21599C516ABC")));
             Assert.That(records[0], Has.Property("Item1").Property("Value").EqualTo(Guid.Parse("D10F1D49-1C4B-437E-B293-21599C516ABC")));
@@ -54,7 +54,7 @@ namespace Homura.Test.UnitTest
             record.Item3.Value = true;
             var updateCount = await dao.UpdateAsync(record);
 
-            records = await dao.FindAllAsync().ToListAsync();
+            records = await dao.FindAllAsync();
             Assert.That(records, Has.Count.EqualTo(1));
             Assert.That(records[0], Has.Property("Id").Property("Value").EqualTo(Guid.Parse("C10F1D49-1C4B-437E-B293-21599C516ABC")));
             Assert.That(records[0], Has.Property("Item1").Property("Value").EqualTo(Guid.Parse("E10F1D49-1C4B-437E-B293-21599C516ABC")));

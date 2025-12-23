@@ -37,9 +37,9 @@ namespace Homura.Test.TestFixture.Dao.Enum
             string anotherDatabaseAliasName = null,
             TimeSpan? timeout = null)
         {
-            var entries = base.FindAllAsync(conn, anotherDatabaseAliasName, timeout);
+            var entries = await base.FindAllAsync(conn, anotherDatabaseAliasName, timeout);
 
-            await foreach (var entry in entries)
+            foreach (var entry in entries)
             {
                 if (entry.Type.Value.IsEnum)
                 {

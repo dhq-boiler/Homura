@@ -2,6 +2,7 @@
 using Homura.Test.TestFixture.Dao.Enum;
 using NUnit.Framework;
 using System;
+using System.Collections.Generic;
 using System.Data.SQLite;
 using System.IO;
 using System.Linq;
@@ -32,7 +33,12 @@ namespace Homura.Test.UnitTest.Enum
             await dao.InsertAsync(new EnumSettingEntry<DayOfWeek>("8F42B0D5-F7EF-4BA6-99D8-F2F0575ED34B", "週の始まり", DayOfWeek.Sunday));
             await dao.InsertAsync(new EnumSettingEntry<Month>("3F60B869-F9AA-4EDF-BD63-7269549D72F4", "年度の始まり", Month.April));
 
-            var entries = (await dao.FindAllAsync().ToListAsync()).ToArray();
+            var entriesList = new List<SettingEntry>();
+            await foreach (var entry in dao.FindAllAsync())
+            {
+                entriesList.Add(entry);
+            }
+            var entries = entriesList.ToArray();
             Assert.That(entries, Has.Length.EqualTo(2));
             Assert.That(entries[0].Title.Value, Is.EqualTo("週の始まり"));
             Assert.That(entries[1].Title.Value, Is.EqualTo("年度の始まり"));
