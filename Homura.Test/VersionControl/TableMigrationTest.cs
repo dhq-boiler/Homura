@@ -83,7 +83,7 @@ namespace Sunctum.Infrastructure.Test.IntegrationTest.Data.Rdbms.VersionControl
                 Assert.That(conn.GetTableNames(), Has.One.EqualTo("Origin"));
                 Assert.That(conn.GetTableNames(), Has.One.EqualTo("Origin_1"));
 
-                var items = await dao.FindAllAsync().ToListAsync();
+                var items = await dao.FindAllAsync();
                 Assert.That(items.Count(), Is.EqualTo(1)); //default version:Version_1
                 Assert.That(items.First().Id, Is.EqualTo(Guid.Empty));
                 Assert.That(items.First().Item1, Is.EqualTo("org_item1"));
@@ -235,7 +235,7 @@ namespace Sunctum.Infrastructure.Test.IntegrationTest.Data.Rdbms.VersionControl
                 dao = new AlphaDao(typeof(Version_2));
                 dao.CurrentConnection = ConnectionManager.DefaultConnection;
 
-                var all = await dao.FindAllAsync().ToListAsync();
+                var all = await dao.FindAllAsync();
                 var arecord = all.Take(1).Single();
                 Assert.That(arecord, Has.Property("Id").EqualTo(Guid.Parse("26D55FA7-1662-4E74-9143-290940A8E8D4")));
                 Assert.That(arecord, Has.Property("Item1").EqualTo("org_item1"));
@@ -267,7 +267,7 @@ namespace Sunctum.Infrastructure.Test.IntegrationTest.Data.Rdbms.VersionControl
                     Item9 = true,
                 });
                 
-                all = await dao.FindAllAsync().ToListAsync();
+                all = await dao.FindAllAsync();
                 arecord = all.Skip(1).Take(1).Single();
                 Assert.That(arecord, Has.Property("Id").EqualTo(Guid.Parse("8069BD2D-2BC9-4C89-966D-8E966FB87546")));
                 Assert.That(arecord, Has.Property("Item1").EqualTo("org_item1"));
@@ -391,7 +391,7 @@ namespace Sunctum.Infrastructure.Test.IntegrationTest.Data.Rdbms.VersionControl
 
                 var dao = new BookDao(typeof(Version_1));
 
-                var records = await dao.FindAllAsync().ToListAsync();
+                var records = await dao.FindAllAsync();
                 Assert.That(records.Count(), Is.EqualTo(1));
                 Assert.That(records[0], Has.Property("Title").EqualTo("kintama"));
                 Assert.That(records[0], Has.Property("AuthorID").EqualTo(Guid.Parse("3320FF3E-B7F0-42CC-A994-C6DF57B2067D")));

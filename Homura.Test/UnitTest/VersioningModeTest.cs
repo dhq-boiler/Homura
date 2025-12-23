@@ -73,7 +73,7 @@ namespace Homura.Test.UnitTest
                 Assert.That(conn.GetTableNames(), Has.One.EqualTo("Valkyrie_1"));
                 Assert.That(conn.GetTableNames(), Has.None.EqualTo("Valkyrie_1_1"));
 
-                var items = await dao.FindAllAsync().ToListAsync();
+                var items = await dao.FindAllAsync();
                 Assert.That(items.Count(), Is.EqualTo(1)); //default version:Version_1
                 Assert.That(items.First().Id, Is.EqualTo(Guid.Empty));
                 Assert.That(items.First().Item1, Is.EqualTo("org_item1"));
@@ -93,7 +93,7 @@ namespace Homura.Test.UnitTest
                 Assert.That(conn.GetTableNames(), Has.One.EqualTo("Valkyrie_1_1"));
                 Assert.That(conn.GetTableNames(), Has.None.EqualTo("Valkyrie_1_2"));
 
-                var items = await dao.FindAllAsync().ToListAsync();
+                var items = await dao.FindAllAsync();
                 Assert.That(items.Count(), Is.EqualTo(1)); //default version:Version_2
                 Assert.That(items.First().Id, Is.EqualTo(Guid.Empty));
                 Assert.That(items.First().Item1, Is.EqualTo("org_item1"));
@@ -129,7 +129,7 @@ namespace Homura.Test.UnitTest
                 await conn.OpenAsync();
 
                 Assert.That(conn.GetTableNames(), Has.One.EqualTo("Frey"));
-                var items = await dao.FindAllAsync().ToListAsync();
+                var items = await dao.FindAllAsync();
                 Assert.That(items.Count(), Is.EqualTo(1)); //default version:Version_1
                 Assert.That(items.First().Id, Is.EqualTo(Guid.Empty));
                 Assert.That(items.First().Item1, Is.EqualTo("org_item1"));
@@ -147,7 +147,7 @@ namespace Homura.Test.UnitTest
 
                 Assert.That(conn.GetTableNames(), Has.One.EqualTo("Frey"));
                 {
-                    var items = await dao.FindAllAsync().ToListAsync();
+                    var items = await dao.FindAllAsync();
                     Assert.That(items.Count(), Is.EqualTo(1)); //default version:Version_1
                     Assert.That(items.First().Id, Is.EqualTo(Guid.Empty));
                     Assert.That(items.First().Item1, Is.EqualTo("org_item1"));
@@ -188,7 +188,7 @@ namespace Homura.Test.UnitTest
                 await conn.OpenAsync();
 
                 Assert.That(conn.GetTableNames(), Has.One.EqualTo("Frey"));
-                var items = await dao.FindAllAsync().ToListAsync();
+                var items = await dao.FindAllAsync();
                 Assert.That(items.Count(), Is.EqualTo(1)); //default version:Version_1
                 Assert.That(items.First().Id, Is.EqualTo(Guid.Empty));
                 Assert.That(items.First().Item1, Is.EqualTo("org_item1"));
@@ -206,7 +206,7 @@ namespace Homura.Test.UnitTest
 
                 Assert.That(conn.GetTableNames(), Has.One.EqualTo("Frey"));
                 {
-                    var items = await dao.FindAllAsync().ToListAsync();
+                    var items = await dao.FindAllAsync();
                     Assert.That(items.Count(), Is.EqualTo(1)); //default version:Version_1
                     Assert.That(items.First().Id, Is.EqualTo(Guid.Empty));
                     Assert.That(items.First().Item1, Is.EqualTo("org_item1"));
@@ -232,7 +232,7 @@ namespace Homura.Test.UnitTest
 
                 Assert.That(conn.GetTableNames(), Has.One.EqualTo("Frey"));
                 {
-                    var items = await dao.FindAllAsync().ToListAsync();
+                    var items = await dao.FindAllAsync();
                     Assert.That(items.Count(), Is.EqualTo(1)); //default version:Version_1
                     Assert.That(items.First().Id, Is.EqualTo(Guid.Empty));
                     Assert.That(items.First().Item1, Is.EqualTo("org_item1"));
@@ -273,7 +273,7 @@ namespace Homura.Test.UnitTest
                 await conn.OpenAsync();
 
                 Assert.That(conn.GetTableNames(), Has.One.EqualTo("Roki"));
-                var items = await dao.FindAllAsync().ToListAsync();
+                var items = await dao.FindAllAsync();
                 Assert.That(items.Count(), Is.EqualTo(1)); //default version:Version_1
                 Assert.That(items.First().Id, Is.EqualTo(Guid.Empty));
                 Assert.That(items.First().Item1, Is.EqualTo("org_item1"));
@@ -292,7 +292,7 @@ namespace Homura.Test.UnitTest
                 {
                     dao = new RokiDao(typeof(Version_1));
                     dao.CurrentConnection = ConnectionManager.DefaultConnection;
-                    var items = await dao.FindAllAsync().ToListAsync();
+                    var items = await dao.FindAllAsync();
                     Assert.That(items.Count(), Is.EqualTo(1)); //default version:Version_1
                     Assert.That(items.First().Id, Is.EqualTo(Guid.Empty));
                     Assert.That(items.First().Item1, Is.EqualTo("org_item1"));
@@ -316,7 +316,7 @@ namespace Homura.Test.UnitTest
                 {
                     dao = new RokiDao(DataVersionManager.DefaultSchemaVersion);
                     dao.CurrentConnection = ConnectionManager.DefaultConnection;
-                    var items = await dao.FindAllAsync().ToListAsync();
+                    var items = await dao.FindAllAsync();
                     Assert.That(items.Count(), Is.EqualTo(1)); //default version:Version_1
                     Assert.That(items.First().Id, Is.EqualTo(Guid.Empty));
                     Assert.That(items.First().Item1, Is.EqualTo("org_item1"));
@@ -353,7 +353,7 @@ namespace Homura.Test.UnitTest
                 await conn.OpenAsync();
 
                 Assert.That(conn.GetTableNames(), Has.One.EqualTo("Frey"));
-                var items = await dao.FindAllAsync().ToListAsync();
+                var items = await dao.FindAllAsync();
                 Assert.That(items.Count(), Is.EqualTo(1)); //default version:Version_1
                 Assert.That(items.First().Id, Is.EqualTo(Guid.Empty));
                 Assert.That(items.First().Item1, Is.EqualTo("org_item1"));
@@ -371,7 +371,7 @@ namespace Homura.Test.UnitTest
 
                 Assert.That(conn.GetTableNames(), Has.One.EqualTo("Frey"));
                 {
-                    var items = await dao.FindAllAsync().ToListAsync();
+                    var items = await dao.FindAllAsync();
                     Assert.That(items.Count(), Is.EqualTo(1)); //default version:Version_1
                     Assert.That(items.First().Id, Is.EqualTo(Guid.Empty));
                     Assert.That(items.First().Item1, Is.EqualTo("org_item1"));
@@ -412,7 +412,7 @@ namespace Homura.Test.UnitTest
                 await conn.OpenAsync();
 
                 Assert.That(conn.GetTableNames(), Has.One.EqualTo("Frey"));
-                var items = await dao.FindAllAsync().ToListAsync();
+                var items = await dao.FindAllAsync();
                 Assert.That(items.Count(), Is.EqualTo(1)); //default version:Version_1
                 Assert.That(items.First().Id, Is.EqualTo(Guid.Empty));
                 Assert.That(items.First().Item1, Is.EqualTo("org_item1"));
@@ -430,7 +430,7 @@ namespace Homura.Test.UnitTest
 
                 Assert.That(conn.GetTableNames(), Has.One.EqualTo("Frey"));
                 {
-                    var items = await dao.FindAllAsync().ToListAsync();
+                    var items = await dao.FindAllAsync();
                     Assert.That(items.Count(), Is.EqualTo(1)); //default version:Version_1
                     Assert.That(items.First().Id, Is.EqualTo(Guid.Empty));
                     Assert.That(items.First().Item1, Is.EqualTo("org_item1"));
@@ -487,7 +487,7 @@ namespace Homura.Test.UnitTest
                 Assert.That(conn.GetTableNames(), Has.One.EqualTo("Valkyrie_1"));
                 Assert.That(conn.GetTableNames(), Has.None.EqualTo("Valkyrie_1_1"));
 
-                var items = await dao.FindAllAsync().ToListAsync();
+                var items = await dao.FindAllAsync();
                 Assert.That(items.Count(), Is.EqualTo(1)); //default version:Version_1
                 Assert.That(items.First().Id, Is.EqualTo(Guid.Empty));
                 Assert.That(items.First().Item1, Is.EqualTo("org_item1"));
@@ -509,7 +509,7 @@ namespace Homura.Test.UnitTest
                 Assert.That(conn.GetTableNames(), Has.One.EqualTo("Valkyrie_1_1"));
                 Assert.That(conn.GetTableNames(), Has.None.EqualTo("Valkyrie_1_2"));
 
-                var items = await dao.FindAllAsync().ToListAsync();
+                var items = await dao.FindAllAsync();
                 Assert.That(items.Count(), Is.EqualTo(1)); //default version:Version_2
                 Assert.That(items.First().Id, Is.EqualTo(Guid.Empty));
                 Assert.That(items.First().Item1, Is.EqualTo("org_item1"));
@@ -545,7 +545,7 @@ namespace Homura.Test.UnitTest
                 await conn.OpenAsync();
 
                 Assert.That(conn.GetTableNames(), Has.One.EqualTo("Valkyrie_0"));
-                var items = await dao.FindAllAsync().ToListAsync();
+                var items = await dao.FindAllAsync();
                 Assert.That(items.Count(), Is.EqualTo(1)); //default version:Version_1
                 Assert.That(items.First().Id, Is.EqualTo(Guid.Empty));
                 Assert.That(items.First().Item1, Is.EqualTo("org_item1"));
@@ -573,7 +573,7 @@ namespace Homura.Test.UnitTest
 
                 Assert.That(conn.GetTableNames(), Has.One.EqualTo("Valkyrie_0"));
                 dao = new Valkyrie_0_Dao();
-                var items = await dao.FindAllAsync().ToListAsync();
+                var items = await dao.FindAllAsync();
                 Assert.That(items.Count(), Is.EqualTo(1)); //default version:Version_1
                 Assert.That(items.First().Id, Is.EqualTo(Guid.Empty));
                 Assert.That(items.First().Item1, Is.EqualTo("org_item1"));
@@ -584,7 +584,7 @@ namespace Homura.Test.UnitTest
 
                 Assert.That(conn.GetTableNames(), Has.One.EqualTo("Valkyrie_1"));
                 dao1 = new Valkyrie_1_Dao(typeof(VersionOrigin)); 
-                var items1 = await dao1.FindAllAsync().ToListAsync();
+                var items1 = await dao1.FindAllAsync();
                 Assert.That(items1.Count(), Is.EqualTo(1)); //default version:Version_1
                 Assert.That(items1.First().Id, Is.EqualTo(Guid.Empty));
                 Assert.That(items1.First().Item1, Is.EqualTo("org_item1"));
@@ -603,7 +603,7 @@ namespace Homura.Test.UnitTest
 
                 Assert.That(conn.GetTableNames(), Has.One.EqualTo("Valkyrie_0"));
                 var dao0 = new Valkyrie_0_Dao();
-                var items0 = await dao.FindAllAsync().ToListAsync();
+                var items0 = await dao.FindAllAsync();
                 Assert.That(items0.Count(), Is.EqualTo(1)); //default version:Version_1
                 Assert.That(items0.First().Id, Is.EqualTo(Guid.Empty));
                 Assert.That(items0.First().Item1, Is.EqualTo("org_item1"));
@@ -614,12 +614,12 @@ namespace Homura.Test.UnitTest
 
                 Assert.That(conn.GetTableNames(), Has.One.EqualTo("Valkyrie_1"));
                 dao1 = new Valkyrie_1_Dao(typeof(VersionOrigin));
-                var items1 = await dao1.FindAllAsync().ToListAsync();
+                var items1 = await dao1.FindAllAsync();
                 Assert.That(items1.Count(), Is.EqualTo(0)); //default version:Version_2
 
                 Assert.That(conn.GetTableNames(), Has.One.EqualTo("Valkyrie_1_1"));
                 var dao2 = new Valkyrie_1_Dao(typeof(Version_1));
-                var items2 = await dao2.FindAllAsync().ToListAsync();
+                var items2 = await dao2.FindAllAsync();
                 Assert.That(items2.Count(), Is.EqualTo(1)); //default version:Version_2
                 Assert.That(items2.First().Id, Is.EqualTo(Guid.Empty));
                 Assert.That(items2.First().Item1, Is.EqualTo("org_item1"));

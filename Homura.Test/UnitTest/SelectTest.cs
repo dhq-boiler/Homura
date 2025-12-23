@@ -52,7 +52,7 @@ namespace Homura.Test.UnitTest
         public async Task FindAllAsync()
         {
             var dao = new AlphaDao(typeof(Version_3));
-            var items = await dao.FindAllAsync().ToListAsync();
+            var items = await dao.FindAllAsync();
         }
 
         [TearDown]
