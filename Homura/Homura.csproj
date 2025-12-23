@@ -20,20 +20,23 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Dapper.StrongName" Version="2.1.66" />
-    <PackageReference Include="GitInfo" Version="2.2.0" />
-    <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
-    <PackageReference Include="NLog" Version="6.0.6" />
-    <PackageReference Include="NuGet.CommandLine" Version="7.0.0">
+    <PackageReference Include="GitInfo" Version="3.6.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Prism.Core" Version="8.1.97" />
+    <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
+    <PackageReference Include="NLog" Version="6.0.7" />
+    <PackageReference Include="NuGet.CommandLine" Version="7.0.1">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Prism.Core" Version="9.0.537" />
     <PackageReference Include="ReactiveProperty" Version="9.8.0" />
     <PackageReference Include="System.ComponentModel.Annotations" Version="5.0.0" />
-    <PackageReference Include="System.ComponentModel.Composition" Version="10.0.0" />
+    <PackageReference Include="System.ComponentModel.Composition" Version="10.0.1" />
     <PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
-    <PackageReference Include="System.Configuration.ConfigurationManager" Version="10.0.0" />
-    <PackageReference Include="System.Linq.AsyncEnumerable" Version="10.0.0" />
+    <PackageReference Include="System.Configuration.ConfigurationManager" Version="10.0.1" />
+    <PackageReference Include="System.Linq.AsyncEnumerable" Version="10.0.1" />
     <PackageReference Include="System.ServiceModel.Duplex" Version="6.0.0" />
     <PackageReference Include="System.ServiceModel.NetTcp" Version="10.0.652802" />
     <PackageReference Include="System.ServiceModel.Federation" Version="10.0.652802" />
