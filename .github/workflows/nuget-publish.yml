@@ -4,6 +4,12 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Package version (e.g. 14.0.0)'
+        required: true
+        type: string
 
 jobs:
   build-test-publish:
@@ -11,6 +17,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
@@ -31,9 +39,14 @@ jobs:
       - name: Run tests
         run: dotnet test Homura.Test/Homura.Test.csproj -c Release --no-build --verbosity normal
 
-      - name: Extract version from tag
+      - name: Determine version
         id: version
-        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> $GITHUB_OUTPUT
+        run: |
+          if [ -n "${{ inputs.version }}" ]; then
+            echo "VERSION=${{ inputs.version }}" >> $GITHUB_OUTPUT
+          else
+            echo "VERSION=${GITHUB_REF_NAME#v}" >> $GITHUB_OUTPUT
+          fi
         shell: bash
 
       - name: Pack NuGet package
