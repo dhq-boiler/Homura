@@ -3,5 +3,7 @@ Homura.Test/bin/
 Homura.Test/obj/
 Homura/bin/
 Homura/obj/
+Homura.SourceGenerator/bin/
+Homura.SourceGenerator/obj/
 packages/
 .claude/settings.local.json
