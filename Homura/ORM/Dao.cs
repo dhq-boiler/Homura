@@ -2168,6 +2168,10 @@ namespace Homura.ORM
 
         public void UpgradeTable(VersionChangeUnit upgradePath, VersioningMode mode, DbConnection conn = null, TimeSpan? timeout = null)
         {
+            // 対象テーブルが存在しない場合は自動作成
+            CreateTableIfNotExists(timeout);
+            CreateIndexIfNotExists(timeout);
+
             QueryHelper.KeepTryingUntilProcessSucceed(() =>
             {
                 QueryHelper.ForDao.ConnectionInternal(this, new Action<DbConnection>((connection) =>
@@ -2212,6 +2216,10 @@ namespace Homura.ORM
 
         public async Task UpgradeTableAsync(VersionChangeUnit upgradePath, VersioningMode mode, DbConnection conn = null, TimeSpan? timeout = null)
         {
+            // 対象テーブルが存在しない場合は自動作成
+            await CreateTableIfNotExistsAsync(timeout).ConfigureAwait(false);
+            await CreateIndexIfNotExistsAsync(timeout).ConfigureAwait(false);
+
             await QueryHelper.KeepTryingUntilProcessSucceedAsync(async () =>
             {
                 await QueryHelper.ForDao.ConnectionInternalAsync(this, async (connection) =>
