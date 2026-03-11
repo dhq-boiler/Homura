@@ -2168,6 +2168,10 @@ namespace Homura.ORM
 
         public void UpgradeTable(VersionChangeUnit upgradePath, VersioningMode mode, DbConnection conn = null, TimeSpan? timeout = null)
         {
+            // 対象テーブルが存在しない場合は自動作成
+            CreateTableIfNotExists(timeout);
+            CreateIndexIfNotExists(timeout);
+
             QueryHelper.KeepTryingUntilProcessSucceed(() =>
             {
                 QueryHelper.ForDao.ConnectionInternal(this, new Action<DbConnection>((connection) =>
@@ -2179,7 +2183,7 @@ namespace Homura.ORM
 
                         using var query = new Insert().Into.Table(newTable)
                             .Columns(newTable.Columns.Select(c => c.ColumnName))
-                            .Select.Columns(oldTable.Columns.Select(c => c.ColumnName).Concat(newTable.NewColumns(oldTable, newTable).Select(v => v.WrapOutput()))).From.Table(oldTable);
+                            .Select.Columns(oldTable.Columns.Select(c => c.ColumnName).Concat(newTable.NewColumns(oldTable, newTable).Select(v => v.WrapOutputAsDefault()))).From.Table(oldTable);
                         var sql = query.ToSql();
                         command.CommandText = sql;
 
@@ -2212,6 +2216,10 @@ namespace Homura.ORM
 
         public async Task UpgradeTableAsync(VersionChangeUnit upgradePath, VersioningMode mode, DbConnection conn = null, TimeSpan? timeout = null)
         {
+            // 対象テーブルが存在しない場合は自動作成
+            await CreateTableIfNotExistsAsync(timeout).ConfigureAwait(false);
+            await CreateIndexIfNotExistsAsync(timeout).ConfigureAwait(false);
+
             await QueryHelper.KeepTryingUntilProcessSucceedAsync(async () =>
             {
                 await QueryHelper.ForDao.ConnectionInternalAsync(this, async (connection) =>
@@ -2223,7 +2231,7 @@ namespace Homura.ORM
 
                         using var query = new Insert().Into.Table(newTable)
                             .Columns(newTable.Columns.Select(c => c.ColumnName))
-                            .Select.Columns(oldTable.Columns.Select(c => c.ColumnName).Concat(newTable.NewColumns(oldTable, newTable).Select(v => v.WrapOutput()))).From.Table(oldTable);
+                            .Select.Columns(oldTable.Columns.Select(c => c.ColumnName).Concat(newTable.NewColumns(oldTable, newTable).Select(v => v.WrapOutputAsDefault()))).From.Table(oldTable);
                         var sql = query.ToSql();
                         command.CommandText = sql;
 
@@ -2296,7 +2304,7 @@ namespace Homura.ORM
                         //fromテーブルからToテーブルへコピー
                         using (var query = new Insert().Into.Table(new NeutralTable($"{newTable.Name}_To"))
                                                         .Columns(newTable.Columns.Select(c => c.ColumnName))
-                                                        .Select.Columns(oldTable.Columns.Select(c => c.ColumnName).Concat(newTable.NewColumns(oldTable, newTable).Select(v => v.WrapOutput()))).From.Table(oldTable))
+                                                        .Select.Columns(oldTable.Columns.Select(c => c.ColumnName).Concat(newTable.NewColumns(oldTable, newTable).Select(v => v.WrapOutputAsDefault()))).From.Table(oldTable))
                         {
                             command.CommandText = query.ToSql();
                             LogManager.GetCurrentClassLogger().Debug($"{query.ToSql()}");
@@ -2356,7 +2364,7 @@ namespace Homura.ORM
                         //fromテーブルからToテーブルへコピー
                         using var query = new Insert().Into.Table(new NeutralTable($"{newTable.Name}_To"))
                             .Columns(newTable.Columns.Select(c => c.ColumnName))
-                            .Select.Columns(oldTable.Columns.Select(c => c.ColumnName).Concat(newTable.NewColumns(oldTable, newTable).Select(v => v.WrapOutput()))).From.Table(oldTable);
+                            .Select.Columns(oldTable.Columns.Select(c => c.ColumnName).Concat(newTable.NewColumns(oldTable, newTable).Select(v => v.WrapOutputAsDefault()))).From.Table(oldTable);
                         command.CommandText = query.ToSql();
                         LogManager.GetCurrentClassLogger().Debug($"{query.ToSql()}");
                         await command.ExecuteNonQueryAsync().ConfigureAwait(false);

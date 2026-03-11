@@ -9,23 +9,31 @@
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
 	<license type="expression">MIT</license>
     <description>Homura - C# ORM</description>
-    <releaseNotes>Summary of changes made in this release of the package.</releaseNotes>
-    <copyright>$copyright$</copyright>
-    <tags>C# ORM</tags>
+    <releaseNotes>
+v14: Migration system improvements and Source Generator support.
+- SafeGet* methods return default values when column does not exist
+- UpgradeTable automatically creates target table and indexes
+- UpgradeTable handles new columns with default values instead of referencing missing source columns
+- Migration ChangePlan execution wrapped in transactions for rollback on failure
+- Source Generator: [GenerateDao] and [GenerateChangePlan] attributes for auto-generating DAO and ChangePlan classes
+- GitHub Actions CI/CD for automated NuGet publishing
+    </releaseNotes>
+    <copyright>Copyright (c) dhq_boiler 2020-2026</copyright>
+    <tags>C# ORM SQLite Migration SourceGenerator</tags>
 	<dependencies>
 		<group targetFramework="net9.0">
-			<dependency id="Dapper.StrongName" version="2.0" />
-			<dependency id="NLog" version="5.2" />
-			<dependency id="Prism.Core" version="8.1" />
-			<dependency id="ReactiveProperty" version="9.1" />
-			<dependency id="System.Linq.Async" version="6.0.1" />
+			<dependency id="Dapper.StrongName" version="2.1.66" />
+			<dependency id="NLog" version="6.0.7" />
+			<dependency id="Prism.Core" version="9.0.537" />
+			<dependency id="ReactiveProperty" version="9.8.0" />
+			<dependency id="System.Linq.AsyncEnumerable" version="10.0.1" />
 		</group>
 		<group targetFramework="net10.0">
-			<dependency id="Dapper.StrongName" version="2.0" />
-			<dependency id="NLog" version="5.2" />
-			<dependency id="Prism.Core" version="8.1" />
-			<dependency id="ReactiveProperty" version="9.1" />
-			<dependency id="System.Linq.Async" version="6.0.1" />
+			<dependency id="Dapper.StrongName" version="2.1.66" />
+			<dependency id="NLog" version="6.0.7" />
+			<dependency id="Prism.Core" version="9.0.537" />
+			<dependency id="ReactiveProperty" version="9.8.0" />
+			<dependency id="System.Linq.AsyncEnumerable" version="10.0.1" />
 		</group>
 	</dependencies>
   </metadata>
@@ -34,6 +42,7 @@
 	  <file src="bin\Release\net9.0\Homura.pdb" target="lib\net9.0" />
 	  <file src="bin\Release\net10.0\*.dll" target="lib\net10.0" />
 	  <file src="bin\Release\net10.0\Homura.pdb" target="lib\net10.0" />
+	  <file src="..\Homura.SourceGenerator\bin\Release\netstandard2.0\Homura.SourceGenerator.dll" target="analyzers\dotnet\cs" />
 	  <file src="**\*.cs" target="src" />
   </files>
 </package>

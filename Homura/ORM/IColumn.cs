@@ -30,6 +30,13 @@ namespace Homura.ORM
         PlaceholderRightValue ToParameter(Dictionary<string, object> idDic);
         string WrapOutput();
 
+        /// <summary>
+        /// 新カラムのデフォルト値を SQL 式として返す。
+        /// UpgradeTable でソーステーブルに存在しない新カラムに使用する。
+        /// WrapOutput と異なり、PassType に関係なく常にデフォルト値を返す。
+        /// </summary>
+        string WrapOutputAsDefault();
+
         HandlingDefaultValue PassType { get; }
     }
 }
