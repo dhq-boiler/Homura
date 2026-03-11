@@ -1,0 +1,11 @@
+C:\Git\Homura\Homura.SourceGenerator\bin\Debug\netstandard2.0\Homura.SourceGenerator.deps.json
+C:\Git\Homura\Homura.SourceGenerator\bin\Debug\netstandard2.0\Homura.SourceGenerator.dll
+C:\Git\Homura\Homura.SourceGenerator\bin\Debug\netstandard2.0\Homura.SourceGenerator.pdb
+C:\Git\Homura\Homura.SourceGenerator\obj\Debug\netstandard2.0\Homura.SourceGenerator.csproj.AssemblyReference.cache
+C:\Git\Homura\Homura.SourceGenerator\obj\Debug\netstandard2.0\Homura.SourceGenerator.GeneratedMSBuildEditorConfig.editorconfig
+C:\Git\Homura\Homura.SourceGenerator\obj\Debug\netstandard2.0\Homura.SourceGenerator.AssemblyInfoInputs.cache
+C:\Git\Homura\Homura.SourceGenerator\obj\Debug\netstandard2.0\Homura.SourceGenerator.AssemblyInfo.cs
+C:\Git\Homura\Homura.SourceGenerator\obj\Debug\netstandard2.0\Homura.SourceGenerator.csproj.CoreCompileInputs.cache
+C:\Git\Homura\Homura.SourceGenerator\obj\Debug\netstandard2.0\Homura.SourceGenerator.sourcelink.json
+C:\Git\Homura\Homura.SourceGenerator\obj\Debug\netstandard2.0\Homura.SourceGenerator.dll
+C:\Git\Homura\Homura.SourceGenerator\obj\Debug\netstandard2.0\Homura.SourceGenerator.pdb
