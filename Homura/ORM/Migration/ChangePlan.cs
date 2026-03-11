@@ -236,46 +236,70 @@ namespace Homura.ORM.Migration
 
         public void DowngradeToTargetVersion(IConnection connection)
         {
-            if (VersionChangePlanList.Any())
+            if (!VersionChangePlanList.Any())
+                return;
+
+            OnBeginToDowngradeTo(new VersionChangeEventArgs(TargetVersion));
+            LogManager.GetCurrentClassLogger().Info($"Begin to downgrade to {TargetVersion.GetType().Name}.");
+
+            using var dataOperationUnit = new DataOperationUnit();
+            dataOperationUnit.Open(connection);
+            dataOperationUnit.BeginTransaction();
+
+            try
             {
-                OnBeginToDowngradeTo(new VersionChangeEventArgs(TargetVersion));
-                LogManager.GetCurrentClassLogger().Info($"Begin to downgrade to {TargetVersion.GetType().Name}.");
+                foreach (var vcp in VersionChangePlanList)
+                {
+                    vcp.Mode = Mode;
+                    vcp.DowngradeToTargetVersion(connection);
+                    ModifiedCount += vcp.ModifiedCount;
+                }
+
+                dataOperationUnit.Commit();
+            }
+            catch (Exception ex)
+            {
+                LogManager.GetCurrentClassLogger().Error(ex, $"Downgrade to {TargetVersion.GetType().Name} failed, rolling back.");
+                dataOperationUnit.Rollback();
+                throw;
             }
 
-            foreach (var vcp in VersionChangePlanList)
-            {
-                vcp.Mode = Mode;
-                vcp.DowngradeToTargetVersion(connection);
-                ModifiedCount += vcp.ModifiedCount;
-            }
-
-            if (VersionChangePlanList.Any())
-            {
-                LogManager.GetCurrentClassLogger().Info($"Finish to downgrade to {TargetVersion.GetType().Name}.");
-                OnFinishedToDowngradeTo(new VersionChangeEventArgs(TargetVersion));
-            }
+            LogManager.GetCurrentClassLogger().Info($"Finish to downgrade to {TargetVersion.GetType().Name}.");
+            OnFinishedToDowngradeTo(new VersionChangeEventArgs(TargetVersion));
         }
 
         public void UpgradeToTargetVersion(IConnection connection)
         {
-            if (VersionChangePlanList.Any())
+            if (!VersionChangePlanList.Any())
+                return;
+
+            OnBeginToUpgradeTo(new VersionChangeEventArgs(TargetVersion));
+            LogManager.GetCurrentClassLogger().Info($"Begin to upgrade to {TargetVersion.GetType().Name}.");
+
+            using var dataOperationUnit = new DataOperationUnit();
+            dataOperationUnit.Open(connection);
+            dataOperationUnit.BeginTransaction();
+
+            try
             {
-                OnBeginToUpgradeTo(new VersionChangeEventArgs(TargetVersion));
-                LogManager.GetCurrentClassLogger().Info($"Begin to upgrade to {TargetVersion.GetType().Name}.");
+                foreach (var vcp in VersionChangePlanList)
+                {
+                    vcp.Mode = Mode;
+                    vcp.UpgradeToTargetVersion(connection);
+                    ModifiedCount += vcp.ModifiedCount;
+                }
+
+                dataOperationUnit.Commit();
+            }
+            catch (Exception ex)
+            {
+                LogManager.GetCurrentClassLogger().Error(ex, $"Migration to {TargetVersion.GetType().Name} failed, rolling back.");
+                dataOperationUnit.Rollback();
+                throw;
             }
 
-            foreach (var vcp in VersionChangePlanList)
-            {
-                vcp.Mode = Mode;
-                vcp.UpgradeToTargetVersion(connection);
-                ModifiedCount += vcp.ModifiedCount;
-            }
-
-            if (VersionChangePlanList.Any())
-            {
-                LogManager.GetCurrentClassLogger().Info($"Finish to upgrade to {TargetVersion.GetType().Name}.");
-                OnFinishedToUpgradeTo(new VersionChangeEventArgs(TargetVersion));
-            }
+            LogManager.GetCurrentClassLogger().Info($"Finish to upgrade to {TargetVersion.GetType().Name}.");
+            OnFinishedToUpgradeTo(new VersionChangeEventArgs(TargetVersion));
         }
 
         public override bool Equals(object obj)
