@@ -67,35 +67,51 @@ namespace Homura.ORM
             }
             else if (PassType == ORM.HandlingDefaultValue.AsValue)
             {
-                if (DBDataType == "TEXT")
-                {
-                    if (DefaultValue is null)
-                    {
-                        return "null";
-                    }
-                    return $"\'{DefaultValue}'";
-                }
-                else
-                {
-                    if (DefaultValue is null)
-                    {
-                        return "null";
-                    }
-                    switch (EntityDataType.Name)
-                    {
-                        case "String":
-                            return $"\'{DefaultValue}\'";
-                        case "int":
-                            return DefaultValue.ToString();
-                        case "Boolean":
-                            return bool.Parse(DefaultValue.ToString()) ? "1" : "0";
-                        case "Guid":
-                            return Guid.Parse(DefaultValue.ToString()).ToString();
-                    }
-                    return DefaultValue.ToString();
-                }
+                return FormatDefaultValue();
             }
             throw new System.Exception("No match");
+        }
+
+        public string WrapOutputAsDefault()
+        {
+            if (PassType == ORM.HandlingDefaultValue.AsValue && DefaultValue != null)
+            {
+                return FormatDefaultValue();
+            }
+
+            // 明示的なデフォルト値が未指定の場合は null を返す
+            return "null";
+        }
+
+        private string FormatDefaultValue()
+        {
+            if (DBDataType == "TEXT")
+            {
+                if (DefaultValue is null)
+                {
+                    return "null";
+                }
+                return $"\'{DefaultValue}'";
+            }
+            else
+            {
+                if (DefaultValue is null)
+                {
+                    return "null";
+                }
+                switch (EntityDataType.Name)
+                {
+                    case "String":
+                        return $"\'{DefaultValue}\'";
+                    case "int":
+                        return DefaultValue.ToString();
+                    case "Boolean":
+                        return bool.Parse(DefaultValue.ToString()) ? "1" : "0";
+                    case "Guid":
+                        return Guid.Parse(DefaultValue.ToString()).ToString();
+                }
+                return DefaultValue.ToString();
+            }
         }
     }
 }
