@@ -35,25 +35,37 @@ namespace Homura.ORM
             DBDataType = dbDataType;
             Constraints = constraints?.ToList();
             Order = order;
-            PropertyGetter = (obj) =>
+            if (propertyInfo != null)
             {
-                var getter = obj.GetType().GetProperty(columnName);
-                var columnValue = getter.GetValue(obj);
-                if (columnValue is null)
+                var isReactiveProperty = typeof(IReactiveProperty).IsAssignableFrom(propertyInfo.PropertyType);
+                PropertyInfo valueProp = isReactiveProperty
+                    ? propertyInfo.PropertyType.GetProperty("Value")
+                    : null;
+                PropertyGetter = (obj) =>
                 {
-                    return null;
-                }
-                else if (columnValue.GetType().GetInterfaces().Contains(typeof(IReactiveProperty)))
+                    var columnValue = propertyInfo.GetValue(obj);
+                    if (columnValue is null)
+                    {
+                        return null;
+                    }
+                    else if (isReactiveProperty)
+                    {
+                        return valueProp.GetValue(columnValue);
+                    }
+                    else
+                    {
+                        return columnValue;
+                    }
+                };
+            }
+            else
+            {
+                PropertyGetter = (obj) =>
                 {
-                    var rp = getter.GetValue(obj) as IReactiveProperty;
-                    var ret = rp.GetType().GetProperty("Value").GetValue(rp);
-                    return ret;
-                }
-                else
-                {
-                    return obj.GetType().GetProperty(columnName).GetValue(obj);
-                }
-            };
+                    var prop = obj.GetType().GetProperty(columnName);
+                    return prop?.GetValue(obj);
+                };
+            }
             PassType = passType;
             DefaultValue = defaultValue;
         }

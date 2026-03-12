@@ -16,6 +16,12 @@ namespace Homura.ORM
 
         private Type _SpecifiedVersion;
 
+        // Column cache keyed by version type
+        private static readonly Dictionary<Type, IReadOnlyList<IColumn>> s_columnsCache = new();
+        private static readonly Dictionary<Type, IReadOnlyList<IColumn>> s_primaryKeyColumnsCache = new();
+        private static readonly Dictionary<Type, IReadOnlyList<IColumn>> s_columnsWithoutPrimaryKeysCache = new();
+        private static readonly object s_cacheLock = new();
+
         public Table()
         {
             SpecifiedVersion = null;
@@ -90,6 +96,13 @@ namespace Homura.ORM
         {
             get
             {
+                var versionKey = SpecifiedVersion ?? typeof(VersionOrigin);
+                lock (s_cacheLock)
+                {
+                    if (s_columnsCache.TryGetValue(versionKey, out var cached))
+                        return cached;
+                }
+
                 List<IColumn> columns = new List<IColumn>();
                 var pinfoList = typeof(E).GetProperties();
 
@@ -115,7 +128,12 @@ namespace Homura.ORM
                     }
                 }
 
-                return columns.OrderBy(a => a.Order).ToList();
+                var result = columns.OrderBy(a => a.Order).ToList();
+                lock (s_cacheLock)
+                {
+                    s_columnsCache[versionKey] = result;
+                }
+                return result;
             }
         }
 
@@ -131,6 +149,13 @@ namespace Homura.ORM
         {
             get
             {
+                var versionKey = SpecifiedVersion ?? typeof(VersionOrigin);
+                lock (s_cacheLock)
+                {
+                    if (s_primaryKeyColumnsCache.TryGetValue(versionKey, out var cached))
+                        return cached;
+                }
+
                 var classPkAttr = typeof(E).GetCustomAttribute<PrimaryKeyAttribute>();
 
                 List<IColumn> columns = new List<IColumn>();
@@ -158,7 +183,12 @@ namespace Homura.ORM
                     }
                 }
 
-                return columns.OrderBy(a => a.Order).ToList();
+                var result = columns.OrderBy(a => a.Order).ToList();
+                lock (s_cacheLock)
+                {
+                    s_primaryKeyColumnsCache[versionKey] = result;
+                }
+                return result;
             }
         }
 
@@ -166,6 +196,13 @@ namespace Homura.ORM
         {
             get
             {
+                var versionKey = SpecifiedVersion ?? typeof(VersionOrigin);
+                lock (s_cacheLock)
+                {
+                    if (s_columnsWithoutPrimaryKeysCache.TryGetValue(versionKey, out var cached))
+                        return cached;
+                }
+
                 List<IColumn> columns = new List<IColumn>();
                 var pinfoList = typeof(E).GetProperties();
 
@@ -194,7 +231,12 @@ namespace Homura.ORM
                     }
                 }
 
-                return columns.OrderBy(a => a.Order).ToList();
+                var result = columns.OrderBy(a => a.Order).ToList();
+                lock (s_cacheLock)
+                {
+                    s_columnsWithoutPrimaryKeysCache[versionKey] = result;
+                }
+                return result;
             }
         }
 
