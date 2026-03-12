@@ -1553,6 +1553,18 @@ namespace Homura.ORM
             }, timeout);
         }
 
+        protected virtual bool TryBuildInsertCommand(DbCommand command, E entity, string tableName)
+            => false;
+
+        protected virtual bool TryBuildUpdateCommand(DbCommand command, E entity, string tableName)
+            => false;
+
+        protected virtual bool TryUpdateInsertParameters(DbCommand command, E entity)
+            => false;
+
+        protected virtual bool TryUpdateUpdateParameters(DbCommand command, E entity)
+            => false;
+
         public async Task InsertAsync(E entity, DbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null)
         {
             InitializeColumnDefinitions();
@@ -1565,11 +1577,25 @@ namespace Homura.ORM
                 throw new DatabaseSchemaException($"Didn't insert because mismatch definition of table:{TableName}", e);
             }
 
+            bool useFastPath = string.IsNullOrWhiteSpace(anotherDatabaseAliasName)
+                && (OverridedColumns == null || !OverridedColumns.Any());
+
             await QueryHelper.KeepTryingUntilProcessSucceedAsync(async () =>
             {
                 await QueryHelper.ForDao.ConnectionInternalAsync(this, async (connection) =>
                 {
                     await using var command = connection.CreateCommand();
+
+                    if (useFastPath && TryBuildInsertCommand(command, entity, TableName))
+                    {
+                        var inserted = await command.ExecuteNonQueryAsync().ConfigureAwait(false);
+                        if (inserted == 0)
+                        {
+                            throw new NoEntityInsertedException($"Failed:{command.CommandText}");
+                        }
+                        return;
+                    }
+
                     var overrideColumns = SwapIfOverrided(Columns);
 
                     var table = string.IsNullOrWhiteSpace(anotherDatabaseAliasName)
@@ -1588,8 +1614,8 @@ namespace Homura.ORM
                     query.SetParameters(command);
 
                     LogManager.GetCurrentClassLogger().Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
-                    var inserted = await command.ExecuteNonQueryAsync().ConfigureAwait(false);
-                    if (inserted == 0)
+                    var inserted2 = await command.ExecuteNonQueryAsync().ConfigureAwait(false);
+                    if (inserted2 == 0)
                     {
                         throw new NoEntityInsertedException($"Failed:{sql} {query.GetParameters().ToStringKeyIsValue()}");
                     }
@@ -1615,6 +1641,9 @@ namespace Homura.ORM
                 return;
             }
 
+            bool useFastPath = string.IsNullOrWhiteSpace(anotherDatabaseAliasName)
+                && (OverridedColumns == null || !OverridedColumns.Any());
+
             await QueryHelper.KeepTryingUntilProcessSucceedAsync(async () =>
             {
                 await QueryHelper.ForDao.ConnectionInternalAsync(this, async (connection) =>
@@ -1629,6 +1658,36 @@ namespace Homura.ORM
                             transaction = await connection.BeginTransactionAsync().ConfigureAwait(false);
                         }
 
+                        var logger = LogManager.GetCurrentClassLogger();
+                        await using var command = connection.CreateCommand();
+                        if (transaction != null)
+                        {
+                            command.Transaction = transaction;
+                        }
+
+                        if (useFastPath && TryBuildInsertCommand(command, entityList[0], TableName))
+                        {
+                            var inserted = await command.ExecuteNonQueryAsync().ConfigureAwait(false);
+                            if (inserted == 0)
+                            {
+                                throw new NoEntityInsertedException($"Failed:{command.CommandText}");
+                            }
+
+                            for (int i = 1; i < entityList.Count; i++)
+                            {
+                                if (!TryUpdateInsertParameters(command, entityList[i]))
+                                {
+                                    break;
+                                }
+                                inserted = await command.ExecuteNonQueryAsync().ConfigureAwait(false);
+                                if (inserted == 0)
+                                {
+                                    throw new NoEntityInsertedException($"Failed:{command.CommandText}");
+                                }
+                            }
+                        }
+                        else
+                        {
                         var overrideColumns = SwapIfOverrided(Columns);
                         var table = (Table<E>)Table.Clone();
                         if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName))
@@ -1637,14 +1696,6 @@ namespace Homura.ORM
                         }
 
                         var columnsList = overrideColumns.ToList();
-                        var logger = LogManager.GetCurrentClassLogger();
-
-                        // Build SQL and command once using first entity, then reuse with parameter updates
-                        await using var command = connection.CreateCommand();
-                        if (transaction != null)
-                        {
-                            command.Transaction = transaction;
-                        }
 
                         var firstEntity = entityList[0];
                         using var query = new Insert().Into.Table(table).Columns(columnsList.Select(c => c.ColumnName))
@@ -1683,6 +1734,7 @@ namespace Homura.ORM
                             {
                                 throw new NoEntityInsertedException($"Failed:{sql}");
                             }
+                        }
                         }
 
                         if (transaction != null)
@@ -2042,11 +2094,20 @@ namespace Homura.ORM
 
         public async Task<int> UpdateAsync(E entity, DbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null)
         {
+            bool useFastPath = string.IsNullOrWhiteSpace(anotherDatabaseAliasName)
+                && (OverridedColumns == null || !OverridedColumns.Any());
+
             return await QueryHelper.KeepTryingUntilProcessSucceedAsync(async () =>
             {
                 return await QueryHelper.ForDao.ConnectionInternalAsync(this, async (connection) =>
                 {
                     await using var command = connection.CreateCommand();
+
+                    if (useFastPath && TryBuildUpdateCommand(command, entity, TableName))
+                    {
+                        return await command.ExecuteNonQueryAsync().ConfigureAwait(false);
+                    }
+
                     var table = string.IsNullOrWhiteSpace(anotherDatabaseAliasName)
                         ? (Table<E>)Table
                         : (Table<E>)Table.Clone();
@@ -2081,6 +2142,9 @@ namespace Homura.ORM
                 return 0;
             }
 
+            bool useFastPath = string.IsNullOrWhiteSpace(anotherDatabaseAliasName)
+                && (OverridedColumns == null || !OverridedColumns.Any());
+
             return await QueryHelper.KeepTryingUntilProcessSucceedAsync(async () =>
             {
                 return await QueryHelper.ForDao.ConnectionInternalAsync(this, async (connection) =>
@@ -2096,6 +2160,30 @@ namespace Homura.ORM
                             transaction = await connection.BeginTransactionAsync().ConfigureAwait(false);
                         }
 
+                        var logger = LogManager.GetCurrentClassLogger();
+                        await using var command = connection.CreateCommand();
+                        if (transaction != null)
+                        {
+                            command.Transaction = transaction;
+                        }
+
+                        if (useFastPath && TryBuildUpdateCommand(command, entityList[0], TableName))
+                        {
+                            var updated = await command.ExecuteNonQueryAsync().ConfigureAwait(false);
+                            totalUpdated += updated;
+
+                            for (int i = 1; i < entityList.Count; i++)
+                            {
+                                if (!TryUpdateUpdateParameters(command, entityList[i]))
+                                {
+                                    break;
+                                }
+                                updated = await command.ExecuteNonQueryAsync().ConfigureAwait(false);
+                                totalUpdated += updated;
+                            }
+                        }
+                        else
+                        {
                         var table = (Table<E>)Table.Clone();
                         if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName))
                         {
@@ -2104,14 +2192,6 @@ namespace Homura.ORM
 
                         var nonPkColumns = table.ColumnsWithoutPrimaryKeys.ToList();
                         var pkColumns = table.PrimaryKeyColumns.ToList();
-                        var logger = LogManager.GetCurrentClassLogger();
-
-                        // Build SQL once using first entity, then reuse command with parameter updates
-                        await using var command = connection.CreateCommand();
-                        if (transaction != null)
-                        {
-                            command.Transaction = transaction;
-                        }
 
                         // Build SQL template from first entity
                         var firstEntity = entityList[0];
@@ -2148,6 +2228,7 @@ namespace Homura.ORM
                             logger.Debug(sql);
                             updated = await command.ExecuteNonQueryAsync().ConfigureAwait(false);
                             totalUpdated += updated;
+                        }
                         }
 
                         if (transaction != null)
