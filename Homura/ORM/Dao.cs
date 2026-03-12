@@ -1627,25 +1627,52 @@ namespace Homura.ORM
                             table.Schema = anotherDatabaseAliasName;
                         }
 
-                        foreach (var entity in entityList)
+                        var columnsList = overrideColumns.ToList();
+                        var logger = LogManager.GetCurrentClassLogger();
+
+                        // Build SQL and command once using first entity, then reuse with parameter updates
+                        await using var command = connection.CreateCommand();
+                        if (transaction != null)
                         {
-                            await using var command = connection.CreateCommand();
-                            if (transaction != null)
+                            command.Transaction = transaction;
+                        }
+
+                        var firstEntity = entityList[0];
+                        using var query = new Insert().Into.Table(table).Columns(columnsList.Select(c => c.ColumnName))
+                            .Values.Value(columnsList.Select(c => c.PropertyGetter(firstEntity)));
+                        var sql = query.ToSql();
+                        command.CommandText = sql;
+                        query.SetParameters(command);
+
+                        logger.Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
+                        var inserted = await command.ExecuteNonQueryAsync().ConfigureAwait(false);
+                        if (inserted == 0)
+                        {
+                            throw new NoEntityInsertedException($"Failed:{sql} {query.GetParameters().ToStringKeyIsValue()}");
+                        }
+
+                        // Reuse command for remaining entities - just update parameter values by index
+                        for (int i = 1; i < entityList.Count; i++)
+                        {
+                            var entity = entityList[i];
+                            for (int j = 0; j < columnsList.Count; j++)
                             {
-                                command.Transaction = transaction;
+                                var value = columnsList[j].PropertyGetter(entity);
+                                if (value is Type t)
+                                {
+                                    command.Parameters[j].Value = t.AssemblyQualifiedName;
+                                }
+                                else
+                                {
+                                    command.Parameters[j].Value = value;
+                                }
                             }
 
-                            using var query = new Insert().Into.Table(table).Columns(overrideColumns.Select(c => c.ColumnName))
-                                .Values.Value(overrideColumns.Select(c => c.PropertyGetter(entity)));
-                            var sql = query.ToSql();
-                            command.CommandText = sql;
-                            query.SetParameters(command);
-
-                            LogManager.GetCurrentClassLogger().Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
-                            var inserted = await command.ExecuteNonQueryAsync().ConfigureAwait(false);
+                            logger.Debug(sql);
+                            inserted = await command.ExecuteNonQueryAsync().ConfigureAwait(false);
                             if (inserted == 0)
                             {
-                                throw new NoEntityInsertedException($"Failed:{sql} {query.GetParameters().ToStringKeyIsValue()}");
+                                throw new NoEntityInsertedException($"Failed:{sql}");
                             }
                         }
 
@@ -2061,25 +2088,51 @@ namespace Homura.ORM
                             table.Schema = anotherDatabaseAliasName;
                         }
 
-                        foreach (var entity in entityList)
+                        var nonPkColumns = table.ColumnsWithoutPrimaryKeys.ToList();
+                        var pkColumns = table.PrimaryKeyColumns.ToList();
+                        var logger = LogManager.GetCurrentClassLogger();
+
+                        // Build SQL once using first entity, then reuse command with parameter updates
+                        await using var command = connection.CreateCommand();
+                        if (transaction != null)
                         {
-                            await using var command = connection.CreateCommand();
-                            if (transaction != null)
+                            command.Transaction = transaction;
+                        }
+
+                        // Build SQL template from first entity
+                        var firstEntity = entityList[0];
+                        var columnsDict = nonPkColumns.ToDictionary(c => c.ColumnName, c => c.PropertyGetter(firstEntity));
+                        var primaryKeysDict = pkColumns.ToDictionary(c => c.ColumnName, c => c.PropertyGetter(firstEntity));
+                        using var query = new Update().Table(table).Set.KeyEqualToValue(columnsDict)
+                            .Where.KeyEqualToValue(primaryKeysDict);
+                        var sql = query.ToSql();
+                        command.CommandText = sql;
+                        query.SetParameters(command);
+
+                        logger.Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
+                        var updated = await command.ExecuteNonQueryAsync().ConfigureAwait(false);
+                        totalUpdated += updated;
+
+                        // Reuse command for remaining entities - just update parameter values by index
+                        var allColumns = nonPkColumns.Concat(pkColumns).ToList();
+                        for (int i = 1; i < entityList.Count; i++)
+                        {
+                            var entity = entityList[i];
+                            for (int j = 0; j < allColumns.Count; j++)
                             {
-                                command.Transaction = transaction;
+                                var value = allColumns[j].PropertyGetter(entity);
+                                if (value is Type t)
+                                {
+                                    command.Parameters[j].Value = t.AssemblyQualifiedName;
+                                }
+                                else
+                                {
+                                    command.Parameters[j].Value = value;
+                                }
                             }
 
-                            var columnsDict = table.ColumnsWithoutPrimaryKeys.ToDictionary(c => c.ColumnName, c => c.PropertyGetter(entity));
-                            var primaryKeysDict = table.PrimaryKeyColumns.ToDictionary(c => c.ColumnName, c => c.PropertyGetter(entity));
-
-                            using var query = new Update().Table(table).Set.KeyEqualToValue(columnsDict)
-                                .Where.KeyEqualToValue(primaryKeysDict);
-                            var sql = query.ToSql();
-                            command.CommandText = sql;
-                            query.SetParameters(command);
-
-                            LogManager.GetCurrentClassLogger().Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
-                            var updated = await command.ExecuteNonQueryAsync().ConfigureAwait(false);
+                            logger.Debug(sql);
+                            updated = await command.ExecuteNonQueryAsync().ConfigureAwait(false);
                             totalUpdated += updated;
                         }
 
