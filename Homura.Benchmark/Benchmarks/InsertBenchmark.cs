@@ -71,6 +71,27 @@ public class InsertBenchmark
         }
     }
 
+    [Benchmark(Description = "Homura ORM (Txn)")]
+    public async Task Homura_InsertWithTransaction()
+    {
+        ConnectionManager.SetDefaultConnection(_instanceId, _connectionString, typeof(SQLiteConnection));
+        var dao = new BenchmarkEntityDao(typeof(VersionOrigin));
+        await using var conn = await dao.GetConnectionAsync();
+        await using var txn = await conn.BeginTransactionAsync();
+        for (int i = 0; i < RecordCount; i++)
+        {
+            await dao.InsertAsync(new BenchmarkEntity
+            {
+                Id = Guid.NewGuid(),
+                Name = $"Item_{i}",
+                Value = i,
+                Description = $"Description for item {i}",
+                CreatedAt = DateTime.UtcNow.ToString("O")
+            }, conn);
+        }
+        await txn.CommitAsync();
+    }
+
     [Benchmark(Description = "Homura ORM (Bulk)")]
     public async Task Homura_InsertBulk()
     {

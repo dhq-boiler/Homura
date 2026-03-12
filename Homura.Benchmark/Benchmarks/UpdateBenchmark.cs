@@ -101,6 +101,26 @@ public class UpdateBenchmark
         }
     }
 
+    [Benchmark(Description = "Homura ORM (Txn)")]
+    public async Task Homura_UpdateWithTransaction()
+    {
+        var dao = new BenchmarkEntityDao(typeof(VersionOrigin));
+        await using var conn = await dao.GetConnectionAsync();
+        await using var txn = await conn.BeginTransactionAsync();
+        foreach (var id in _ids)
+        {
+            await dao.UpdateAsync(new BenchmarkEntity
+            {
+                Id = id,
+                Name = "Updated",
+                Value = 999,
+                Description = "Updated description",
+                CreatedAt = DateTime.UtcNow.ToString("O")
+            }, conn);
+        }
+        await txn.CommitAsync();
+    }
+
     [Benchmark(Description = "Homura ORM (Bulk)")]
     public async Task Homura_UpdateBulk()
     {

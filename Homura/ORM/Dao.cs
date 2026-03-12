@@ -109,6 +109,12 @@ namespace Homura.ORM
             }
         }
 
+        public async Task<DbTransaction> BeginTransactionAsync()
+        {
+            var conn = await GetConnectionAsync().ConfigureAwait(false);
+            return await conn.BeginTransactionAsync().ConfigureAwait(false);
+        }
+
         public void VerifyTableDefinition(DbConnection conn)
         {
             InitializeColumnDefinitions();
@@ -1566,14 +1572,17 @@ namespace Homura.ORM
                     await using var command = connection.CreateCommand();
                     var overrideColumns = SwapIfOverrided(Columns);
 
-                    var table = (Table<E>)Table.Clone();
+                    var table = string.IsNullOrWhiteSpace(anotherDatabaseAliasName)
+                        ? (Table<E>)Table
+                        : (Table<E>)Table.Clone();
                     if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName))
                     {
                         table.Schema = anotherDatabaseAliasName;
                     }
 
-                    using var query = new Insert().Into.Table(table).Columns(overrideColumns.Select(c => c.ColumnName))
-                        .Values.Value(overrideColumns.Select(c => c.PropertyGetter(entity)));
+                    var columnsList = overrideColumns.ToList();
+                    using var query = new Insert().Into.Table(table).Columns(columnsList.Select(c => c.ColumnName))
+                        .Values.Value(columnsList.Select(c => c.PropertyGetter(entity)));
                     var sql = query.ToSql();
                     command.CommandText = sql;
                     query.SetParameters(command);
@@ -2038,14 +2047,19 @@ namespace Homura.ORM
                 return await QueryHelper.ForDao.ConnectionInternalAsync(this, async (connection) =>
                 {
                     await using var command = connection.CreateCommand();
-                    var table = (Table<E>)Table.Clone();
+                    var table = string.IsNullOrWhiteSpace(anotherDatabaseAliasName)
+                        ? (Table<E>)Table
+                        : (Table<E>)Table.Clone();
                     if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName))
                     {
                         table.Schema = anotherDatabaseAliasName;
                     }
 
-                    var columnsDict = table.ColumnsWithoutPrimaryKeys.ToDictionary(c => c.ColumnName, c => c.PropertyGetter(entity));
-                    var primaryKeysDict = table.PrimaryKeyColumns.ToDictionary(c => c.ColumnName, c => c.PropertyGetter(entity));
+                    var nonPkColumns = table.ColumnsWithoutPrimaryKeys;
+                    var pkColumns = table.PrimaryKeyColumns;
+
+                    var columnsDict = nonPkColumns.ToDictionary(c => c.ColumnName, c => c.PropertyGetter(entity));
+                    var primaryKeysDict = pkColumns.ToDictionary(c => c.ColumnName, c => c.PropertyGetter(entity));
 
                     using var query = new Update().Table(table).Set.KeyEqualToValue(columnsDict)
                         .Where.KeyEqualToValue(primaryKeysDict);
