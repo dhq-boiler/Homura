@@ -108,6 +108,62 @@ public class InsertBenchmark
         await dao.InsertBulkAsync(entities);
     }
 
+    [Benchmark(Description = "Homura Generated")]
+    public async Task Homura_Insert_Generated()
+    {
+        ConnectionManager.SetDefaultConnection(_instanceId, _connectionString, typeof(SQLiteConnection));
+        var dao = new GeneratedBenchmarkEntityDao(typeof(VersionOrigin));
+        await using var conn = await dao.GetConnectionAsync();
+        for (int i = 0; i < RecordCount; i++)
+        {
+            await dao.InsertAsync(new BenchmarkEntity
+            {
+                Id = Guid.NewGuid(),
+                Name = $"Item_{i}",
+                Value = i,
+                Description = $"Description for item {i}",
+                CreatedAt = DateTime.UtcNow.ToString("O")
+            }, conn);
+        }
+    }
+
+    [Benchmark(Description = "Homura Generated (Txn)")]
+    public async Task Homura_Insert_GeneratedWithTransaction()
+    {
+        ConnectionManager.SetDefaultConnection(_instanceId, _connectionString, typeof(SQLiteConnection));
+        var dao = new GeneratedBenchmarkEntityDao(typeof(VersionOrigin));
+        await using var conn = await dao.GetConnectionAsync();
+        await using var txn = await conn.BeginTransactionAsync();
+        for (int i = 0; i < RecordCount; i++)
+        {
+            await dao.InsertAsync(new BenchmarkEntity
+            {
+                Id = Guid.NewGuid(),
+                Name = $"Item_{i}",
+                Value = i,
+                Description = $"Description for item {i}",
+                CreatedAt = DateTime.UtcNow.ToString("O")
+            }, conn);
+        }
+        await txn.CommitAsync();
+    }
+
+    [Benchmark(Description = "Homura Generated (Bulk)")]
+    public async Task Homura_Insert_GeneratedBulk()
+    {
+        ConnectionManager.SetDefaultConnection(_instanceId, _connectionString, typeof(SQLiteConnection));
+        var dao = new GeneratedBenchmarkEntityDao(typeof(VersionOrigin));
+        var entities = Enumerable.Range(0, RecordCount).Select(i => new BenchmarkEntity
+        {
+            Id = Guid.NewGuid(),
+            Name = $"Item_{i}",
+            Value = i,
+            Description = $"Description for item {i}",
+            CreatedAt = DateTime.UtcNow.ToString("O")
+        });
+        await dao.InsertBulkAsync(entities);
+    }
+
     [Benchmark(Description = "Dapper")]
     public async Task Dapper_Insert()
     {

@@ -136,6 +136,59 @@ public class UpdateBenchmark
         await dao.UpdateBulkAsync(entities);
     }
 
+    [Benchmark(Description = "Homura Generated")]
+    public async Task Homura_Update_Generated()
+    {
+        var dao = new GeneratedBenchmarkEntityDao(typeof(VersionOrigin));
+        await using var conn = await dao.GetConnectionAsync();
+        foreach (var id in _ids)
+        {
+            await dao.UpdateAsync(new BenchmarkEntity
+            {
+                Id = id,
+                Name = "Updated",
+                Value = 999,
+                Description = "Updated description",
+                CreatedAt = DateTime.UtcNow.ToString("O")
+            }, conn);
+        }
+    }
+
+    [Benchmark(Description = "Homura Generated (Txn)")]
+    public async Task Homura_Update_GeneratedWithTransaction()
+    {
+        var dao = new GeneratedBenchmarkEntityDao(typeof(VersionOrigin));
+        await using var conn = await dao.GetConnectionAsync();
+        await using var txn = await conn.BeginTransactionAsync();
+        foreach (var id in _ids)
+        {
+            await dao.UpdateAsync(new BenchmarkEntity
+            {
+                Id = id,
+                Name = "Updated",
+                Value = 999,
+                Description = "Updated description",
+                CreatedAt = DateTime.UtcNow.ToString("O")
+            }, conn);
+        }
+        await txn.CommitAsync();
+    }
+
+    [Benchmark(Description = "Homura Generated (Bulk)")]
+    public async Task Homura_Update_GeneratedBulk()
+    {
+        var dao = new GeneratedBenchmarkEntityDao(typeof(VersionOrigin));
+        var entities = _ids.Select(id => new BenchmarkEntity
+        {
+            Id = id,
+            Name = "Updated",
+            Value = 999,
+            Description = "Updated description",
+            CreatedAt = DateTime.UtcNow.ToString("O")
+        });
+        await dao.UpdateBulkAsync(entities);
+    }
+
     [Benchmark(Description = "Dapper")]
     public async Task Dapper_Update()
     {
