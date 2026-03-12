@@ -12,6 +12,9 @@ namespace Homura.SourceGenerator
     {
         private const string GenerateDaoAttributeName = "Homura.ORM.Mapping.GenerateDaoAttribute";
         private const string ColumnAttributeName = "Homura.ORM.Mapping.ColumnAttribute";
+        private const string PrimaryKeyAttributeName = "Homura.ORM.Mapping.PrimaryKeyAttribute";
+        private const string SinceAttributeName = "Homura.ORM.Mapping.SinceAttribute";
+        private const string UntilAttributeName = "Homura.ORM.Mapping.UntilAttribute";
 
         public void Initialize(IncrementalGeneratorInitializationContext context)
         {
@@ -47,7 +50,8 @@ namespace Homura.SourceGenerator
                 : symbol.ContainingNamespace.ToDisplayString();
 
             var properties = new List<PropertyColumnInfo>();
-            CollectColumnProperties(symbol, properties);
+            bool hasVersionDependentColumns = false;
+            CollectColumnProperties(symbol, properties, ref hasVersionDependentColumns);
 
             return new EntityInfo
             {
@@ -57,13 +61,43 @@ namespace Homura.SourceGenerator
                 DaoName = daoName,
                 Properties = properties,
                 Accessibility = symbol.DeclaredAccessibility,
+                HasVersionDependentColumns = hasVersionDependentColumns,
             };
         }
 
-        private static void CollectColumnProperties(INamedTypeSymbol symbol, List<PropertyColumnInfo> properties)
+        private static void CollectColumnProperties(INamedTypeSymbol symbol, List<PropertyColumnInfo> properties, ref bool hasVersionDependentColumns)
         {
-            // Walk inheritance chain to collect all [Column] properties
+            // Collect class-level [PrimaryKey("Col1", "Col2")] column names
+            var classPkColumnNames = new HashSet<string>();
             var type = symbol;
+            while (type != null)
+            {
+                foreach (var classAttr in type.GetAttributes())
+                {
+                    if (classAttr.AttributeClass?.ToDisplayString() == PrimaryKeyAttributeName)
+                    {
+                        foreach (var arg in classAttr.ConstructorArguments)
+                        {
+                            if (arg.Kind == TypedConstantKind.Array)
+                            {
+                                foreach (var item in arg.Values)
+                                {
+                                    if (item.Value is string colName)
+                                        classPkColumnNames.Add(colName);
+                                }
+                            }
+                            else if (arg.Value is string colName)
+                            {
+                                classPkColumnNames.Add(colName);
+                            }
+                        }
+                    }
+                }
+                type = type.BaseType;
+            }
+
+            // Walk inheritance chain to collect all [Column] properties
+            type = symbol;
             while (type != null)
             {
                 foreach (var member in type.GetMembers())
@@ -89,6 +123,25 @@ namespace Homura.SourceGenerator
 
                     var safeGetMethod = GetSafeGetMethodName(prop.Type);
 
+                    // Check for [PrimaryKey] on property
+                    bool isPrimaryKey = prop.GetAttributes()
+                        .Any(a => a.AttributeClass?.ToDisplayString() == PrimaryKeyAttributeName);
+
+                    // Also check class-level PrimaryKey attribute
+                    if (!isPrimaryKey && classPkColumnNames.Contains(columnName))
+                        isPrimaryKey = true;
+
+                    // Check for [Since] or [Until]
+                    bool hasSinceOrUntil = prop.GetAttributes()
+                        .Any(a =>
+                        {
+                            var name = a.AttributeClass?.ToDisplayString();
+                            return name == SinceAttributeName || name == UntilAttributeName;
+                        });
+
+                    if (hasSinceOrUntil)
+                        hasVersionDependentColumns = true;
+
                     properties.Add(new PropertyColumnInfo
                     {
                         PropertyName = prop.Name,
@@ -98,6 +151,7 @@ namespace Homura.SourceGenerator
                         PropertyTypeName = prop.Type.ToDisplayString(),
                         IsReactiveProperty = IsReactivePropertyType(prop.Type),
                         ReactiveInnerTypeName = GetReactiveInnerType(prop.Type),
+                        IsPrimaryKey = isPrimaryKey,
                     });
                 }
 
@@ -174,6 +228,25 @@ namespace Homura.SourceGenerator
             }
         }
 
+        private static bool IsTypeProperty(PropertyColumnInfo prop)
+        {
+            return prop.PropertyTypeName == "System.Type";
+        }
+
+        private static string GenerateGetValueExpression(PropertyColumnInfo prop, string entityVar)
+        {
+            string rawValue;
+            if (prop.IsReactiveProperty)
+                rawValue = $"{entityVar}.{prop.PropertyName}.Value";
+            else
+                rawValue = $"{entityVar}.{prop.PropertyName}";
+
+            if (IsTypeProperty(prop))
+                return $"(object){rawValue}?.AssemblyQualifiedName ?? DBNull.Value";
+
+            return $"(object){rawValue} ?? DBNull.Value";
+        }
+
         private static string GenerateDaoSource(EntityInfo info)
         {
             var sb = new StringBuilder();
@@ -185,6 +258,7 @@ namespace Homura.SourceGenerator
             sb.AppendLine("using Homura.ORM.Setup;");
             sb.AppendLine("using System;");
             sb.AppendLine("using System.Data;");
+            sb.AppendLine("using System.Data.Common;");
             sb.AppendLine();
 
             if (info.Namespace != null)
@@ -226,12 +300,110 @@ namespace Homura.SourceGenerator
             sb.AppendLine("            return entity;");
             sb.AppendLine("        }");
 
+            // Generate Insert/Update fast path only if no version-dependent columns
+            if (!info.HasVersionDependentColumns)
+            {
+                GenerateInsertMethods(sb, info);
+                GenerateUpdateMethods(sb, info);
+            }
+
             sb.AppendLine("    }");
 
             if (info.Namespace != null)
                 sb.AppendLine("}");
 
             return sb.ToString();
+        }
+
+        private static void GenerateInsertMethods(StringBuilder sb, EntityInfo info)
+        {
+            var allColumns = info.Properties;
+            var columnNames = string.Join(", ", allColumns.Select(p => p.ColumnName));
+            var paramNames = string.Join(", ", allColumns.Select(p => $"@{p.ColumnName.ToLower()}"));
+
+            // SQL template constant
+            sb.AppendLine();
+            sb.AppendLine($"        private const string _insertSqlTemplate = \"INSERT INTO {{0}} ({columnNames}) VALUES ({paramNames})\";");
+
+            // TryBuildInsertCommand
+            sb.AppendLine();
+            sb.AppendLine($"        protected override bool TryBuildInsertCommand(DbCommand command, {info.EntityFullName} entity, string tableName)");
+            sb.AppendLine("        {");
+            sb.AppendLine("            command.CommandText = string.Format(_insertSqlTemplate, tableName);");
+
+            for (int i = 0; i < allColumns.Count; i++)
+            {
+                var prop = allColumns[i];
+                sb.AppendLine($"            var p{i} = command.CreateParameter();");
+                sb.AppendLine($"            p{i}.ParameterName = \"@{prop.ColumnName.ToLower()}\";");
+                sb.AppendLine($"            p{i}.Value = {GenerateGetValueExpression(prop, "entity")};");
+                sb.AppendLine($"            command.Parameters.Add(p{i});");
+            }
+
+            sb.AppendLine("            return true;");
+            sb.AppendLine("        }");
+
+            // TryUpdateInsertParameters
+            sb.AppendLine();
+            sb.AppendLine($"        protected override bool TryUpdateInsertParameters(DbCommand command, {info.EntityFullName} entity)");
+            sb.AppendLine("        {");
+
+            for (int i = 0; i < allColumns.Count; i++)
+            {
+                var prop = allColumns[i];
+                sb.AppendLine($"            command.Parameters[{i}].Value = {GenerateGetValueExpression(prop, "entity")};");
+            }
+
+            sb.AppendLine("            return true;");
+            sb.AppendLine("        }");
+        }
+
+        private static void GenerateUpdateMethods(StringBuilder sb, EntityInfo info)
+        {
+            var nonPkColumns = info.Properties.Where(p => !p.IsPrimaryKey).ToList();
+            var pkColumns = info.Properties.Where(p => p.IsPrimaryKey).ToList();
+
+            if (!pkColumns.Any()) return; // No PK, can't generate update
+
+            var setClauses = string.Join(", ", nonPkColumns.Select(p => $"{p.ColumnName} = @{p.ColumnName.ToLower()}"));
+            var whereClauses = string.Join(" AND ", pkColumns.Select(p => $"{p.ColumnName} = @{p.ColumnName.ToLower()}"));
+
+            // SQL template constant
+            sb.AppendLine();
+            sb.AppendLine($"        private const string _updateSqlTemplate = \"UPDATE {{0}} SET {setClauses} WHERE {whereClauses}\";");
+
+            // TryBuildUpdateCommand - parameters order: non-PK then PK (matching query builder behavior)
+            sb.AppendLine();
+            sb.AppendLine($"        protected override bool TryBuildUpdateCommand(DbCommand command, {info.EntityFullName} entity, string tableName)");
+            sb.AppendLine("        {");
+            sb.AppendLine("            command.CommandText = string.Format(_updateSqlTemplate, tableName);");
+
+            var orderedColumns = nonPkColumns.Concat(pkColumns).ToList();
+            for (int i = 0; i < orderedColumns.Count; i++)
+            {
+                var prop = orderedColumns[i];
+                sb.AppendLine($"            var p{i} = command.CreateParameter();");
+                sb.AppendLine($"            p{i}.ParameterName = \"@{prop.ColumnName.ToLower()}\";");
+                sb.AppendLine($"            p{i}.Value = {GenerateGetValueExpression(prop, "entity")};");
+                sb.AppendLine($"            command.Parameters.Add(p{i});");
+            }
+
+            sb.AppendLine("            return true;");
+            sb.AppendLine("        }");
+
+            // TryUpdateUpdateParameters
+            sb.AppendLine();
+            sb.AppendLine($"        protected override bool TryUpdateUpdateParameters(DbCommand command, {info.EntityFullName} entity)");
+            sb.AppendLine("        {");
+
+            for (int i = 0; i < orderedColumns.Count; i++)
+            {
+                var prop = orderedColumns[i];
+                sb.AppendLine($"            command.Parameters[{i}].Value = {GenerateGetValueExpression(prop, "entity")};");
+            }
+
+            sb.AppendLine("            return true;");
+            sb.AppendLine("        }");
         }
 
         private class EntityInfo
@@ -242,6 +414,7 @@ namespace Homura.SourceGenerator
             public string DaoName { get; set; }
             public List<PropertyColumnInfo> Properties { get; set; }
             public Accessibility Accessibility { get; set; }
+            public bool HasVersionDependentColumns { get; set; }
         }
 
         private class PropertyColumnInfo
@@ -253,6 +426,7 @@ namespace Homura.SourceGenerator
             public string PropertyTypeName { get; set; }
             public bool IsReactiveProperty { get; set; }
             public string ReactiveInnerTypeName { get; set; }
+            public bool IsPrimaryKey { get; set; }
         }
     }
 }
