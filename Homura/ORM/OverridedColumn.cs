@@ -23,25 +23,7 @@ namespace Homura.ORM
             _DBDataType = newDataType;
             _Constraints = newConstraints;
             _Order = newOrder;
-            PropertyGetter = (obj) =>
-            {
-                var getter = obj.GetType().GetProperty(_ColumnName);
-                var columnValue = getter.GetValue(obj);
-                if (columnValue is null)
-                {
-                    return null;
-                }
-                else if (columnValue.GetType().GetInterfaces().Contains(typeof(IReactiveProperty)))
-                {
-                    var rp = getter.GetValue(obj) as IReactiveProperty;
-                    var ret = rp.GetType().GetProperty("Value").GetValue(rp);
-                    return ret;
-                }
-                else
-                {
-                    return obj.GetType().GetProperty(_ColumnName).GetValue(obj);
-                }
-            };
+            PropertyGetter = baseColumn.PropertyGetter;
         }
 
         public Column BaseColumn { get; private set; }

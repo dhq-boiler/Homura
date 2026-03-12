@@ -5,5 +5,8 @@ Homura/bin/
 Homura/obj/
 Homura.SourceGenerator/bin/
 Homura.SourceGenerator/obj/
+Homura.Benchmark/bin/
+Homura.Benchmark/obj/
+BenchmarkDotNet.Artifacts/
 packages/
 .claude/settings.local.json
