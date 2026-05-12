@@ -300,11 +300,12 @@ namespace Homura.SourceGenerator
             sb.AppendLine("            return entity;");
             sb.AppendLine("        }");
 
-            // Generate Insert/Update fast path only if no version-dependent columns
+            // Generate Insert/Update/Select fast path only if no version-dependent columns
             if (!info.HasVersionDependentColumns)
             {
                 GenerateInsertMethods(sb, info);
                 GenerateUpdateMethods(sb, info);
+                GenerateSelectMethods(sb, info);
             }
 
             sb.AppendLine("    }");
@@ -356,6 +357,94 @@ namespace Homura.SourceGenerator
 
             sb.AppendLine("            return true;");
             sb.AppendLine("        }");
+        }
+
+        private static void GenerateSelectMethods(StringBuilder sb, EntityInfo info)
+        {
+            var allColumns = info.Properties;
+            var columnList = string.Join(", ", allColumns.Select(p => p.ColumnName));
+
+            // SQL template
+            sb.AppendLine();
+            sb.AppendLine($"        private const string _findAllSqlTemplate = \"SELECT {columnList} FROM {{0}}\";");
+
+            // GetFindAllFastSql
+            sb.AppendLine();
+            sb.AppendLine("        protected override string GetFindAllFastSql(string tableName)");
+            sb.AppendLine("            => string.Format(_findAllSqlTemplate, tableName);");
+
+            // PrecomputeOrdinals (returns empty array — ToEntityFast uses literal indices from SELECT order)
+            sb.AppendLine();
+            sb.AppendLine("        protected override int[] PrecomputeOrdinals(IDataRecord reader)");
+            sb.AppendLine("            => System.Array.Empty<int>();");
+
+            // ToEntityFast
+            sb.AppendLine();
+            sb.AppendLine($"        protected override {info.EntityFullName} ToEntityFast(IDataRecord reader, int[] ordinals)");
+            sb.AppendLine("        {");
+            sb.AppendLine($"            var entity = new {info.EntityFullName}();");
+
+            for (int i = 0; i < allColumns.Count; i++)
+            {
+                var prop = allColumns[i];
+                var readExpr = GenerateReaderReadExpression(prop, i);
+                if (prop.IsReactiveProperty)
+                    sb.AppendLine($"            entity.{prop.PropertyName}.Value = {readExpr};");
+                else
+                    sb.AppendLine($"            entity.{prop.PropertyName} = {readExpr};");
+            }
+
+            sb.AppendLine("            return entity;");
+            sb.AppendLine("        }");
+        }
+
+        private static string GenerateReaderReadExpression(PropertyColumnInfo prop, int index)
+        {
+            string typeName = prop.IsReactiveProperty ? prop.ReactiveInnerTypeName : prop.PropertyTypeName;
+            switch (typeName)
+            {
+                case "bool":
+                    return $"reader.GetBoolean({index})";
+                case "bool?":
+                    return $"reader.IsDBNull({index}) ? (bool?)null : reader.GetBoolean({index})";
+                case "char":
+                    return $"reader.IsDBNull({index}) ? char.MinValue : reader.GetChar({index})";
+                case "char?":
+                    return $"reader.IsDBNull({index}) ? (char?)null : reader.GetChar({index})";
+                case "string":
+                    return $"reader.IsDBNull({index}) ? null : reader.GetString({index})";
+                case "int":
+                    return $"reader.IsDBNull({index}) ? int.MinValue : reader.GetInt32({index})";
+                case "int?":
+                    return $"reader.IsDBNull({index}) ? (int?)null : reader.GetInt32({index})";
+                case "long":
+                    return $"reader.GetInt64({index})";
+                case "long?":
+                    return $"reader.IsDBNull({index}) ? (long?)null : reader.GetInt64({index})";
+                case "float":
+                    return $"reader.GetFloat({index})";
+                case "float?":
+                    return $"reader.IsDBNull({index}) ? (float?)null : reader.GetFloat({index})";
+                case "double":
+                    return $"reader.GetDouble({index})";
+                case "double?":
+                    return $"reader.IsDBNull({index}) ? (double?)null : reader.GetDouble({index})";
+                case "System.DateTime":
+                    return $"reader.GetDateTime({index})";
+                case "System.DateTime?":
+                    return $"reader.IsDBNull({index}) ? (System.DateTime?)null : reader.GetDateTime({index})";
+                case "System.Guid":
+                    return $"reader.IsDBNull({index}) ? System.Guid.Empty : reader.GetGuid({index})";
+                case "System.Guid?":
+                    return $"reader.IsDBNull({index}) ? (System.Guid?)null : reader.GetGuid({index})";
+                case "System.Type":
+                    return $"reader.IsDBNull({index}) ? null : System.Type.GetType(reader.GetString({index}))";
+                case "object":
+                    return $"reader.IsDBNull({index}) ? null : reader.GetValue({index})";
+                default:
+                    // Fallback: cast GetValue
+                    return $"reader.IsDBNull({index}) ? default({typeName}) : ({typeName})reader.GetValue({index})";
+            }
         }
 
         private static void GenerateUpdateMethods(StringBuilder sb, EntityInfo info)

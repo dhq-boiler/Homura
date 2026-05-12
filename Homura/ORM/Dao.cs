@@ -62,20 +62,29 @@ namespace Homura.ORM
             EntityVersionType = VersionHelper.GetVersionTypeFromDataVersionManager<E>(dataVersionManager);
         }
 
-        public Type EntityVersionType { get; set; }
+        private Type _entityVersionType;
+        private ITable _cachedTable;
+
+        public Type EntityVersionType
+        {
+            get => _entityVersionType;
+            set
+            {
+                if (!ReferenceEquals(_entityVersionType, value))
+                {
+                    _entityVersionType = value;
+                    _cachedTable = null;
+                }
+            }
+        }
 
         public ITable Table
         {
             get
             {
-                if (EntityVersionType != null)
-                {
-                    return new Table<E>(EntityVersionType);
-                }
-                else
-                {
-                    return new Table<E>();
-                }
+                return _cachedTable ??= _entityVersionType != null
+                    ? new Table<E>(_entityVersionType)
+                    : new Table<E>();
             }
         }
 
@@ -1565,6 +1574,23 @@ namespace Homura.ORM
         protected virtual bool TryUpdateUpdateParameters(DbCommand command, E entity)
             => false;
 
+        /// <summary>
+        /// Returns the SQL string for the FindAll fast path, or null to fall back to the QueryBuilder path.
+        /// </summary>
+        protected virtual string GetFindAllFastSql(string tableName) => null;
+
+        /// <summary>
+        /// Pre-computes column ordinals from the reader's schema, matching the column order expected by <see cref="ToEntityFast"/>.
+        /// Called once per query, before the read loop. Returns null to fall back.
+        /// </summary>
+        protected virtual int[] PrecomputeOrdinals(IDataRecord reader) => null;
+
+        /// <summary>
+        /// Reads a single entity from the reader using pre-cached ordinals.
+        /// Default falls back to <see cref="ToEntity"/>.
+        /// </summary>
+        protected virtual E ToEntityFast(IDataRecord reader, int[] ordinals) => ToEntity(reader);
+
         public async Task InsertAsync(E entity, DbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null)
         {
             InitializeColumnDefinitions();
@@ -1803,6 +1829,25 @@ namespace Homura.ORM
                         }
 
                         using var command = conn.CreateCommand();
+
+                        var fastSql = string.IsNullOrWhiteSpace(anotherDatabaseAliasName)
+                                      && (OverridedColumns == null || !OverridedColumns.Any())
+                            ? GetFindAllFastSql(TableName)
+                            : null;
+                        if (fastSql != null)
+                        {
+                            command.CommandText = fastSql;
+                            command.CommandType = CommandType.Text;
+                            LogManager.GetCurrentClassLogger().Debug(fastSql);
+                            using var fastReader = command.ExecuteReader();
+                            var ordinals = PrecomputeOrdinals(fastReader);
+                            while (fastReader.Read())
+                            {
+                                ret.Add(ToEntityFast(fastReader, ordinals));
+                            }
+                            return ret;
+                        }
+
                         var table = (Table<E>)Table.Clone();
                         if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName))
                         {
@@ -1871,6 +1916,25 @@ namespace Homura.ORM
                         }
 
                         await using var command = conn.CreateCommand();
+
+                        var fastSql = string.IsNullOrWhiteSpace(anotherDatabaseAliasName)
+                                      && (OverridedColumns == null || !OverridedColumns.Any())
+                            ? GetFindAllFastSql(TableName)
+                            : null;
+                        if (fastSql != null)
+                        {
+                            command.CommandText = fastSql;
+                            command.CommandType = CommandType.Text;
+                            LogManager.GetCurrentClassLogger().Debug(fastSql);
+                            await using var fastReader = await command.ExecuteReaderAsync().ConfigureAwait(false);
+                            var ordinals = PrecomputeOrdinals(fastReader);
+                            while (await fastReader.ReadAsync().ConfigureAwait(false))
+                            {
+                                ret.Add(ToEntityFast(fastReader, ordinals));
+                            }
+                            return ret;
+                        }
+
                         var table = (Table<E>)Table.Clone();
                         if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName))
                         {
