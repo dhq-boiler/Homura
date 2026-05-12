@@ -26,6 +26,8 @@ namespace Homura.ORM
 
         public Func<object, object> PropertyGetter { get; protected set; }
 
+        public PropertyInfo PropertyInfo { get; protected set; }
+
         private object GetValue(object obj)
         {
             return PropertyGetter(obj);

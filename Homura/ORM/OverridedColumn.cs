@@ -24,6 +24,7 @@ namespace Homura.ORM
             _Constraints = newConstraints;
             _Order = newOrder;
             PropertyGetter = baseColumn.PropertyGetter;
+            PropertyInfo = newPropInfo ?? baseColumn.PropertyInfo;
         }
 
         public Column BaseColumn { get; private set; }

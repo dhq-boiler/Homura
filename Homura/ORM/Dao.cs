@@ -202,6 +202,15 @@ namespace Homura.ORM
 
         protected E ToEntityInDefaultWay(IDataRecord reader, params IColumn[] columns)
         {
+            if (columns == null || columns.Length == 0)
+            {
+                // Fast path: per-(type, version) compiled reader bypasses LINQ Except,
+                // GetInterfaces probes, and the DelegateCache dictionary lookups.
+                var columnList = Columns as IReadOnlyList<IColumn> ?? Columns.ToList();
+                var compiled = EntityReaderCache<E>.Get(_entityVersionType, columnList);
+                return compiled(reader, Table);
+            }
+
             var ret = CreateInstance();
             const string VALUE_STR = "Value";
 
