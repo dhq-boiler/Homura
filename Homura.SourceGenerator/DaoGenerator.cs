@@ -438,7 +438,7 @@ namespace Homura.SourceGenerator
                 case "System.Guid?":
                     return $"reader.IsDBNull({index}) ? (System.Guid?)null : reader.GetGuid({index})";
                 case "System.Type":
-                    return $"reader.IsDBNull({index}) ? null : System.Type.GetType(reader.GetString({index}))";
+                    return $"reader.IsDBNull({index}) ? null : Homura.Extensions.Extensions.GetCachedType(reader.GetString({index}))";
                 case "object":
                     return $"reader.IsDBNull({index}) ? null : reader.GetValue({index})";
                 default:

@@ -1,11 +1,24 @@
 ﻿using Homura.ORM;
 using System;
+using System.Collections.Concurrent;
 using System.Data;
 
 namespace Homura.Extensions
 {
     public static class Extensions
     {
+        private static readonly ConcurrentDictionary<string, Type> s_typeCache = new();
+
+        /// <summary>
+        /// Resolves a Type by its assembly-qualified name with caching.
+        /// Repeated calls for the same FQN return the cached Type instance without re-resolving.
+        /// </summary>
+        public static Type GetCachedType(string assemblyQualifiedName)
+        {
+            if (assemblyQualifiedName is null) return null;
+            return s_typeCache.GetOrAdd(assemblyQualifiedName, static fqn => Type.GetType(fqn));
+        }
+
         public static Guid SafeGetGuid(this IDataRecord rdr, string columnName, ITable table)
         {
             if (!rdr.TryGetColumnIndex(columnName, out int index))
@@ -171,11 +184,10 @@ namespace Homura.Extensions
             if (!rdr.TryGetColumnIndex(columnName, out int index))
                 return null;
 
-            bool isNull = rdr.IsDBNull(index);
+            if (rdr.IsDBNull(index))
+                return null;
 
-            var FQDN = rdr.GetString(index);
-
-            return isNull ? null : Type.GetType(FQDN);
+            return GetCachedType(rdr.GetString(index));
         }
 
         public static object SafeGetObject(this IDataRecord rdr, string columnName, ITable table)
