@@ -7,7 +7,34 @@ namespace Homura.QueryBuilder.Core
 {
     public abstract class SyntaxBase : ISyntaxBase, IDisposable
     {
-        internal List<SyntaxBase> Relay { get; set; }
+        internal SyntaxBase Parent { get; private set; }
+        private List<SyntaxBase> _relayCache;
+
+        /// <summary>
+        /// Returns the rendering chain for this node (everything that should precede it).
+        /// Built lazily on first access; subsequent reads (including subquery splices that
+        /// mutate the list via AddRange) hit the cache. Construction no longer copies.
+        /// </summary>
+        internal List<SyntaxBase> Relay
+        {
+            get
+            {
+                if (_relayCache == null)
+                {
+                    _relayCache = new List<SyntaxBase>();
+                    if (Parent != null)
+                    {
+                        _relayCache.AddRange(Parent.Relay);
+                        _relayCache.Add(Parent);
+                    }
+                }
+                return _relayCache;
+            }
+            set
+            {
+                _relayCache = value;
+            }
+        }
 
         internal Dictionary<string, object> Parameters { get; set; }
 
@@ -17,7 +44,6 @@ namespace Homura.QueryBuilder.Core
 
         protected SyntaxBase()
         {
-            Relay = new List<SyntaxBase>();
             Parameters = new Dictionary<string, object>();
             LocalParameters = new List<string>();
             ParameterCount = 0;
@@ -25,8 +51,7 @@ namespace Homura.QueryBuilder.Core
 
         protected SyntaxBase(SyntaxBase syntaxBase)
         {
-            Relay = syntaxBase.Relay.ToList();
-            Relay.Add(syntaxBase);
+            Parent = syntaxBase;
             Parameters = syntaxBase.Parameters;
             LocalParameters = new List<string>();
             ParameterCount = syntaxBase.ParameterCount;
@@ -61,7 +86,7 @@ namespace Homura.QueryBuilder.Core
 
         internal List<SyntaxBase> PassRelay()
         {
-            var relay = Relay.ToList();
+            var relay = new List<SyntaxBase>(Relay);
             relay.Add(this);
             return relay;
         }
@@ -86,15 +111,23 @@ namespace Homura.QueryBuilder.Core
             {
                 if (disposing)
                 {
-                    foreach (var relay in Relay)
+                    if (_relayCache != null)
                     {
-                        relay.Dispose();
+                        foreach (var relay in _relayCache)
+                        {
+                            relay.Dispose();
+                        }
+                        _relayCache.Clear();
+                        _relayCache = null;
                     }
-                    Relay.Clear();
-                    Relay = null;
-                    Parameters.Clear();
+                    else
+                    {
+                        Parent?.Dispose();
+                    }
+                    Parent = null;
+                    Parameters?.Clear();
                     Parameters = null;
-                    LocalParameters.Clear();
+                    LocalParameters?.Clear();
                     LocalParameters = null;
                 }
 

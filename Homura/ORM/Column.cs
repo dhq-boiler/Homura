@@ -35,6 +35,7 @@ namespace Homura.ORM
             DBDataType = dbDataType;
             Constraints = constraints?.ToList();
             Order = order;
+            PropertyInfo = propertyInfo;
             if (propertyInfo != null)
             {
                 var isReactiveProperty = typeof(IReactiveProperty).IsAssignableFrom(propertyInfo.PropertyType);

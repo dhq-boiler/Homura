@@ -300,11 +300,15 @@ namespace Homura.SourceGenerator
             sb.AppendLine("            return entity;");
             sb.AppendLine("        }");
 
-            // Generate Insert/Update fast path only if no version-dependent columns
+            // Generate Insert/Update/Select/Delete fast path only if no version-dependent columns
             if (!info.HasVersionDependentColumns)
             {
                 GenerateInsertMethods(sb, info);
                 GenerateUpdateMethods(sb, info);
+                GenerateSelectMethods(sb, info);
+                GenerateFindByMethods(sb, info);
+                GenerateDeleteMethods(sb, info);
+                GeneratePrimaryKeyMethods(sb, info);
             }
 
             sb.AppendLine("    }");
@@ -356,6 +360,321 @@ namespace Homura.SourceGenerator
 
             sb.AppendLine("            return true;");
             sb.AppendLine("        }");
+        }
+
+        private static void GeneratePrimaryKeyMethods(StringBuilder sb, EntityInfo info)
+        {
+            var pkColumns = info.Properties.Where(p => p.IsPrimaryKey).ToList();
+            if (pkColumns.Count == 0) return;
+
+            var allColumns = info.Properties;
+            var columnList = string.Join(", ", allColumns.Select(p => p.ColumnName));
+            var whereClause = string.Join(" AND ", pkColumns.Select(p => $"{p.ColumnName} = @{p.ColumnName.ToLowerInvariant()}"));
+
+            // SQL template constants
+            sb.AppendLine();
+            sb.AppendLine($"        private const string _findByPkSqlTemplate = \"SELECT {columnList} FROM {{0}} WHERE {whereClause}\";");
+            sb.AppendLine();
+            sb.AppendLine($"        private const string _deleteByPkSqlTemplate = \"DELETE FROM {{0}} WHERE {whereClause}\";");
+
+            // Build C# parameter list: e.g. "System.Guid id, int otherKey"
+            var csharpParams = string.Join(", ", pkColumns.Select(p => $"{PkParamType(p)} {PkParamName(p)}"));
+
+            GenerateFindByPkBody(sb, info, pkColumns, csharpParams);
+            GenerateDeleteByPkBody(sb, info, pkColumns, csharpParams);
+        }
+
+        private static string PkParamType(PropertyColumnInfo prop)
+            => prop.IsReactiveProperty ? prop.ReactiveInnerTypeName : prop.PropertyTypeName;
+
+        private static string PkParamName(PropertyColumnInfo prop)
+        {
+            // camelCase: lower-case first char
+            var n = prop.PropertyName;
+            if (string.IsNullOrEmpty(n)) return n;
+            var lower = char.ToLowerInvariant(n[0]) + (n.Length > 1 ? n.Substring(1) : "");
+            return IsCSharpKeyword(lower) ? "@" + lower : lower;
+        }
+
+        private static bool IsCSharpKeyword(string s)
+        {
+            switch (s)
+            {
+                case "abstract": case "as": case "base": case "bool": case "break":
+                case "byte": case "case": case "catch": case "char": case "checked":
+                case "class": case "const": case "continue": case "decimal": case "default":
+                case "delegate": case "do": case "double": case "else": case "enum":
+                case "event": case "explicit": case "extern": case "false": case "finally":
+                case "fixed": case "float": case "for": case "foreach": case "goto":
+                case "if": case "implicit": case "in": case "int": case "interface":
+                case "internal": case "is": case "lock": case "long": case "namespace":
+                case "new": case "null": case "object": case "operator": case "out":
+                case "override": case "params": case "private": case "protected": case "public":
+                case "readonly": case "ref": case "return": case "sbyte": case "sealed":
+                case "short": case "sizeof": case "stackalloc": case "static": case "string":
+                case "struct": case "switch": case "this": case "throw": case "true":
+                case "try": case "typeof": case "uint": case "ulong": case "unchecked":
+                case "unsafe": case "ushort": case "using": case "virtual": case "void":
+                case "volatile": case "while":
+                    return true;
+                default: return false;
+            }
+        }
+
+        private static string PkBindValueExpression(PropertyColumnInfo prop, string paramName)
+        {
+            var t = PkParamType(prop);
+            if (t == "System.Type") return $"(object){paramName}?.AssemblyQualifiedName ?? DBNull.Value";
+            return $"(object){paramName} ?? DBNull.Value";
+        }
+
+        private static void GenerateFindByPkBody(StringBuilder sb, EntityInfo info, List<PropertyColumnInfo> pkColumns, string csharpParams)
+        {
+            sb.AppendLine();
+            sb.AppendLine($"        public async System.Threading.Tasks.Task<{info.EntityFullName}> FindByPrimaryKeyAsync({csharpParams}, System.Data.Common.DbConnection conn = null, System.TimeSpan? timeout = null)");
+            sb.AppendLine("        {");
+            sb.AppendLine("            timeout ??= System.TimeSpan.FromMinutes(5);");
+            sb.AppendLine("            var beginTime = System.DateTime.Now;");
+            sb.AppendLine("            var isTransaction = conn != null;");
+            sb.AppendLine("            System.Data.Common.DbConnection localConn = conn;");
+            sb.AppendLine("            try");
+            sb.AppendLine("            {");
+            sb.AppendLine("                if (!isTransaction) localConn = await GetConnectionAsync().ConfigureAwait(false);");
+            sb.AppendLine("                while ((System.DateTime.Now - beginTime) <= timeout)");
+            sb.AppendLine("                {");
+            sb.AppendLine("                    try");
+            sb.AppendLine("                    {");
+            sb.AppendLine("                        await using var command = localConn.CreateCommand();");
+            sb.AppendLine("                        command.CommandText = string.Format(_findByPkSqlTemplate, TableName);");
+            sb.AppendLine("                        command.CommandType = System.Data.CommandType.Text;");
+
+            for (int i = 0; i < pkColumns.Count; i++)
+            {
+                var pk = pkColumns[i];
+                var paramName = PkParamName(pk);
+                sb.AppendLine($"                        var p{i} = command.CreateParameter();");
+                sb.AppendLine($"                        p{i}.ParameterName = \"@{pk.ColumnName.ToLowerInvariant()}\";");
+                sb.AppendLine($"                        p{i}.Value = {PkBindValueExpression(pk, paramName)};");
+                sb.AppendLine($"                        command.Parameters.Add(p{i});");
+            }
+
+            sb.AppendLine("                        if (s_logger.IsDebugEnabled) s_logger.Debug(command.CommandText);");
+            sb.AppendLine("                        await using var reader = await command.ExecuteReaderAsync().ConfigureAwait(false);");
+            sb.AppendLine("                        if (!await reader.ReadAsync().ConfigureAwait(false)) return null;");
+            sb.AppendLine("                        return ToEntityFast(reader, null);");
+            sb.AppendLine("                    }");
+            sb.AppendLine("                    catch (System.Exception ex)");
+            sb.AppendLine("                    {");
+            sb.AppendLine("                        if (ex.Message.Contains(\"database is lock\")) { s_logger.Warn(\"database is lock\"); continue; }");
+            sb.AppendLine("                        s_logger.Error(ex);");
+            sb.AppendLine("                        throw;");
+            sb.AppendLine("                    }");
+            sb.AppendLine("                }");
+            sb.AppendLine("                throw new System.TimeoutException();");
+            sb.AppendLine("            }");
+            sb.AppendLine("            finally");
+            sb.AppendLine("            {");
+            sb.AppendLine("                if (!isTransaction && localConn != null) await localConn.DisposeAsync().ConfigureAwait(false);");
+            sb.AppendLine("            }");
+            sb.AppendLine("        }");
+        }
+
+        private static void GenerateDeleteByPkBody(StringBuilder sb, EntityInfo info, List<PropertyColumnInfo> pkColumns, string csharpParams)
+        {
+            sb.AppendLine();
+            sb.AppendLine($"        public async System.Threading.Tasks.Task<int> DeleteByPrimaryKeyAsync({csharpParams}, System.Data.Common.DbConnection conn = null, System.TimeSpan? timeout = null)");
+            sb.AppendLine("        {");
+            sb.AppendLine("            timeout ??= System.TimeSpan.FromMinutes(5);");
+            sb.AppendLine("            var beginTime = System.DateTime.Now;");
+            sb.AppendLine("            var isTransaction = conn != null;");
+            sb.AppendLine("            System.Data.Common.DbConnection localConn = conn;");
+            sb.AppendLine("            try");
+            sb.AppendLine("            {");
+            sb.AppendLine("                if (!isTransaction) localConn = await GetConnectionAsync().ConfigureAwait(false);");
+            sb.AppendLine("                while ((System.DateTime.Now - beginTime) <= timeout)");
+            sb.AppendLine("                {");
+            sb.AppendLine("                    try");
+            sb.AppendLine("                    {");
+            sb.AppendLine("                        await using var command = localConn.CreateCommand();");
+            sb.AppendLine("                        command.CommandText = string.Format(_deleteByPkSqlTemplate, TableName);");
+            sb.AppendLine("                        command.CommandType = System.Data.CommandType.Text;");
+
+            for (int i = 0; i < pkColumns.Count; i++)
+            {
+                var pk = pkColumns[i];
+                var paramName = PkParamName(pk);
+                sb.AppendLine($"                        var p{i} = command.CreateParameter();");
+                sb.AppendLine($"                        p{i}.ParameterName = \"@{pk.ColumnName.ToLowerInvariant()}\";");
+                sb.AppendLine($"                        p{i}.Value = {PkBindValueExpression(pk, paramName)};");
+                sb.AppendLine($"                        command.Parameters.Add(p{i});");
+            }
+
+            sb.AppendLine("                        if (s_logger.IsDebugEnabled) s_logger.Debug(command.CommandText);");
+            sb.AppendLine("                        return await command.ExecuteNonQueryAsync().ConfigureAwait(false);");
+            sb.AppendLine("                    }");
+            sb.AppendLine("                    catch (System.Exception ex)");
+            sb.AppendLine("                    {");
+            sb.AppendLine("                        if (ex.Message.Contains(\"database is lock\")) { s_logger.Warn(\"database is lock\"); continue; }");
+            sb.AppendLine("                        s_logger.Error(ex);");
+            sb.AppendLine("                        throw;");
+            sb.AppendLine("                    }");
+            sb.AppendLine("                }");
+            sb.AppendLine("                throw new System.TimeoutException();");
+            sb.AppendLine("            }");
+            sb.AppendLine("            finally");
+            sb.AppendLine("            {");
+            sb.AppendLine("                if (!isTransaction && localConn != null) await localConn.DisposeAsync().ConfigureAwait(false);");
+            sb.AppendLine("            }");
+            sb.AppendLine("        }");
+        }
+
+        private static void GenerateFindByMethods(StringBuilder sb, EntityInfo info)
+        {
+            var allColumns = info.Properties;
+            var columnList = string.Join(", ", allColumns.Select(p => p.ColumnName));
+
+            sb.AppendLine();
+            sb.AppendLine("        private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, string> s_findBySqlCache = new();");
+
+            sb.AppendLine();
+            sb.AppendLine($"        private const string _findBySelectPrefix = \"SELECT {columnList} FROM \";");
+
+            sb.AppendLine();
+            sb.AppendLine("        protected override string BuildFindByFastSql(string tableName, System.Collections.Generic.IReadOnlyList<string> orderedColumnNames)");
+            sb.AppendLine("        {");
+            sb.AppendLine("            var cacheKey = tableName + \"|\" + string.Join(\",\", orderedColumnNames);");
+            sb.AppendLine("            return s_findBySqlCache.GetOrAdd(cacheKey, _ =>");
+            sb.AppendLine("            {");
+            sb.AppendLine("                var sb = new System.Text.StringBuilder();");
+            sb.AppendLine("                sb.Append(_findBySelectPrefix).Append(tableName).Append(\" WHERE \");");
+            sb.AppendLine("                for (int i = 0; i < orderedColumnNames.Count; i++)");
+            sb.AppendLine("                {");
+            sb.AppendLine("                    if (i > 0) sb.Append(\" AND \");");
+            sb.AppendLine("                    var col = orderedColumnNames[i];");
+            sb.AppendLine("                    sb.Append(col).Append(\" = @\").Append(col.ToLowerInvariant());");
+            sb.AppendLine("                }");
+            sb.AppendLine("                return sb.ToString();");
+            sb.AppendLine("            });");
+            sb.AppendLine("        }");
+        }
+
+        private static void GenerateDeleteMethods(StringBuilder sb, EntityInfo info)
+        {
+            sb.AppendLine();
+            sb.AppendLine("        private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, string> s_deleteBySqlCache = new();");
+
+            sb.AppendLine();
+            sb.AppendLine("        private const string _deleteAllSqlTemplate = \"DELETE FROM {0}\";");
+
+            sb.AppendLine();
+            sb.AppendLine("        protected override string GetDeleteAllFastSql(string tableName)");
+            sb.AppendLine("            => string.Format(_deleteAllSqlTemplate, tableName);");
+
+            sb.AppendLine();
+            sb.AppendLine("        protected override string BuildDeleteFastSql(string tableName, System.Collections.Generic.IReadOnlyList<string> orderedColumnNames)");
+            sb.AppendLine("        {");
+            sb.AppendLine("            var cacheKey = tableName + \"|\" + string.Join(\",\", orderedColumnNames);");
+            sb.AppendLine("            return s_deleteBySqlCache.GetOrAdd(cacheKey, _ =>");
+            sb.AppendLine("            {");
+            sb.AppendLine("                var sb = new System.Text.StringBuilder();");
+            sb.AppendLine("                sb.Append(\"DELETE FROM \").Append(tableName).Append(\" WHERE \");");
+            sb.AppendLine("                for (int i = 0; i < orderedColumnNames.Count; i++)");
+            sb.AppendLine("                {");
+            sb.AppendLine("                    if (i > 0) sb.Append(\" AND \");");
+            sb.AppendLine("                    var col = orderedColumnNames[i];");
+            sb.AppendLine("                    sb.Append(col).Append(\" = @\").Append(col.ToLowerInvariant());");
+            sb.AppendLine("                }");
+            sb.AppendLine("                return sb.ToString();");
+            sb.AppendLine("            });");
+            sb.AppendLine("        }");
+        }
+
+        private static void GenerateSelectMethods(StringBuilder sb, EntityInfo info)
+        {
+            var allColumns = info.Properties;
+            var columnList = string.Join(", ", allColumns.Select(p => p.ColumnName));
+
+            // SQL template
+            sb.AppendLine();
+            sb.AppendLine($"        private const string _findAllSqlTemplate = \"SELECT {columnList} FROM {{0}}\";");
+
+            // GetFindAllFastSql
+            sb.AppendLine();
+            sb.AppendLine("        protected override string GetFindAllFastSql(string tableName)");
+            sb.AppendLine("            => string.Format(_findAllSqlTemplate, tableName);");
+
+            // PrecomputeOrdinals (returns empty array — ToEntityFast uses literal indices from SELECT order)
+            sb.AppendLine();
+            sb.AppendLine("        protected override int[] PrecomputeOrdinals(IDataRecord reader)");
+            sb.AppendLine("            => System.Array.Empty<int>();");
+
+            // ToEntityFast
+            sb.AppendLine();
+            sb.AppendLine($"        protected override {info.EntityFullName} ToEntityFast(IDataRecord reader, int[] ordinals)");
+            sb.AppendLine("        {");
+            sb.AppendLine($"            var entity = new {info.EntityFullName}();");
+
+            for (int i = 0; i < allColumns.Count; i++)
+            {
+                var prop = allColumns[i];
+                var readExpr = GenerateReaderReadExpression(prop, i);
+                if (prop.IsReactiveProperty)
+                    sb.AppendLine($"            entity.{prop.PropertyName}.Value = {readExpr};");
+                else
+                    sb.AppendLine($"            entity.{prop.PropertyName} = {readExpr};");
+            }
+
+            sb.AppendLine("            return entity;");
+            sb.AppendLine("        }");
+        }
+
+        private static string GenerateReaderReadExpression(PropertyColumnInfo prop, int index)
+        {
+            string typeName = prop.IsReactiveProperty ? prop.ReactiveInnerTypeName : prop.PropertyTypeName;
+            switch (typeName)
+            {
+                case "bool":
+                    return $"reader.GetBoolean({index})";
+                case "bool?":
+                    return $"reader.IsDBNull({index}) ? (bool?)null : reader.GetBoolean({index})";
+                case "char":
+                    return $"reader.IsDBNull({index}) ? char.MinValue : reader.GetChar({index})";
+                case "char?":
+                    return $"reader.IsDBNull({index}) ? (char?)null : reader.GetChar({index})";
+                case "string":
+                    return $"reader.IsDBNull({index}) ? null : reader.GetString({index})";
+                case "int":
+                    return $"reader.IsDBNull({index}) ? int.MinValue : reader.GetInt32({index})";
+                case "int?":
+                    return $"reader.IsDBNull({index}) ? (int?)null : reader.GetInt32({index})";
+                case "long":
+                    return $"reader.GetInt64({index})";
+                case "long?":
+                    return $"reader.IsDBNull({index}) ? (long?)null : reader.GetInt64({index})";
+                case "float":
+                    return $"reader.GetFloat({index})";
+                case "float?":
+                    return $"reader.IsDBNull({index}) ? (float?)null : reader.GetFloat({index})";
+                case "double":
+                    return $"reader.GetDouble({index})";
+                case "double?":
+                    return $"reader.IsDBNull({index}) ? (double?)null : reader.GetDouble({index})";
+                case "System.DateTime":
+                    return $"reader.GetDateTime({index})";
+                case "System.DateTime?":
+                    return $"reader.IsDBNull({index}) ? (System.DateTime?)null : reader.GetDateTime({index})";
+                case "System.Guid":
+                    return $"reader.IsDBNull({index}) ? System.Guid.Empty : reader.GetGuid({index})";
+                case "System.Guid?":
+                    return $"reader.IsDBNull({index}) ? (System.Guid?)null : reader.GetGuid({index})";
+                case "System.Type":
+                    return $"reader.IsDBNull({index}) ? null : Homura.Extensions.Extensions.GetCachedType(reader.GetString({index}))";
+                case "object":
+                    return $"reader.IsDBNull({index}) ? null : reader.GetValue({index})";
+                default:
+                    // Fallback: cast GetValue
+                    return $"reader.IsDBNull({index}) ? default({typeName}) : ({typeName})reader.GetValue({index})";
+            }
         }
 
         private static void GenerateUpdateMethods(StringBuilder sb, EntityInfo info)

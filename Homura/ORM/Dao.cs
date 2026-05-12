@@ -22,6 +22,8 @@ namespace Homura.ORM
 {
     public abstract class Dao<E> : MustInitialize<Type>, IDao<E> where E : EntityBaseObject, new()
     {
+        protected static readonly Logger s_logger = LogManager.GetCurrentClassLogger();
+
         public static readonly string s_COLUMN_NAME = "COLUMN_NAME";
         public static readonly string s_IS_NULLABLE = "IS_NULLABLE";
         public static readonly string s_DATA_TYPE = "DATA_TYPE";
@@ -62,20 +64,29 @@ namespace Homura.ORM
             EntityVersionType = VersionHelper.GetVersionTypeFromDataVersionManager<E>(dataVersionManager);
         }
 
-        public Type EntityVersionType { get; set; }
+        private Type _entityVersionType;
+        private ITable _cachedTable;
+
+        public Type EntityVersionType
+        {
+            get => _entityVersionType;
+            set
+            {
+                if (!ReferenceEquals(_entityVersionType, value))
+                {
+                    _entityVersionType = value;
+                    _cachedTable = null;
+                }
+            }
+        }
 
         public ITable Table
         {
             get
             {
-                if (EntityVersionType != null)
-                {
-                    return new Table<E>(EntityVersionType);
-                }
-                else
-                {
-                    return new Table<E>();
-                }
+                return _cachedTable ??= _entityVersionType != null
+                    ? new Table<E>(_entityVersionType)
+                    : new Table<E>();
             }
         }
 
@@ -191,6 +202,15 @@ namespace Homura.ORM
 
         protected E ToEntityInDefaultWay(IDataRecord reader, params IColumn[] columns)
         {
+            if (columns == null || columns.Length == 0)
+            {
+                // Fast path: per-(type, version) compiled reader bypasses LINQ Except,
+                // GetInterfaces probes, and the DelegateCache dictionary lookups.
+                var columnList = Columns as IReadOnlyList<IColumn> ?? Columns.ToList();
+                var compiled = EntityReaderCache<E>.Get(_entityVersionType, columnList);
+                return compiled(reader, Table);
+            }
+
             var ret = CreateInstance();
             const string VALUE_STR = "Value";
 
@@ -1036,7 +1056,7 @@ namespace Homura.ORM
                 using var conn = GetConnection();
                 var sql = $"create table if not exists {TableName}";
                 DefineColumns(ref sql, Columns);
-                LogManager.GetCurrentClassLogger().Debug(sql);
+                s_logger.Debug(sql);
                 conn.Execute(sql);
             }, timeout);
         }
@@ -1048,7 +1068,7 @@ namespace Homura.ORM
                 await using var conn = await GetConnectionAsync().ConfigureAwait(false);
                 var sql = $"create table if not exists {TableName}";
                 DefineColumns(ref sql, Columns);
-                LogManager.GetCurrentClassLogger().Debug(sql);
+                s_logger.Debug(sql);
                 await conn.ExecuteAsync(sql).ConfigureAwait(false);
             }), timeout);
         }
@@ -1059,7 +1079,7 @@ namespace Homura.ORM
             {
                 using var conn = GetConnection();
                 var sql = $"drop table if exists {TableName}";
-                LogManager.GetCurrentClassLogger().Debug(sql);
+                s_logger.Debug(sql);
                 conn.Execute(sql);
             }, timeout);
         }
@@ -1070,7 +1090,7 @@ namespace Homura.ORM
             {
                 await using var conn = await GetConnectionAsync().ConfigureAwait(false);
                 var sql = $"drop table if exists {TableName}";
-                LogManager.GetCurrentClassLogger().Debug(sql);
+                s_logger.Debug(sql);
                 await conn.ExecuteAsync(sql).ConfigureAwait(false);
             }), timeout).ConfigureAwait(false);
         }
@@ -1106,7 +1126,7 @@ namespace Homura.ORM
 
                 using var conn = GetConnection();
                 var sql = $"create index if not exists {indexName} on {TableName}({indexPropertyName})";
-                LogManager.GetCurrentClassLogger().Debug(sql);
+                s_logger.Debug(sql);
                 var result = conn.Execute(sql);
                 if (result != -1)
                 {
@@ -1124,7 +1144,7 @@ namespace Homura.ORM
                 var indexName = $"index_{TableName}_{indexPropertyName}";
                 await using var conn = await GetConnectionAsync().ConfigureAwait(false);
                 var sql = $"create index if not exists {indexName} on {TableName}({indexPropertyName})";
-                LogManager.GetCurrentClassLogger().Debug(sql);
+                s_logger.Debug(sql);
                 var result = await conn.ExecuteAsync(sql).ConfigureAwait(false);
                 if (result != -1)
                 {
@@ -1163,7 +1183,7 @@ namespace Homura.ORM
             }
             sql += ")";
 
-            LogManager.GetCurrentClassLogger().Debug(sql);
+            s_logger.Debug(sql);
             var result = conn.Execute(sql);
             if (result != -1)
             {
@@ -1201,7 +1221,7 @@ namespace Homura.ORM
             }
             sql += ")";
 
-            LogManager.GetCurrentClassLogger().Debug(sql);
+            s_logger.Debug(sql);
             var result = await conn.ExecuteAsync(sql).ConfigureAwait(false);
             if (result != -1)
             {
@@ -1261,7 +1281,7 @@ namespace Homura.ORM
 
                     command.CommandText = sql;
 
-                    LogManager.GetCurrentClassLogger().Debug(sql);
+                    s_logger.Debug(sql);
                     using var reader = command.ExecuteReader();
                     reader.Read();
                     return reader.GetInt32(reader.GetOrdinal("Count"));
@@ -1287,7 +1307,7 @@ namespace Homura.ORM
 
                     command.CommandText = sql;
 
-                    LogManager.GetCurrentClassLogger().Debug(sql);
+                    s_logger.Debug(sql);
                     await using var reader = await command.ExecuteReaderAsync().ConfigureAwait(false);
                     await reader.ReadAsync().ConfigureAwait(false);
                     return reader.GetInt32(reader.GetOrdinal("Count"));
@@ -1316,7 +1336,7 @@ namespace Homura.ORM
                     command.CommandType = CommandType.Text;
                     query.SetParameters(command);
 
-                    LogManager.GetCurrentClassLogger().Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
+                    if (s_logger.IsDebugEnabled) s_logger.Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
                     using var reader = command.ExecuteReader();
                     reader.Read();
                     return reader.GetInt32(reader.GetOrdinal("Count"));
@@ -1345,7 +1365,7 @@ namespace Homura.ORM
                     command.CommandType = CommandType.Text;
                     query.SetParameters(command);
 
-                    LogManager.GetCurrentClassLogger().Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
+                    if (s_logger.IsDebugEnabled) s_logger.Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
                     await using var reader = await command.ExecuteReaderAsync().ConfigureAwait(false);
                     await reader.ReadAsync().ConfigureAwait(false);
                     return reader.GetInt32(reader.GetOrdinal("Count"));
@@ -1373,7 +1393,7 @@ namespace Homura.ORM
 
                     query.SetParameters(command);
 
-                    LogManager.GetCurrentClassLogger().Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
+                    if (s_logger.IsDebugEnabled) s_logger.Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
                     command.ExecuteNonQuery();
                 }, conn);
             }, timeout);
@@ -1399,7 +1419,7 @@ namespace Homura.ORM
 
                     query.SetParameters(command);
 
-                    LogManager.GetCurrentClassLogger().Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
+                    if (s_logger.IsDebugEnabled) s_logger.Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
                     await command.ExecuteNonQueryAsync().ConfigureAwait(false);
                 }, conn).ConfigureAwait(false);
 
@@ -1413,6 +1433,14 @@ namespace Homura.ORM
                 QueryHelper.ForDao.ConnectionInternal(this, new Action<DbConnection>((connection) =>
                 {
                     using var command = connection.CreateCommand();
+
+                    if (TryPrepareDeleteAllFastCommand(command, anotherDatabaseAliasName))
+                    {
+                        s_logger.Debug(command.CommandText);
+                        command.ExecuteNonQuery();
+                        return;
+                    }
+
                     var table = (Table<E>)Table.Clone();
                     if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName))
                     {
@@ -1426,7 +1454,7 @@ namespace Homura.ORM
 
                     query.SetParameters(command);
 
-                    LogManager.GetCurrentClassLogger().Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
+                    if (s_logger.IsDebugEnabled) s_logger.Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
                     var deleted = command.ExecuteNonQuery();
                 }), conn);
             }, timeout);
@@ -1439,6 +1467,14 @@ namespace Homura.ORM
                 await QueryHelper.ForDao.ConnectionInternalAsync(this, async (connection) =>
                 {
                     await using var command = connection.CreateCommand();
+
+                    if (TryPrepareDeleteAllFastCommand(command, anotherDatabaseAliasName))
+                    {
+                        s_logger.Debug(command.CommandText);
+                        await command.ExecuteNonQueryAsync().ConfigureAwait(false);
+                        return;
+                    }
+
                     var table = (Table<E>)Table.Clone();
                     if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName))
                     {
@@ -1452,7 +1488,7 @@ namespace Homura.ORM
 
                     query.SetParameters(command);
 
-                    LogManager.GetCurrentClassLogger().Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
+                    if (s_logger.IsDebugEnabled) s_logger.Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
                     var deleted = await command.ExecuteNonQueryAsync().ConfigureAwait(false);
                 }, conn).ConfigureAwait(false);
             }, timeout).ConfigureAwait(false);
@@ -1465,6 +1501,14 @@ namespace Homura.ORM
                 QueryHelper.ForDao.ConnectionInternal(this, new Action<DbConnection>((connection) =>
                 {
                     using var command = connection.CreateCommand();
+
+                    if (TryPrepareDeleteFastCommand(command, idDic, anotherDatabaseAliasName))
+                    {
+                        s_logger.Debug(command.CommandText);
+                        command.ExecuteNonQuery();
+                        return;
+                    }
+
                     var table = (Table<E>)Table.Clone();
                     if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName))
                     {
@@ -1479,7 +1523,7 @@ namespace Homura.ORM
 
                     query.SetParameters(command);
 
-                    LogManager.GetCurrentClassLogger().Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
+                    if (s_logger.IsDebugEnabled) s_logger.Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
                     var deleted = command.ExecuteNonQuery();
                 }), conn);
             }, timeout);
@@ -1492,6 +1536,14 @@ namespace Homura.ORM
                 await QueryHelper.ForDao.ConnectionInternalAsync(this, async (connection) =>
                 {
                     await using var command = connection.CreateCommand();
+
+                    if (TryPrepareDeleteFastCommand(command, idDic, anotherDatabaseAliasName))
+                    {
+                        s_logger.Debug(command.CommandText);
+                        await command.ExecuteNonQueryAsync().ConfigureAwait(false);
+                        return;
+                    }
+
                     var table = (Table<E>)Table.Clone();
                     if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName))
                     {
@@ -1506,7 +1558,7 @@ namespace Homura.ORM
 
                     query.SetParameters(command);
 
-                    LogManager.GetCurrentClassLogger().Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
+                    if (s_logger.IsDebugEnabled) s_logger.Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
                     var deleted = await command.ExecuteNonQueryAsync().ConfigureAwait(false);
                 }, conn).ConfigureAwait(false);
             }, timeout).ConfigureAwait(false);
@@ -1543,7 +1595,7 @@ namespace Homura.ORM
                     command.CommandText = sql;
                     query.SetParameters(command);
 
-                    LogManager.GetCurrentClassLogger().Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
+                    if (s_logger.IsDebugEnabled) s_logger.Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
                     var inserted = command.ExecuteNonQuery();
                     if (inserted == 0)
                     {
@@ -1565,6 +1617,91 @@ namespace Homura.ORM
         protected virtual bool TryUpdateUpdateParameters(DbCommand command, E entity)
             => false;
 
+        /// <summary>
+        /// Returns the SQL string for the FindAll fast path, or null to fall back to the QueryBuilder path.
+        /// </summary>
+        protected virtual string GetFindAllFastSql(string tableName) => null;
+
+        /// <summary>
+        /// Pre-computes column ordinals from the reader's schema, matching the column order expected by <see cref="ToEntityFast"/>.
+        /// Called once per query, before the read loop. Returns null to fall back.
+        /// </summary>
+        protected virtual int[] PrecomputeOrdinals(IDataRecord reader) => null;
+
+        /// <summary>
+        /// Reads a single entity from the reader using pre-cached ordinals.
+        /// Default falls back to <see cref="ToEntity"/>.
+        /// </summary>
+        protected virtual E ToEntityFast(IDataRecord reader, int[] ordinals) => ToEntity(reader);
+
+        /// <summary>
+        /// Returns the SQL string for a FindBy fast path keyed by the given column names,
+        /// or null to fall back to the QueryBuilder path. Parameter names follow the
+        /// pattern '@' + column-name-lowercase.
+        /// </summary>
+        protected virtual string BuildFindByFastSql(string tableName, IReadOnlyList<string> orderedColumnNames) => null;
+
+        /// <summary>
+        /// Returns the SQL string for a Delete-by-dictionary fast path keyed by the given
+        /// column names, or null to fall back to the QueryBuilder path. Parameter names
+        /// follow the pattern '@' + column-name-lowercase.
+        /// </summary>
+        protected virtual string BuildDeleteFastSql(string tableName, IReadOnlyList<string> orderedColumnNames) => null;
+
+        /// <summary>
+        /// Returns the SQL string for a DeleteAll fast path, or null to fall back.
+        /// </summary>
+        protected virtual string GetDeleteAllFastSql(string tableName) => null;
+
+        private bool TryPrepareKeyEqualToValueFast(DbCommand command, Dictionary<string, object> idDic, string anotherDatabaseAliasName,
+                                                   System.Func<string, IReadOnlyList<string>, string> sqlBuilder)
+        {
+            if (idDic == null || idDic.Count == 0) return false;
+            if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName)) return false;
+            if (OverridedColumns.Count > 0) return false;
+
+            var orderedKeys = new List<string>(idDic.Count);
+            foreach (var k in idDic.Keys) orderedKeys.Add(k);
+            orderedKeys.Sort(StringComparer.Ordinal);
+
+            var fastSql = sqlBuilder(TableName, orderedKeys);
+            if (fastSql == null) return false;
+
+            command.CommandText = fastSql;
+            command.CommandType = CommandType.Text;
+            foreach (var key in orderedKeys)
+            {
+                var p = command.CreateParameter();
+                p.ParameterName = "@" + key.ToLowerInvariant();
+                var raw = idDic[key];
+                p.Value = raw switch
+                {
+                    null => DBNull.Value,
+                    Type t => (object)t.AssemblyQualifiedName,
+                    _ => raw,
+                };
+                command.Parameters.Add(p);
+            }
+            return true;
+        }
+
+        private bool TryPrepareFindByFastCommand(DbCommand command, Dictionary<string, object> idDic, string anotherDatabaseAliasName)
+            => TryPrepareKeyEqualToValueFast(command, idDic, anotherDatabaseAliasName, BuildFindByFastSql);
+
+        private bool TryPrepareDeleteFastCommand(DbCommand command, Dictionary<string, object> idDic, string anotherDatabaseAliasName)
+            => TryPrepareKeyEqualToValueFast(command, idDic, anotherDatabaseAliasName, BuildDeleteFastSql);
+
+        private bool TryPrepareDeleteAllFastCommand(DbCommand command, string anotherDatabaseAliasName)
+        {
+            if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName)) return false;
+            if (OverridedColumns.Count > 0) return false;
+            var fastSql = GetDeleteAllFastSql(TableName);
+            if (fastSql == null) return false;
+            command.CommandText = fastSql;
+            command.CommandType = CommandType.Text;
+            return true;
+        }
+
         public async Task InsertAsync(E entity, DbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null)
         {
             InitializeColumnDefinitions();
@@ -1578,7 +1715,7 @@ namespace Homura.ORM
             }
 
             bool useFastPath = string.IsNullOrWhiteSpace(anotherDatabaseAliasName)
-                && (OverridedColumns == null || !OverridedColumns.Any());
+                && OverridedColumns.Count == 0;
 
             await QueryHelper.KeepTryingUntilProcessSucceedAsync(async () =>
             {
@@ -1613,7 +1750,7 @@ namespace Homura.ORM
                     command.CommandText = sql;
                     query.SetParameters(command);
 
-                    LogManager.GetCurrentClassLogger().Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
+                    if (s_logger.IsDebugEnabled) s_logger.Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
                     var inserted2 = await command.ExecuteNonQueryAsync().ConfigureAwait(false);
                     if (inserted2 == 0)
                     {
@@ -1642,7 +1779,7 @@ namespace Homura.ORM
             }
 
             bool useFastPath = string.IsNullOrWhiteSpace(anotherDatabaseAliasName)
-                && (OverridedColumns == null || !OverridedColumns.Any());
+                && OverridedColumns.Count == 0;
 
             await QueryHelper.KeepTryingUntilProcessSucceedAsync(async () =>
             {
@@ -1658,7 +1795,6 @@ namespace Homura.ORM
                             transaction = await connection.BeginTransactionAsync().ConfigureAwait(false);
                         }
 
-                        var logger = LogManager.GetCurrentClassLogger();
                         await using var command = connection.CreateCommand();
                         if (transaction != null)
                         {
@@ -1704,7 +1840,7 @@ namespace Homura.ORM
                         command.CommandText = sql;
                         query.SetParameters(command);
 
-                        logger.Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
+                        if (s_logger.IsDebugEnabled) s_logger.Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
                         var inserted = await command.ExecuteNonQueryAsync().ConfigureAwait(false);
                         if (inserted == 0)
                         {
@@ -1728,7 +1864,7 @@ namespace Homura.ORM
                                 }
                             }
 
-                            logger.Debug(sql);
+                            s_logger.Debug(sql);
                             inserted = await command.ExecuteNonQueryAsync().ConfigureAwait(false);
                             if (inserted == 0)
                             {
@@ -1803,6 +1939,25 @@ namespace Homura.ORM
                         }
 
                         using var command = conn.CreateCommand();
+
+                        var fastSql = string.IsNullOrWhiteSpace(anotherDatabaseAliasName)
+                                      && OverridedColumns.Count == 0
+                            ? GetFindAllFastSql(TableName)
+                            : null;
+                        if (fastSql != null)
+                        {
+                            command.CommandText = fastSql;
+                            command.CommandType = CommandType.Text;
+                            s_logger.Debug(fastSql);
+                            using var fastReader = command.ExecuteReader();
+                            var ordinals = PrecomputeOrdinals(fastReader);
+                            while (fastReader.Read())
+                            {
+                                ret.Add(ToEntityFast(fastReader, ordinals));
+                            }
+                            return ret;
+                        }
+
                         var table = (Table<E>)Table.Clone();
                         if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName))
                         {
@@ -1814,7 +1969,7 @@ namespace Homura.ORM
                         command.CommandText = sql;
                         command.CommandType = CommandType.Text;
 
-                        LogManager.GetCurrentClassLogger().Debug(sql);
+                        s_logger.Debug(sql);
                         using var reader = command.ExecuteReader();
                         while (reader.Read())
                         {
@@ -1835,12 +1990,12 @@ namespace Homura.ORM
                 {
                     if (ex.Message.Contains("database is lock"))
                     {
-                        LogManager.GetCurrentClassLogger().Warn("database is lock");
+                        s_logger.Warn("database is lock");
                         continue;
                     }
                     else
                     {
-                        LogManager.GetCurrentClassLogger().Error(ex);
+                        s_logger.Error(ex);
                         throw;
                     }
                 }
@@ -1871,6 +2026,25 @@ namespace Homura.ORM
                         }
 
                         await using var command = conn.CreateCommand();
+
+                        var fastSql = string.IsNullOrWhiteSpace(anotherDatabaseAliasName)
+                                      && OverridedColumns.Count == 0
+                            ? GetFindAllFastSql(TableName)
+                            : null;
+                        if (fastSql != null)
+                        {
+                            command.CommandText = fastSql;
+                            command.CommandType = CommandType.Text;
+                            s_logger.Debug(fastSql);
+                            await using var fastReader = await command.ExecuteReaderAsync().ConfigureAwait(false);
+                            var ordinals = PrecomputeOrdinals(fastReader);
+                            while (await fastReader.ReadAsync().ConfigureAwait(false))
+                            {
+                                ret.Add(ToEntityFast(fastReader, ordinals));
+                            }
+                            return ret;
+                        }
+
                         var table = (Table<E>)Table.Clone();
                         if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName))
                         {
@@ -1882,7 +2056,7 @@ namespace Homura.ORM
                         command.CommandText = sql;
                         command.CommandType = CommandType.Text;
 
-                        LogManager.GetCurrentClassLogger().Debug(sql);
+                        s_logger.Debug(sql);
                         await using var reader = await command.ExecuteReaderAsync().ConfigureAwait(false);
                         while (await reader.ReadAsync().ConfigureAwait(false))
                         {
@@ -1903,12 +2077,12 @@ namespace Homura.ORM
                 {
                     if (ex.Message.Contains("database is lock"))
                     {
-                        LogManager.GetCurrentClassLogger().Warn("database is lock");
+                        s_logger.Warn("database is lock");
                         continue;
                     }
                     else
                     {
-                        LogManager.GetCurrentClassLogger().Error(ex);
+                        s_logger.Error(ex);
                         throw;
                     }
                 }
@@ -1940,6 +2114,19 @@ namespace Homura.ORM
                     {
 
                         using var command = conn.CreateCommand();
+
+                        if (TryPrepareFindByFastCommand(command, idDic, anotherDatabaseAliasName))
+                        {
+                            s_logger.Debug(command.CommandText);
+                            using var fastReader = command.ExecuteReader();
+                            var ordinals = PrecomputeOrdinals(fastReader);
+                            while (fastReader.Read())
+                            {
+                                ret.Add(ToEntityFast(fastReader, ordinals));
+                            }
+                            return ret;
+                        }
+
                         var table = (Table<E>)Table.Clone();
                         if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName))
                         {
@@ -1953,7 +2140,7 @@ namespace Homura.ORM
                         command.CommandType = CommandType.Text;
                         query.SetParameters(command);
 
-                        LogManager.GetCurrentClassLogger().Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
+                        if (s_logger.IsDebugEnabled) s_logger.Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
                         using var reader = command.ExecuteReader();
                         while (reader.Read())
                         {
@@ -1966,12 +2153,12 @@ namespace Homura.ORM
                     {
                         if (ex.Message.Contains("database is lock"))
                         {
-                            LogManager.GetCurrentClassLogger().Warn("database is lock");
+                            s_logger.Warn("database is lock");
                             continue;
                         }
                         else
                         {
-                            LogManager.GetCurrentClassLogger().Error(ex);
+                            s_logger.Error(ex);
                             throw;
                         }
                     }
@@ -2011,6 +2198,19 @@ namespace Homura.ORM
                         try
                         {
                             await using var command = conn.CreateCommand();
+
+                            if (TryPrepareFindByFastCommand(command, idDic, anotherDatabaseAliasName))
+                            {
+                                s_logger.Debug(command.CommandText);
+                                await using var fastReader = await command.ExecuteReaderAsync().ConfigureAwait(false);
+                                var ordinals = PrecomputeOrdinals(fastReader);
+                                while (await fastReader.ReadAsync().ConfigureAwait(false))
+                                {
+                                    ret.Add(ToEntityFast(fastReader, ordinals));
+                                }
+                                return;
+                            }
+
                             var table = (Table<E>)Table.Clone();
                             if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName))
                             {
@@ -2024,7 +2224,7 @@ namespace Homura.ORM
                             command.CommandType = CommandType.Text;
                             query.SetParameters(command);
 
-                            LogManager.GetCurrentClassLogger().Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
+                            if (s_logger.IsDebugEnabled) s_logger.Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
                             await using var reader = await command.ExecuteReaderAsync().ConfigureAwait(false);
                             while (await reader.ReadAsync().ConfigureAwait(false))
                             {
@@ -2037,12 +2237,12 @@ namespace Homura.ORM
                         {
                             if (ex.Message.Contains("database is lock"))
                             {
-                                LogManager.GetCurrentClassLogger().Warn("database is lock");
+                                s_logger.Warn("database is lock");
                                 continue;
                             }
                             else
                             {
-                                LogManager.GetCurrentClassLogger().Error(ex);
+                                s_logger.Error(ex);
                                 throw;
                             }
                         }
@@ -2086,7 +2286,7 @@ namespace Homura.ORM
                     command.CommandText = sql;
                     query.SetParameters(command);
 
-                    LogManager.GetCurrentClassLogger().Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
+                    if (s_logger.IsDebugEnabled) s_logger.Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
                     command.ExecuteNonQuery();
                 }), conn);
             }, timeout);
@@ -2095,7 +2295,7 @@ namespace Homura.ORM
         public async Task<int> UpdateAsync(E entity, DbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null)
         {
             bool useFastPath = string.IsNullOrWhiteSpace(anotherDatabaseAliasName)
-                && (OverridedColumns == null || !OverridedColumns.Any());
+                && OverridedColumns.Count == 0;
 
             return await QueryHelper.KeepTryingUntilProcessSucceedAsync(async () =>
             {
@@ -2128,7 +2328,7 @@ namespace Homura.ORM
                     command.CommandText = sql;
                     query.SetParameters(command);
 
-                    LogManager.GetCurrentClassLogger().Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
+                    if (s_logger.IsDebugEnabled) s_logger.Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
                     return await command.ExecuteNonQueryAsync().ConfigureAwait(false);
                 }, conn).ConfigureAwait(false);
             }, timeout).ConfigureAwait(false);
@@ -2143,7 +2343,7 @@ namespace Homura.ORM
             }
 
             bool useFastPath = string.IsNullOrWhiteSpace(anotherDatabaseAliasName)
-                && (OverridedColumns == null || !OverridedColumns.Any());
+                && OverridedColumns.Count == 0;
 
             return await QueryHelper.KeepTryingUntilProcessSucceedAsync(async () =>
             {
@@ -2160,7 +2360,6 @@ namespace Homura.ORM
                             transaction = await connection.BeginTransactionAsync().ConfigureAwait(false);
                         }
 
-                        var logger = LogManager.GetCurrentClassLogger();
                         await using var command = connection.CreateCommand();
                         if (transaction != null)
                         {
@@ -2203,7 +2402,7 @@ namespace Homura.ORM
                         command.CommandText = sql;
                         query.SetParameters(command);
 
-                        logger.Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
+                        if (s_logger.IsDebugEnabled) s_logger.Debug($"{sql} {query.GetParameters().ToStringKeyIsValue()}");
                         var updated = await command.ExecuteNonQueryAsync().ConfigureAwait(false);
                         totalUpdated += updated;
 
@@ -2225,7 +2424,7 @@ namespace Homura.ORM
                                 }
                             }
 
-                            logger.Debug(sql);
+                            s_logger.Debug(sql);
                             updated = await command.ExecuteNonQueryAsync().ConfigureAwait(false);
                             totalUpdated += updated;
                         }
@@ -2335,7 +2534,7 @@ namespace Homura.ORM
                         var sql = query.ToSql();
                         command.CommandText = sql;
 
-                        LogManager.GetCurrentClassLogger().Debug($"{sql}");
+                        s_logger.Debug(sql);
                         command.ExecuteNonQuery();
                     }
 
@@ -2344,7 +2543,7 @@ namespace Homura.ORM
                         using var command = connection.CreateCommand();
                         var sql = $"delete from {new Table<E>(upgradePath.From).Name}";
                         command.CommandText = sql;
-                        LogManager.GetCurrentClassLogger().Debug($"{sql}");
+                        s_logger.Debug(sql);
                         command.ExecuteNonQuery();
                     }
 
@@ -2354,7 +2553,7 @@ namespace Homura.ORM
                         using var command = connection.CreateCommand();
                         var sql = $"drop table {new Table<E>(upgradePath.From).Name}";
                         command.CommandText = sql;
-                        LogManager.GetCurrentClassLogger().Debug($"{sql}");
+                        s_logger.Debug(sql);
                         command.ExecuteNonQuery();
                     }
 
@@ -2383,7 +2582,7 @@ namespace Homura.ORM
                         var sql = query.ToSql();
                         command.CommandText = sql;
 
-                        LogManager.GetCurrentClassLogger().Debug($"{sql}");
+                        s_logger.Debug(sql);
                         await command.ExecuteNonQueryAsync().ConfigureAwait(false);
                     }
 
@@ -2392,7 +2591,7 @@ namespace Homura.ORM
                         await using var command = connection.CreateCommand();
                         var sql = $"delete from {new Table<E>(upgradePath.From).Name}";
                         command.CommandText = sql;
-                        LogManager.GetCurrentClassLogger().Debug($"{sql}");
+                        s_logger.Debug(sql);
                         await command.ExecuteNonQueryAsync().ConfigureAwait(false);
                     }
 
@@ -2401,7 +2600,7 @@ namespace Homura.ORM
                         await using var command = connection.CreateCommand();
                         var sql = $"drop table {new Table<E>(upgradePath.From).Name}";
                         command.CommandText = sql;
-                        LogManager.GetCurrentClassLogger().Debug($"{sql}");
+                        s_logger.Debug(sql);
                         await command.ExecuteNonQueryAsync().ConfigureAwait(false);
                     }
 
@@ -2443,7 +2642,7 @@ namespace Homura.ORM
                         }
                         sql += ")";
                         command.CommandText = sql;
-                        LogManager.GetCurrentClassLogger().Debug($"{sql}");
+                        s_logger.Debug(sql);
                         command.ExecuteNonQuery();
                     }
 
@@ -2455,7 +2654,7 @@ namespace Homura.ORM
                                                         .Select.Columns(oldTable.Columns.Select(c => c.ColumnName).Concat(newTable.NewColumns(oldTable, newTable).Select(v => v.WrapOutputAsDefault()))).From.Table(oldTable))
                         {
                             command.CommandText = query.ToSql();
-                            LogManager.GetCurrentClassLogger().Debug($"{query.ToSql()}");
+                            s_logger.Debug(query.ToSql());
                             command.ExecuteNonQuery();
                         }
                     }
@@ -2465,7 +2664,7 @@ namespace Homura.ORM
                         //Drop fromテーブル
                         var sql = $"drop table {oldTable.Name}";
                         command.CommandText = sql;
-                        LogManager.GetCurrentClassLogger().Debug($"{sql}");
+                        s_logger.Debug(sql);
                         command.ExecuteNonQuery();
                     }
 
@@ -2474,7 +2673,7 @@ namespace Homura.ORM
                         //ToテーブルをリネームしてFromテーブルに
                         var sql = $"alter table {newTable.Name}_To rename to {oldTable.Name}";
                         command.CommandText = sql;
-                        LogManager.GetCurrentClassLogger().Debug($"{sql}");
+                        s_logger.Debug(sql);
                         command.ExecuteNonQuery();
                     }
                 }), conn);
@@ -2503,7 +2702,7 @@ namespace Homura.ORM
                         }
                         sql += ")";
                         command.CommandText = sql;
-                        LogManager.GetCurrentClassLogger().Debug($"{sql}");
+                        s_logger.Debug(sql);
                         await command.ExecuteNonQueryAsync().ConfigureAwait(false);
                     }
 
@@ -2514,7 +2713,7 @@ namespace Homura.ORM
                             .Columns(newTable.Columns.Select(c => c.ColumnName))
                             .Select.Columns(oldTable.Columns.Select(c => c.ColumnName).Concat(newTable.NewColumns(oldTable, newTable).Select(v => v.WrapOutputAsDefault()))).From.Table(oldTable);
                         command.CommandText = query.ToSql();
-                        LogManager.GetCurrentClassLogger().Debug($"{query.ToSql()}");
+                        s_logger.Debug(query.ToSql());
                         await command.ExecuteNonQueryAsync().ConfigureAwait(false);
                     }
 
@@ -2523,7 +2722,7 @@ namespace Homura.ORM
                         //Drop fromテーブル
                         var sql = $"drop table {oldTable.Name}";
                         command.CommandText = sql;
-                        LogManager.GetCurrentClassLogger().Debug($"{sql}");
+                        s_logger.Debug(sql);
                         await command.ExecuteNonQueryAsync().ConfigureAwait(false);
                     }
 
@@ -2532,7 +2731,7 @@ namespace Homura.ORM
                         //ToテーブルをリネームしてFromテーブルに
                         var sql = $"alter table {newTable.Name}_To rename to {oldTable.Name}";
                         command.CommandText = sql;
-                        LogManager.GetCurrentClassLogger().Debug($"{sql}");
+                        s_logger.Debug(sql);
                         await command.ExecuteNonQueryAsync().ConfigureAwait(false);
                     }
                 }, conn).ConfigureAwait(false);

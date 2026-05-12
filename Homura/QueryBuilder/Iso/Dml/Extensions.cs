@@ -84,53 +84,70 @@ namespace Homura.QueryBuilder.Iso.Dml
             return ret;
         }
 
-        private static string RelayQuery(this List<SyntaxBase> list)
-        {
-            SyntaxBase previous = null;
-            StringBuilder builder = new StringBuilder();
-            foreach (var syntax in list)
-            {
-                Merge(builder, previous, syntax);
-                previous = syntax;
-            }
-            return builder.ToString();
-        }
-
         public static string RelayQuery(this List<SyntaxBase> list, SyntaxBase syntaxBase)
         {
-            var relay = list.ToList();
-            relay.Add(syntaxBase);
-            return relay.RelayQuery();
+            // Render list then syntaxBase, in one pass with no intermediate list copy.
+            var builder = new StringBuilder();
+            var state = new MergeState();
+            SyntaxBase previous = null;
+            foreach (var syntax in list)
+            {
+                Merge(builder, ref state, previous, syntax);
+                previous = syntax;
+            }
+            Merge(builder, ref state, previous, syntaxBase);
+            return builder.ToString();
         }
 
         #region private
 
-        private static readonly string s_DELIMITER_SPACE = " ";
+        private const char s_DELIMITER_SPACE_CHAR = ' ';
 
-        private static void Merge(StringBuilder builder, SyntaxBase previous, SyntaxBase current)
+        private struct MergeState
         {
-            var building = builder.ToString();
-            bool bothNotEmpty = !string.IsNullOrWhiteSpace(building) && !string.IsNullOrWhiteSpace(current.Represent());
-            bool lastIsNotSpace = !building.EndsWith(s_DELIMITER_SPACE);
-            bool IsNotNoMargin = !(previous is INoMarginRightSyntax) && !(current is INoMarginLeftSyntax);
+            public bool HasContent;     // any non-whitespace already appended
+            public bool LastCharIsSpace; // last char written was ' '
+        }
 
-            if (bothNotEmpty && lastIsNotSpace && IsNotNoMargin)
+        private static void Merge(StringBuilder builder, ref MergeState state, SyntaxBase previous, SyntaxBase current)
+        {
+            // Cache Represent() — it can be non-trivial.
+            var repr = current.Represent();
+            bool currentIsNotBlank = !string.IsNullOrWhiteSpace(repr);
+
+            bool bothNotEmpty = state.HasContent && currentIsNotBlank;
+            bool lastIsNotSpace = !state.LastCharIsSpace;
+            bool isNotNoMargin = !(previous is INoMarginRightSyntax) && !(current is INoMarginLeftSyntax);
+
+            if (bothNotEmpty && lastIsNotSpace && isNotNoMargin)
             {
-                if (current is IRepeatable)
+                bool addSpace = true;
+                if (current is IRepeatable repeatable)
                 {
-                    var repeatable = current as IRepeatable;
-                    if (repeatable.Delimiter != Delimiter.Comma && repeatable.Delimiter != Delimiter.ClosedParenthesisAndComma)
+                    if (repeatable.Delimiter == Delimiter.Comma || repeatable.Delimiter == Delimiter.ClosedParenthesisAndComma)
                     {
-                        builder.Append(s_DELIMITER_SPACE);
+                        addSpace = false;
                     }
                 }
-                else
+
+                if (addSpace)
                 {
-                    builder.Append(s_DELIMITER_SPACE);
+                    builder.Append(s_DELIMITER_SPACE_CHAR);
+                    state.LastCharIsSpace = true;
+                    state.HasContent = true;
                 }
             }
 
-            builder.Append(current.Represent());
+            if (!string.IsNullOrEmpty(repr))
+            {
+                builder.Append(repr);
+                char last = repr[repr.Length - 1];
+                state.LastCharIsSpace = last == s_DELIMITER_SPACE_CHAR;
+                if (currentIsNotBlank)
+                {
+                    state.HasContent = true;
+                }
+            }
         }
 
         #endregion //private

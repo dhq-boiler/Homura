@@ -23,6 +23,8 @@ namespace Homura.ORM
 
         Func<object, object> PropertyGetter { get; }
 
+        PropertyInfo PropertyInfo { get; }
+
         string ConstraintsToSql();
 
         PlaceholderRightValue ToParameter(EntityBaseObject entity);
