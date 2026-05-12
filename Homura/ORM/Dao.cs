@@ -1422,6 +1422,14 @@ namespace Homura.ORM
                 QueryHelper.ForDao.ConnectionInternal(this, new Action<DbConnection>((connection) =>
                 {
                     using var command = connection.CreateCommand();
+
+                    if (TryPrepareDeleteAllFastCommand(command, anotherDatabaseAliasName))
+                    {
+                        LogManager.GetCurrentClassLogger().Debug(command.CommandText);
+                        command.ExecuteNonQuery();
+                        return;
+                    }
+
                     var table = (Table<E>)Table.Clone();
                     if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName))
                     {
@@ -1448,6 +1456,14 @@ namespace Homura.ORM
                 await QueryHelper.ForDao.ConnectionInternalAsync(this, async (connection) =>
                 {
                     await using var command = connection.CreateCommand();
+
+                    if (TryPrepareDeleteAllFastCommand(command, anotherDatabaseAliasName))
+                    {
+                        LogManager.GetCurrentClassLogger().Debug(command.CommandText);
+                        await command.ExecuteNonQueryAsync().ConfigureAwait(false);
+                        return;
+                    }
+
                     var table = (Table<E>)Table.Clone();
                     if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName))
                     {
@@ -1474,6 +1490,14 @@ namespace Homura.ORM
                 QueryHelper.ForDao.ConnectionInternal(this, new Action<DbConnection>((connection) =>
                 {
                     using var command = connection.CreateCommand();
+
+                    if (TryPrepareDeleteFastCommand(command, idDic, anotherDatabaseAliasName))
+                    {
+                        LogManager.GetCurrentClassLogger().Debug(command.CommandText);
+                        command.ExecuteNonQuery();
+                        return;
+                    }
+
                     var table = (Table<E>)Table.Clone();
                     if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName))
                     {
@@ -1501,6 +1525,14 @@ namespace Homura.ORM
                 await QueryHelper.ForDao.ConnectionInternalAsync(this, async (connection) =>
                 {
                     await using var command = connection.CreateCommand();
+
+                    if (TryPrepareDeleteFastCommand(command, idDic, anotherDatabaseAliasName))
+                    {
+                        LogManager.GetCurrentClassLogger().Debug(command.CommandText);
+                        await command.ExecuteNonQueryAsync().ConfigureAwait(false);
+                        return;
+                    }
+
                     var table = (Table<E>)Table.Clone();
                     if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName))
                     {
@@ -1590,6 +1622,74 @@ namespace Homura.ORM
         /// Default falls back to <see cref="ToEntity"/>.
         /// </summary>
         protected virtual E ToEntityFast(IDataRecord reader, int[] ordinals) => ToEntity(reader);
+
+        /// <summary>
+        /// Returns the SQL string for a FindBy fast path keyed by the given column names,
+        /// or null to fall back to the QueryBuilder path. Parameter names follow the
+        /// pattern '@' + column-name-lowercase.
+        /// </summary>
+        protected virtual string BuildFindByFastSql(string tableName, IReadOnlyList<string> orderedColumnNames) => null;
+
+        /// <summary>
+        /// Returns the SQL string for a Delete-by-dictionary fast path keyed by the given
+        /// column names, or null to fall back to the QueryBuilder path. Parameter names
+        /// follow the pattern '@' + column-name-lowercase.
+        /// </summary>
+        protected virtual string BuildDeleteFastSql(string tableName, IReadOnlyList<string> orderedColumnNames) => null;
+
+        /// <summary>
+        /// Returns the SQL string for a DeleteAll fast path, or null to fall back.
+        /// </summary>
+        protected virtual string GetDeleteAllFastSql(string tableName) => null;
+
+        private bool TryPrepareKeyEqualToValueFast(DbCommand command, Dictionary<string, object> idDic, string anotherDatabaseAliasName,
+                                                   System.Func<string, IReadOnlyList<string>, string> sqlBuilder)
+        {
+            if (idDic == null || idDic.Count == 0) return false;
+            if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName)) return false;
+            if (OverridedColumns != null && OverridedColumns.Any()) return false;
+
+            var orderedKeys = new List<string>(idDic.Count);
+            foreach (var k in idDic.Keys) orderedKeys.Add(k);
+            orderedKeys.Sort(StringComparer.Ordinal);
+
+            var fastSql = sqlBuilder(TableName, orderedKeys);
+            if (fastSql == null) return false;
+
+            command.CommandText = fastSql;
+            command.CommandType = CommandType.Text;
+            foreach (var key in orderedKeys)
+            {
+                var p = command.CreateParameter();
+                p.ParameterName = "@" + key.ToLowerInvariant();
+                var raw = idDic[key];
+                p.Value = raw switch
+                {
+                    null => DBNull.Value,
+                    Type t => (object)t.AssemblyQualifiedName,
+                    _ => raw,
+                };
+                command.Parameters.Add(p);
+            }
+            return true;
+        }
+
+        private bool TryPrepareFindByFastCommand(DbCommand command, Dictionary<string, object> idDic, string anotherDatabaseAliasName)
+            => TryPrepareKeyEqualToValueFast(command, idDic, anotherDatabaseAliasName, BuildFindByFastSql);
+
+        private bool TryPrepareDeleteFastCommand(DbCommand command, Dictionary<string, object> idDic, string anotherDatabaseAliasName)
+            => TryPrepareKeyEqualToValueFast(command, idDic, anotherDatabaseAliasName, BuildDeleteFastSql);
+
+        private bool TryPrepareDeleteAllFastCommand(DbCommand command, string anotherDatabaseAliasName)
+        {
+            if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName)) return false;
+            if (OverridedColumns != null && OverridedColumns.Any()) return false;
+            var fastSql = GetDeleteAllFastSql(TableName);
+            if (fastSql == null) return false;
+            command.CommandText = fastSql;
+            command.CommandType = CommandType.Text;
+            return true;
+        }
 
         public async Task InsertAsync(E entity, DbConnection conn = null, string anotherDatabaseAliasName = null, TimeSpan? timeout = null)
         {
@@ -2004,6 +2104,19 @@ namespace Homura.ORM
                     {
 
                         using var command = conn.CreateCommand();
+
+                        if (TryPrepareFindByFastCommand(command, idDic, anotherDatabaseAliasName))
+                        {
+                            LogManager.GetCurrentClassLogger().Debug(command.CommandText);
+                            using var fastReader = command.ExecuteReader();
+                            var ordinals = PrecomputeOrdinals(fastReader);
+                            while (fastReader.Read())
+                            {
+                                ret.Add(ToEntityFast(fastReader, ordinals));
+                            }
+                            return ret;
+                        }
+
                         var table = (Table<E>)Table.Clone();
                         if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName))
                         {
@@ -2075,6 +2188,19 @@ namespace Homura.ORM
                         try
                         {
                             await using var command = conn.CreateCommand();
+
+                            if (TryPrepareFindByFastCommand(command, idDic, anotherDatabaseAliasName))
+                            {
+                                LogManager.GetCurrentClassLogger().Debug(command.CommandText);
+                                await using var fastReader = await command.ExecuteReaderAsync().ConfigureAwait(false);
+                                var ordinals = PrecomputeOrdinals(fastReader);
+                                while (await fastReader.ReadAsync().ConfigureAwait(false))
+                                {
+                                    ret.Add(ToEntityFast(fastReader, ordinals));
+                                }
+                                return;
+                            }
+
                             var table = (Table<E>)Table.Clone();
                             if (!string.IsNullOrWhiteSpace(anotherDatabaseAliasName))
                             {

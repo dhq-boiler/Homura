@@ -300,12 +300,14 @@ namespace Homura.SourceGenerator
             sb.AppendLine("            return entity;");
             sb.AppendLine("        }");
 
-            // Generate Insert/Update/Select fast path only if no version-dependent columns
+            // Generate Insert/Update/Select/Delete fast path only if no version-dependent columns
             if (!info.HasVersionDependentColumns)
             {
                 GenerateInsertMethods(sb, info);
                 GenerateUpdateMethods(sb, info);
                 GenerateSelectMethods(sb, info);
+                GenerateFindByMethods(sb, info);
+                GenerateDeleteMethods(sb, info);
             }
 
             sb.AppendLine("    }");
@@ -356,6 +358,67 @@ namespace Homura.SourceGenerator
             }
 
             sb.AppendLine("            return true;");
+            sb.AppendLine("        }");
+        }
+
+        private static void GenerateFindByMethods(StringBuilder sb, EntityInfo info)
+        {
+            var allColumns = info.Properties;
+            var columnList = string.Join(", ", allColumns.Select(p => p.ColumnName));
+
+            sb.AppendLine();
+            sb.AppendLine("        private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, string> s_findBySqlCache = new();");
+
+            sb.AppendLine();
+            sb.AppendLine($"        private const string _findBySelectPrefix = \"SELECT {columnList} FROM \";");
+
+            sb.AppendLine();
+            sb.AppendLine("        protected override string BuildFindByFastSql(string tableName, System.Collections.Generic.IReadOnlyList<string> orderedColumnNames)");
+            sb.AppendLine("        {");
+            sb.AppendLine("            var cacheKey = tableName + \"|\" + string.Join(\",\", orderedColumnNames);");
+            sb.AppendLine("            return s_findBySqlCache.GetOrAdd(cacheKey, _ =>");
+            sb.AppendLine("            {");
+            sb.AppendLine("                var sb = new System.Text.StringBuilder();");
+            sb.AppendLine("                sb.Append(_findBySelectPrefix).Append(tableName).Append(\" WHERE \");");
+            sb.AppendLine("                for (int i = 0; i < orderedColumnNames.Count; i++)");
+            sb.AppendLine("                {");
+            sb.AppendLine("                    if (i > 0) sb.Append(\" AND \");");
+            sb.AppendLine("                    var col = orderedColumnNames[i];");
+            sb.AppendLine("                    sb.Append(col).Append(\" = @\").Append(col.ToLowerInvariant());");
+            sb.AppendLine("                }");
+            sb.AppendLine("                return sb.ToString();");
+            sb.AppendLine("            });");
+            sb.AppendLine("        }");
+        }
+
+        private static void GenerateDeleteMethods(StringBuilder sb, EntityInfo info)
+        {
+            sb.AppendLine();
+            sb.AppendLine("        private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, string> s_deleteBySqlCache = new();");
+
+            sb.AppendLine();
+            sb.AppendLine("        private const string _deleteAllSqlTemplate = \"DELETE FROM {0}\";");
+
+            sb.AppendLine();
+            sb.AppendLine("        protected override string GetDeleteAllFastSql(string tableName)");
+            sb.AppendLine("            => string.Format(_deleteAllSqlTemplate, tableName);");
+
+            sb.AppendLine();
+            sb.AppendLine("        protected override string BuildDeleteFastSql(string tableName, System.Collections.Generic.IReadOnlyList<string> orderedColumnNames)");
+            sb.AppendLine("        {");
+            sb.AppendLine("            var cacheKey = tableName + \"|\" + string.Join(\",\", orderedColumnNames);");
+            sb.AppendLine("            return s_deleteBySqlCache.GetOrAdd(cacheKey, _ =>");
+            sb.AppendLine("            {");
+            sb.AppendLine("                var sb = new System.Text.StringBuilder();");
+            sb.AppendLine("                sb.Append(\"DELETE FROM \").Append(tableName).Append(\" WHERE \");");
+            sb.AppendLine("                for (int i = 0; i < orderedColumnNames.Count; i++)");
+            sb.AppendLine("                {");
+            sb.AppendLine("                    if (i > 0) sb.Append(\" AND \");");
+            sb.AppendLine("                    var col = orderedColumnNames[i];");
+            sb.AppendLine("                    sb.Append(col).Append(\" = @\").Append(col.ToLowerInvariant());");
+            sb.AppendLine("                }");
+            sb.AppendLine("                return sb.ToString();");
+            sb.AppendLine("            });");
             sb.AppendLine("        }");
         }
 
