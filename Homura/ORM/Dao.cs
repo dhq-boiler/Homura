@@ -22,7 +22,7 @@ namespace Homura.ORM
 {
     public abstract class Dao<E> : MustInitialize<Type>, IDao<E> where E : EntityBaseObject, new()
     {
-        private static readonly Logger s_logger = LogManager.GetCurrentClassLogger();
+        protected static readonly Logger s_logger = LogManager.GetCurrentClassLogger();
 
         public static readonly string s_COLUMN_NAME = "COLUMN_NAME";
         public static readonly string s_IS_NULLABLE = "IS_NULLABLE";

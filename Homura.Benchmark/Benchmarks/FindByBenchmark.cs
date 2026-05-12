@@ -116,6 +116,21 @@ public class FindByBenchmark
         return matched;
     }
 
+    [Benchmark(Description = "Homura ORM (Generated Typed PK)")]
+    public async Task<int> Homura_Generated_FindByPrimaryKey()
+    {
+        var dao = new GeneratedBenchmarkEntityDao(typeof(VersionOrigin));
+        await using var conn = await dao.GetConnectionAsync();
+        int matched = 0;
+        for (int i = 0; i < LookupCount; i++)
+        {
+            var id = _ids[i % _ids.Length];
+            var row = await dao.FindByPrimaryKeyAsync(id, conn);
+            if (row != null) matched++;
+        }
+        return matched;
+    }
+
     [Benchmark(Description = "Dapper")]
     public async Task<int> Dapper_FindById()
     {
