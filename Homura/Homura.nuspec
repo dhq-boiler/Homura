@@ -10,12 +10,35 @@
 	<license type="expression">MIT</license>
     <description>Homura - C# ORM</description>
     <releaseNotes>
-v14.0.1: Performance optimization for Insert/Update operations.
-- Source Generator now generates Insert/Update fast path code, bypassing query builder chain
-- Cache PropertyGetter delegates and Table column metadata to avoid repeated reflection
-- Reuse DbCommand and parameters in InsertBulkAsync/UpdateBulkAsync
-- Add BeginTransactionAsync to Dao, skip unnecessary Table.Clone
-- Txn-based Insert/Update: ~3.4x faster, ~85% less memory allocation (1000 records)
+v14.1.0: Major read-path overhaul. Generated and non-generated DAOs now both reach Dapper-class throughput.
+
+New APIs (Source Generator emits these on entities with primary keys):
+- Task&lt;E&gt; FindByPrimaryKeyAsync(pk..., conn, timeout) — strongly-typed positional args, const SQL, no Dictionary allocation
+- Task&lt;int&gt; DeleteByPrimaryKeyAsync(pk..., conn, timeout) — same pattern for deletes
+
+Source Generator additions:
+- SELECT fast path: const SQL template plus a ToEntityFast override using literal ordinals and typed reader.GetXxx calls (skips SafeGet wrapping)
+- FindBy / Delete fast path: per-DAO ConcurrentDictionary cache of SQL keyed by the sorted key set; the Dictionary entry point routes through it before the QueryBuilder fallback
+- DeleteAll const SQL
+
+Core runtime improvements:
+- Dao&lt;E&gt;.Table now caches the Table&lt;E&gt; instance; EntityVersionType setter invalidates the cache
+- EntityReaderCache&lt;E&gt; compiles a per-(type, version) Func&lt;IDataRecord, ITable, E&gt; via Expression trees, replacing the per-row reflection loop (DelegateCache lookups, GetInterfaces probes, CatchThrow closures) in ToEntityInDefaultWay
+- ConcurrentDictionary cache for Type.GetType(assemblyQualifiedName); SafeGetType also fixes a latent DBNull bug
+- QueryBuilder switches Relay from per-step List copy to a lazily-materialized parent-pointer chain; Merge replaces builder.ToString() per iteration with HasContent + LastCharIsSpace flags and caches Represent() per call
+- s_logger is a static readonly Logger field; Debug calls that build parameter strings are now guarded by IsDebugEnabled
+- OverridedColumns.Count replaces null-check + LINQ Any() in every fast-path guard
+
+Public surface:
+- IColumn gains a PropertyInfo accessor (used by the compiled reader). External implementations of IColumn need to add it.
+- Dao&lt;E&gt;.s_logger visibility changed from private to protected so generated subclasses can guard their Debug calls.
+
+Benchmark highlights (AMD Ryzen 9 5950X, SQLite, .NET 9):
+- Select 1000 rows, non-generated DAO: 11.6 ms / 5.9 MB -&gt; 2.6 ms / 557 KB
+- Select 1000 rows, generated DAO: 2.4 ms / 836 KB -&gt; 1.8 ms / 436 KB (matches Dapper)
+- FindBy 1000 PK lookups, Typed PK: 158 ms / 2316 KB (beats Dapper at 159 ms / 2495 KB on both axes)
+
+All 197 existing tests pass plus 3 new TypeCacheTest cases.
     </releaseNotes>
     <copyright>Copyright (c) dhq_boiler 2020-2026</copyright>
     <tags>C# ORM SQLite Migration SourceGenerator</tags>
