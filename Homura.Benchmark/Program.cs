@@ -11,7 +11,8 @@ Console.WriteLine("Select benchmark to run:");
 Console.WriteLine("  1. Insert");
 Console.WriteLine("  2. Select");
 Console.WriteLine("  3. Update");
-Console.WriteLine("  4. All");
+Console.WriteLine("  4. FindBy");
+Console.WriteLine("  5. All");
 Console.WriteLine();
 
 var key = args.Length > 0 ? args[0] : Console.ReadLine();
@@ -28,9 +29,13 @@ switch (key)
         BenchmarkRunner.Run<UpdateBenchmark>(config);
         break;
     case "4":
+        BenchmarkRunner.Run<FindByBenchmark>(config);
+        break;
+    case "5":
     default:
         BenchmarkRunner.Run<InsertBenchmark>(config);
         BenchmarkRunner.Run<SelectBenchmark>(config);
         BenchmarkRunner.Run<UpdateBenchmark>(config);
+        BenchmarkRunner.Run<FindByBenchmark>(config);
         break;
 }
